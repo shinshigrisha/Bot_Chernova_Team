@@ -35,3 +35,17 @@ def get_ingest_file(key: str) -> bytes:
     bucket = get_settings().s3.bucket
     resp = client.get_object(Bucket=bucket, Key=key)
     return resp["Body"].read()
+
+
+def get_latest_ingest_file(batch_id: UUID) -> tuple[str, bytes]:
+    """Find and return latest ingest object for batch."""
+    client = get_s3_client()
+    bucket = get_settings().s3.bucket
+    prefix = f"ingest/{batch_id}/"
+    resp = client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    contents = resp.get("Contents", [])
+    if not contents:
+        raise FileNotFoundError(f"No ingest file found for batch {batch_id}")
+    latest = max(contents, key=lambda item: item.get("LastModified"))
+    key = latest["Key"]
+    return key, get_ingest_file(key)

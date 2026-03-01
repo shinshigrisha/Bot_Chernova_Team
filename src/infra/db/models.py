@@ -362,3 +362,22 @@ class DeliveryOrderRaw(Base):
     )
 
     batch: Mapped["IngestBatch"] = relationship(back_populates="raw_rows")
+
+
+class FAQItem(Base):
+    __tablename__ = "faq_ai"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    tags: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
+    q: Mapped[str] = mapped_column(Text, nullable=False)
+    a: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+# Backward-compatible alias for faq_ai model naming.
+FAQAI = FAQItem

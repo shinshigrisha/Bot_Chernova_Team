@@ -1,0 +1,14 @@
+# Context7 Integration
+
+When the user asks about:
+- Library APIs or documentation
+- Framework setup or configuration
+- Code examples for external packages
+- How to use a specific library feature
+
+Automatically use Context7 MCP to fetch current documentation. Don't rely on training data for library-specific code.
+
+If Context7 is unavailable:
+- Verify `CONTEXT7_API_KEY` is set in environment.
+- Verify `.cursor/mcp.json` loads the `context7` server.
+- If still unavailable, explicitly report MCP outage and proceed with local code analysis only.

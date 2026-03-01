@@ -35,7 +35,7 @@ isProject: false
 **Конфигурация:**
 
 - [src/config.py](src/config.py) — pydantic BaseSettings из env: `DATABASE_URL`, `REDIS_URL`, `CELERY_BROKER_URL`, S3_*, `BOT_TOKEN`, `ADMIN_IDS`, `TIMEZONE`, `LOG_LEVEL`
-- Корневой [src/__init__.py](src/__init__.py) и `__init__.py` во всех пакетах
+- Корневой [src/**init**.py](src/__init__.py) и `__init__.py` во всех пакетах
 
 ---
 
@@ -64,24 +64,26 @@ isProject: false
 
 **Миграция 001_initial_mvp** — схема:
 
-| Таблица | Ключевые поля и ограничения |
-|---------|-----------------------------|
-| territories | id, name, created_at |
-| teams | id, territory_id FK, name, created_at |
-| darkstores | id, team_id FK, code, name, is_white bool, created_at |
-| users | id, tg_user_id UNIQUE, role enum, display_name, created_at, updated_at |
-| user_scopes | id, user_id FK, team_id FK nullable, darkstore_id FK nullable, partial UNIQUE(user_id, team_id, darkstore_id) |
-| couriers | id, darkstore_id FK, external_key, name, created_at |
-| chat_bindings | id, team_id FK, chat_id, category enum (alerts/daily/assets/incidents/general), topic_id nullable, created_at |
-| assets | id, darkstore_id FK, asset_type, serial, status, condition, created_at, updated_at; UNIQUE(darkstore_id, asset_type, serial) |
-| asset_assignments | id, asset_id FK, courier_id FK, assigned_at, returned_at nullable; один активный на asset (partial unique: returned_at IS NULL) |
-| asset_events | id, asset_id FK, assignment_id FK nullable, event_type, payload jsonb, created_at |
-| shift_log | id, darkstore_id FK, log_type, severity, title, details, created_at, created_by FK nullable; индексы по ds + date |
-| notifications | id, type enum, status enum, dedupe_key nullable UNIQUE, payload jsonb, created_at |
-| notification_targets | id, notification_id FK, channel enum, chat_id, topic_id nullable, created_at |
-| notification_delivery_attempts | id, notification_id FK, attempted_at, status, error_code, retry_after nullable, created_at |
-| ingest_batches | id, source enum, content_hash, status enum, rules_version, created_at; **UNIQUE(source, content_hash)** |
-| delivery_orders_raw | id, batch_id FK, order_key, ds_code, zone_code nullable, start_delivery_at, deadline_at, finish_at_raw, durations jsonb, raw jsonb, created_at; индексы batch_id, ds_code, zone_code |
+
+| Таблица                        | Ключевые поля и ограничения                                                                                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| territories                    | id, name, created_at                                                                                                                                                                 |
+| teams                          | id, territory_id FK, name, created_at                                                                                                                                                |
+| darkstores                     | id, team_id FK, code, name, is_white bool, created_at                                                                                                                                |
+| users                          | id, tg_user_id UNIQUE, role enum, display_name, created_at, updated_at                                                                                                               |
+| user_scopes                    | id, user_id FK, team_id FK nullable, darkstore_id FK nullable, partial UNIQUE(user_id, team_id, darkstore_id)                                                                        |
+| couriers                       | id, darkstore_id FK, external_key, name, created_at                                                                                                                                  |
+| chat_bindings                  | id, team_id FK, chat_id, category enum (alerts/daily/assets/incidents/general), topic_id nullable, created_at                                                                        |
+| assets                         | id, darkstore_id FK, asset_type, serial, status, condition, created_at, updated_at; UNIQUE(darkstore_id, asset_type, serial)                                                         |
+| asset_assignments              | id, asset_id FK, courier_id FK, assigned_at, returned_at nullable; один активный на asset (partial unique: returned_at IS NULL)                                                      |
+| asset_events                   | id, asset_id FK, assignment_id FK nullable, event_type, payload jsonb, created_at                                                                                                    |
+| shift_log                      | id, darkstore_id FK, log_type, severity, title, details, created_at, created_by FK nullable; индексы по ds + date                                                                    |
+| notifications                  | id, type enum, status enum, dedupe_key nullable UNIQUE, payload jsonb, created_at                                                                                                    |
+| notification_targets           | id, notification_id FK, channel enum, chat_id, topic_id nullable, created_at                                                                                                         |
+| notification_delivery_attempts | id, notification_id FK, attempted_at, status, error_code, retry_after nullable, created_at                                                                                           |
+| ingest_batches                 | id, source enum, content_hash, status enum, rules_version, created_at; **UNIQUE(source, content_hash)**                                                                              |
+| delivery_orders_raw            | id, batch_id FK, order_key, ds_code, zone_code nullable, start_delivery_at, deadline_at, finish_at_raw, durations jsonb, raw jsonb, created_at; индексы batch_id, ds_code, zone_code |
+
 
 Во всех таблицах: PK, created_at/updated_at где нужно; FK с индексами; индексы для частых фильтров. **downgrade**: удаление таблиц в обратном порядке зависимостей.
 
@@ -185,13 +187,15 @@ flowchart LR
   I --> Q
 ```
 
+
+
 ---
 
 ## Список создаваемых/изменяемых файлов
 
 **Корень:** docker-compose.yml, Dockerfile, Makefile, pyproject.toml, alembic.ini, .env.example (дополнение).
 
-**Конфиг и структура:** src/config.py, src/__init__.py, все пакеты с __init__.py.
+**Конфиг и структура:** src/config.py, src/**init**.py, все пакеты с **init**.py.
 
 **DB:** src/infra/db/session.py, models.py, enums.py, repositories/assets.py, shift_log.py, notifications.py, ingest.py; migrations/env.py, migrations/script.py.mako, migrations/versions/001_initial_mvp.py.
 
@@ -199,7 +203,7 @@ flowchart LR
 
 **Очередь и уведомления:** src/infra/queue/celery_app.py, tasks.py; src/infra/notifications/channels.py, telegram_channel.py; src/infra/storage/s3.py.
 
-**Бот:** src/bot/main.py, src/bot/states.py, src/bot/handlers/start.py, src/bot/admin/__init__.py, menu.py, FSM-хендлеры для ТМЦ/инцидент/CSV.
+**Бот:** src/bot/main.py, src/bot/states.py, src/bot/handlers/start.py, src/bot/admin/**init**.py, menu.py, FSM-хендлеры для ТМЦ/инцидент/CSV.
 
 **Документация:** обновление docs/ARCHITECTURE.md, DEPLOYMENT.md, RUNBOOK.md, ADMIN_GUIDE.md, DATA_DICTIONARY.md, SECURITY.md.
 
@@ -215,3 +219,4 @@ flowchart LR
 - **Воркер:** `make worker`
 - **Проверка:** отправить в Telegram `/start` и `/admin`; логи: `docker compose logs -f bot`
 - **Тесты:** `pytest tests/ -v`
+

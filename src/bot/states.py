@@ -22,3 +22,15 @@ class IncidentStates(StatesGroup):
 
 class IngestCSVStates(StatesGroup):
     upload = State()
+
+
+class AIChatStates(StatesGroup):
+    active = State()
+
+
+class AIAddFAQStates(StatesGroup):
+    question = State()
+    answer = State()
+    category = State()
+    tag = State()
+    keywords = State()

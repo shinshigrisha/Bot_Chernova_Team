@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     # S3/MinIO
     s3: S3Settings = Field(default_factory=S3Settings)
 
+    # AI
+    ai_enabled: bool = Field(default=False, alias="AI_ENABLED")
+    groq_api_key: str = Field(default="", alias="GROQ_API_KEY")
+    deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+
     @field_validator("admin_ids", mode="before")
     @classmethod
     def parse_admin_ids(cls, v: Union[str, List[int]]) -> List[int]:

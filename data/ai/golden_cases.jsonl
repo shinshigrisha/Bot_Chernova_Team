@@ -1,0 +1,5 @@
+{"input":"Яйца разбиты, пакет цел","expect_tags":["damage"],"must_contain_any":["фото","зафиксируй","куратору"],"must_not_contain_any":["ничем не могу помочь"]}
+{"input":"Не дозвонился клиенту, домофон","expect_tags":["contact_customer"],"must_contain_any":["2–3","ожидание","комментарии"],"must_not_contain_any":["сразу пишите куратору"]}
+{"input":"АКБ дымит в шкафу","expect_tags":["battery_fire"],"must_contain_any":["прекрати","обесточь","безопасность"],"must_not_contain_any":["продолжай зарядку"]}
+{"input":"Не хватает пакета, недовоз","expect_tags":["missing_items"],"must_contain_any":["проверь","МП","сообщи"],"must_not_contain_any":["забей"]}
+{"input":"Не успеваю в таймер, пробка","expect_tags":["late_delivery"],"must_contain_any":["ETA","сообщи","причина"],"must_not_contain_any":["превышай скорость"]}
