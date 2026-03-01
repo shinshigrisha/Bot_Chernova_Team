@@ -1,40 +1,56 @@
-# Runbook / Troubleshooting
+# Runbook / Устранение неполадок
 
-## Telegram rate limits (429)
-Symptoms:
-- Delivery attempts failing with 429
-Actions:
-- Respect retry_after
-- Reduce send rate, enable digest, check dedupe
-- Ensure sends go through queue, not handlers
+## Бот не отвечает
+- Проверить, что контейнер bot запущен: `docker compose ps`.
+- Логи: `docker compose logs -f bot`. Убедиться, что BOT_TOKEN задан и нет ошибок при старте.
+- Проверить доступность postgres и redis из контейнера bot (внутренняя сеть).
 
-## Missing chat/topic bindings
-- Alerts are not appearing in expected topic
-Fix:
-- Check Team bindings in Admin UI
-- Verify bot permissions in forum topics
+## Миграция не применяется
+- Проверить DATABASE_URL (async URL: postgresql+asyncpg://...).
+- Убедиться, что postgres уже поднят и здоров: `docker compose up -d postgres`, затем `make migrate`.
+- При ошибках enum/таблиц — проверить порядок миграций и наличие downgrade.
 
-## Ingest failures (CSV/API)
-- Batch status FAILED, parse errors
-Fix:
-- Validate CSV columns against Data Dictionary
-- Check timezone assumptions
-- Re-run ingestion with corrected file
+## Лимиты Telegram (429)
+Симптомы:
+- Попытки доставки завершаются с кодом 429
 
-## ZiZ analytics disabled
-Cause:
-- zone_code coverage below threshold
-Fix:
-- Ensure source provides stable zone_code
-- Otherwise operate in Store-only mode
+Действия:
+- Учитывать retry_after
+- Снизить частоту отправки, включить дайджест, проверить дедупликацию
+- Убедиться, что отправка идёт через очередь, а не из handlers
 
-## Duplicate scheduled jobs
-Cause:
-- multiple scheduler instances
-Fix:
-- single scheduler or distributed lock
+## Отсутствующие привязки чата/топика
+- Алерты не попадают в ожидаемый топик
 
-## Recalc required
-- rules_version changed
-Fix:
-- run /admin -> Analytics -> Recalculate for date range (queue)
+Решение:
+- Проверить привязки команд в админ-интерфейсе
+- Проверить права бота в топиках форума
+
+## Ошибки ingest (CSV/API)
+- Статус батча FAILED, ошибки парсинга
+
+Решение:
+- Сверить колонки CSV с Data Dictionary
+- Проверить предположения о часовом поясе
+- Повторить загрузку с исправленным файлом
+
+## Аналитика ZiZ отключена
+Причина:
+- Доля zone_code ниже порога
+
+Решение:
+- Обеспечить стабильную передачу zone_code из источника
+- Иначе работать в режиме Store-only
+
+## Дублирование запланированных задач
+Причина:
+- несколько экземпляров scheduler
+
+Решение:
+- один scheduler или распределённая блокировка
+
+## Требуется перерасчёт
+- Изменилась rules_version
+
+Решение:
+- Выполнить /admin → Аналитика → Перерасчёт за период (через очередь)

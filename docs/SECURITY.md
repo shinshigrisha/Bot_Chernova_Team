@@ -1,20 +1,20 @@
-# Security
+# Безопасность
 
-## Secrets
-- Never commit tokens/passwords
-- Use .env for dev, secret manager for prod
+## Секреты
+- Не коммитить токены и пароли
+- В разработке использовать .env, в проде — secret manager
 
-## Network
-- Postgres/Redis should not be exposed publicly
-- Restrict inbound access to bot/API endpoints
+## Сеть
+- Postgres и Redis в docker-compose не публикуются наружу (без ports); доступ только из внутренней сети (bot, worker).
+- Ограничить входящий доступ к эндпоинтам бота/API в проде.
 
 ## RBAC
-- Enforce role checks on every admin action
-- Enforce territory/ds scope checks
+- Доступ к /admin: проверка роли (ADMIN, LEAD, CURATOR) или вхождение Telegram ID в ADMIN_IDS.
+- Проверять роль при каждом админ-действии; область видимости (территория/ds) — по user_scopes при доступе к данным.
 
-## Audit
-- Record who did what and when (assets, decisions, config changes)
-- Keep immutable logs for critical actions
+## Аудит
+- Фиксировать, кто что и когда сделал (ТМЦ, решения, изменения конфигурации)
+- Вести неизменяемые логи по критичным действиям
 
-## Data access
-- Superset DB read-only credentials (least privilege)
+## Доступ к данным
+- Учётные данные к БД Superset — только на чтение (минимальные привилегии)

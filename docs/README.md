@@ -1,21 +1,21 @@
 # Delivery Assistant
 
-This repository contains the Delivery Assistant system (Telegram bot + backend services) for managing delivery operations:
-- Shifts & polls
-- Assets (TMC)
-- Shift log & incidents
-- Superset data ingest (CSV/API/DB)
-- Analytics, alerts, daily reporting
+В этом репозитории — система Delivery Assistant (Telegram-бот и бэкенд-сервисы) для управления операциями доставки:
+- Смены и опросы
+- ТМЦ (активы)
+- Журнал смены и инциденты
+- Загрузка данных из Superset (CSV/API/DB)
+- Аналитика, алерты, ежедневная отчётность
 - AI Curator (RAG)
 
-## Quickstart (dev)
-1. Copy `.env.example` to `.env` and fill values
+## Быстрый старт (разработка)
+1. Скопировать `.env.example` в `.env` и заполнить значения
 2. `docker compose up -d --build`
-3. Apply migrations: `make migrate`
-4. Run bot locally (optional): `make bot`
+3. Применить миграции: `make migrate`
+4. Запустить бота локально (опционально): `make bot`
 
-See:
+См. также:
 - docs/DEPLOYMENT.md
 - docs/ADMIN_GUIDE.md
 
-Generated: 2026-03-01
+Дата: 2026-03-01

@@ -1,18 +1,18 @@
-# ADR 000: <Title>
+# ADR 000: <Название>
 
-## Status
-Proposed | Accepted | Deprecated
+## Статус
+Предложено | Принято | Устарело
 
-## Context
-What problem are we solving? What constraints exist?
+## Контекст
+Какую проблему решаем? Какие есть ограничения?
 
-## Decision
-What did we decide and why?
+## Решение
+Что решили и почему?
 
-## Consequences
-- Positive
-- Negative
-- Follow-ups
+## Последствия
+- Положительные
+- Отрицательные
+- Дальнейшие шаги
 
-## Alternatives considered
-List alternatives and reasons rejected.
+## Рассмотренные альтернативы
+Перечислить альтернативы и причины отказа.

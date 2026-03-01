@@ -1,27 +1,37 @@
-# Admin Guide (by roles)
+# Руководство администратора (по ролям)
+
+## Вход в админку
+- Команда `/admin` в боте. Доступ: роль ADMIN, LEAD или CURATOR либо Telegram ID в списке ADMIN_IDS.
+
+## Пункты админ-меню (MVP)
+- **ТМЦ** — выдача ТМЦ: выбор ДС (код), курьер (внешний ключ), тип ТМЦ, серийный номер, состояние, опционально фото, подтверждение. Запись в assets/asset_assignments/asset_events.
+- **Журнал смены** — создание инцидента: ДС, серьёзность (low/medium/high/critical), заголовок, описание, подтверждение. Запись в shift_log.
+- **Импорт CSV** — загрузка файла (документом). Создаётся batch (идемпотентно по content_hash), файл сохраняется в MinIO, задача парсинга ставится в очередь. Ответ: «batch создан» или «дубликат».
+- **Настройки** — заглушка (в разработке).
+- **Мониторинг** — заглушка (в разработке).
 
 ## ADMIN
-- Manage territories/teams, chat bindings, topic IDs
-- Configure schedules, thresholds
-- Manage integrations (CSV/API/DB)
-- Manage AI knowledge base and policies
-- Monitor system health and logs
+- Управление территориями/командами, привязками чатов, ID топиков
+- Настройка расписаний и порогов
+- Управление интеграциями (CSV/API/DB)
+- Управление базой знаний и политиками AI
+- Мониторинг состояния системы и логов
 
 ## LEAD
-- View territory dashboards & daily reports
-- Confirm/override recommendations
-- Audit decisions and actions
+- Просмотр дашбордов территорий и ежедневных отчётов
+- Подтверждение/переопределение рекомендаций
+- Аудит решений и действий
 
 ## CURATOR
-- Manage assets (issue/return/inventory)
-- Create incidents and shift notes
-- View dashboards for assigned DS/white stores
-- Mark actions as "applied manually" with comment
+- Управление ТМЦ (выдача/возврат/инвентаризация)
+- Создание инцидентов и записей в журнале смены
+- Просмотр дашбордов по назначенным ДС/белым магазинам
+- Отметка действий как «применено вручную» с комментарием
 
 ## VIEWER / AUDITOR
-- Read-only dashboards and reports
-- Export reports
+- Только чтение: дашборды и отчёты
+- Экспорт отчётов
 
-## COURIER (optional)
-- View own assignments / assets (if enabled)
-- Ask AI Curator FAQ
+## COURIER (опционально)
+- Просмотр своих назначений и ТМЦ (если включено)
+- Вопросы к AI Curator (FAQ)
