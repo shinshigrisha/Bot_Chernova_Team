@@ -33,6 +33,16 @@ from src.infra.db.enums import (
 )
 
 
+def _pg_enum(enum_class: type, name: str) -> ENUM:
+    """Create a PostgreSQL ENUM column type using enum values (not names)."""
+    return ENUM(
+        enum_class,
+        name=name,
+        create_type=False,
+        values_callable=lambda obj: [e.value for e in obj],
+    )
+
+
 class Base(DeclarativeBase):
     """Declarative base for all models."""
 
@@ -90,7 +100,7 @@ class User(Base):
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tg_user_id: Mapped[int] = mapped_column(nullable=False, unique=True)
     role: Mapped[UserRole] = mapped_column(
-        ENUM(UserRole, name="user_role", create_type=False), nullable=False
+        _pg_enum(UserRole, "user_role"), nullable=False
     )
     display_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
@@ -148,7 +158,7 @@ class ChatBinding(Base):
     )
     chat_id: Mapped[int] = mapped_column(nullable=False)
     category: Mapped[ChatBindingCategory] = mapped_column(
-        ENUM(ChatBindingCategory, name="chat_binding_category", create_type=False), nullable=False
+        _pg_enum(ChatBindingCategory, "chat_binding_category"), nullable=False
     )
     topic_id: Mapped[Optional[int]] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
@@ -164,14 +174,14 @@ class Asset(Base):
         UUID(as_uuid=True), ForeignKey("darkstores.id", ondelete="CASCADE"), nullable=False
     )
     asset_type: Mapped[AssetType] = mapped_column(
-        ENUM(AssetType, name="asset_type", create_type=False), nullable=False
+        _pg_enum(AssetType, "asset_type"), nullable=False
     )
     serial: Mapped[str] = mapped_column(String(128), nullable=False)
     status: Mapped[AssetStatus] = mapped_column(
-        ENUM(AssetStatus, name="asset_status", create_type=False), nullable=False
+        _pg_enum(AssetStatus, "asset_status"), nullable=False
     )
     condition: Mapped[AssetCondition] = mapped_column(
-        ENUM(AssetCondition, name="asset_condition", create_type=False), nullable=False
+        _pg_enum(AssetCondition, "asset_condition"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -240,10 +250,10 @@ class ShiftLog(Base):
         UUID(as_uuid=True), ForeignKey("darkstores.id", ondelete="CASCADE"), nullable=False
     )
     log_type: Mapped[LogType] = mapped_column(
-        ENUM(LogType, name="log_type", create_type=False), nullable=False
+        _pg_enum(LogType, "log_type"), nullable=False
     )
     severity: Mapped[Severity] = mapped_column(
-        ENUM(Severity, name="severity", create_type=False), nullable=False
+        _pg_enum(Severity, "severity"), nullable=False
     )
     title: Mapped[str] = mapped_column(String(512), nullable=False)
     details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -265,10 +275,10 @@ class Notification(Base):
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     type: Mapped[NotificationType] = mapped_column(
-        ENUM(NotificationType, name="notification_type", create_type=False), nullable=False
+        _pg_enum(NotificationType, "notification_type"), nullable=False
     )
     status: Mapped[NotificationStatus] = mapped_column(
-        ENUM(NotificationStatus, name="notification_status", create_type=False), nullable=False
+        _pg_enum(NotificationStatus, "notification_status"), nullable=False
     )
     dedupe_key: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
     payload: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
@@ -288,7 +298,7 @@ class NotificationTarget(Base):
         UUID(as_uuid=True), ForeignKey("notifications.id", ondelete="CASCADE"), nullable=False
     )
     channel: Mapped[NotificationChannel] = mapped_column(
-        ENUM(NotificationChannel, name="notification_channel", create_type=False), nullable=False
+        _pg_enum(NotificationChannel, "notification_channel"), nullable=False
     )
     chat_id: Mapped[int] = mapped_column(nullable=False)
     topic_id: Mapped[Optional[int]] = mapped_column(nullable=True)
@@ -306,7 +316,7 @@ class NotificationDeliveryAttempt(Base):
     )
     attempted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     status: Mapped[AttemptStatus] = mapped_column(
-        ENUM(AttemptStatus, name="attempt_status", create_type=False), nullable=False
+        _pg_enum(AttemptStatus, "attempt_status"), nullable=False
     )
     error_code: Mapped[Optional[int]] = mapped_column(nullable=True)
     retry_after: Mapped[Optional[int]] = mapped_column(nullable=True)
@@ -320,11 +330,11 @@ class IngestBatch(Base):
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     source: Mapped[IngestSource] = mapped_column(
-        ENUM(IngestSource, name="ingest_source", create_type=False), nullable=False
+        _pg_enum(IngestSource, "ingest_source"), nullable=False
     )
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[IngestStatus] = mapped_column(
-        ENUM(IngestStatus, name="ingest_status", create_type=False), nullable=False
+        _pg_enum(IngestStatus, "ingest_status"), nullable=False
     )
     rules_version: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

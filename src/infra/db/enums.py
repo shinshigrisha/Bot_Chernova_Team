@@ -1,5 +1,8 @@
 """Database enums for Delivery Assistant."""
 import enum
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserRole(str, enum.Enum):
@@ -8,6 +11,39 @@ class UserRole(str, enum.Enum):
     CURATOR = "curator"
     VIEWER = "viewer"
     COURIER = "courier"
+
+
+# Маппинг всех допустимых строковых представлений → UserRole.
+# Покрывает: "admin", "ADMIN", "UserRole.ADMIN", "userrole.admin" и т.п.
+_ROLE_LOOKUP: dict[str, UserRole] = {}
+for _r in UserRole:
+    _ROLE_LOOKUP[_r.value] = _r          # "admin"
+    _ROLE_LOOKUP[_r.name.lower()] = _r   # "admin" (= value, дублирует для LEAD/CURATOR)
+    _ROLE_LOOKUP[_r.name] = _r           # "ADMIN"
+    _ROLE_LOOKUP[f"userrole.{_r.value}"] = _r  # "userrole.admin" (str(enum) в py<3.11)
+
+
+def coerce_user_role(
+    value: "str | UserRole",
+    default: UserRole = UserRole.VIEWER,
+) -> UserRole:
+    """Безопасно приводит произвольную строку к UserRole.
+
+    Принимает значения в любом регистре: "ADMIN", "admin", "UserRole.ADMIN".
+    При невалидном значении логирует WARNING и возвращает ``default``.
+    """
+    if isinstance(value, UserRole):
+        return value
+    key = str(value).strip().lower().removeprefix("userrole.")
+    role = _ROLE_LOOKUP.get(key)
+    if role is None:
+        logger.warning(
+            "coerce_user_role: неизвестное значение %r, используется fallback %s",
+            value,
+            default,
+        )
+        return default
+    return role
 
 
 class AssetType(str, enum.Enum):
