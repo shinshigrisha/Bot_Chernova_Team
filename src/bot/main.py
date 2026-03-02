@@ -11,6 +11,7 @@ from src.bot.admin import router as admin_router
 from src.bot.handlers.ai_chat import router as ai_chat_router
 from src.bot.handlers.start import router as start_router
 from src.bot.middlewares.ai_inject import InjectAIMiddleware
+from src.bot.middlewares.log_updates import LogUpdatesMiddleware
 from src.config import get_settings
 from src.core.services.ai.ai_courier_service import AICourierService
 from src.core.services.ai.provider_router import ProviderRouter
@@ -68,6 +69,25 @@ async def _shutdown_ai(bot: Bot, dp: Dispatcher) -> None:
         logger.info("AI providers closed")
 
 
+def _register_error_handler(dp: Dispatcher) -> None:
+    from aiogram import Router
+    from aiogram.types import ErrorEvent
+
+    err_router = Router(name="errors")
+
+    @err_router.error()
+    async def _on_error(event: ErrorEvent) -> None:
+        logger.exception("handler_error: %s", event.exception)
+        msg = event.update.message if event.update else None
+        if msg and hasattr(msg, "answer"):
+            try:
+                await msg.answer("Произошла ошибка. Попробуйте позже или напишите /start.")
+            except Exception:
+                pass
+
+    dp.include_router(err_router)
+
+
 async def main() -> None:
     settings = get_settings()
     if not settings.bot_token:
@@ -77,14 +97,27 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN),
     )
 
+    # Без сброса webhook long polling не получает обновления
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("Webhook cleared for polling")
+    except Exception as e:
+        logger.warning("delete_webhook: %s", e)
+
     dp = Dispatcher()
-    dp.update.middleware(InjectAIMiddleware(dp))
+    dp.update.outer_middleware(LogUpdatesMiddleware())
+    dp.update.outer_middleware(InjectAIMiddleware(dp))
     _init_ai(dp)
 
     dp.include_router(start_router)
     dp.include_router(admin_router)
     dp.include_router(ai_chat_router)  # last: catches free text after commands
-    dp.shutdown.register(lambda bot: _shutdown_ai(bot, dp))
+    _register_error_handler(dp)
+
+    async def _on_shutdown(bot: Bot) -> None:
+        await _shutdown_ai(bot, dp)
+
+    dp.shutdown.register(_on_shutdown)
     await dp.start_polling(bot)
 
 

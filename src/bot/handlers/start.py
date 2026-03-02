@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 async def cmd_start(message: Message) -> None:
     settings = get_settings()
     tg_user_id = message.from_user.id if message.from_user else 0
+    logger.info("cmd_start: tg_user_id=%s", tg_user_id)
     display_name = message.from_user.full_name if message.from_user else None
     role = UserRole.ADMIN if tg_user_id in settings.admin_ids else UserRole.VIEWER
     try:

@@ -10,6 +10,8 @@
 
 Проверка: в Telegram отправить боту `/start` и `/admin`; логи — `docker compose logs -f bot`.
 
+**Важно:** если бот раньше работал по webhook, при старте он сбрасывает webhook (чтобы long polling получал обновления). Если бот не отвечает на команды — убедитесь, что миграции применены (`make migrate`) и в логах есть строка `Webhook cleared for polling`.
+
 **Тесты:** требуют запущенный Postgres с применёнными миграциями. После `make up` и `make migrate`: `pytest tests/ -v` (используется `DATABASE_URL` из окружения).
 
 ## Службы (docker-compose)

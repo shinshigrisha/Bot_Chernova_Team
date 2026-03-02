@@ -1,4 +1,5 @@
 """Application configuration from environment."""
+import json
 from functools import lru_cache
 from typing import List, Union
 
@@ -56,12 +57,18 @@ class Settings(BaseSettings):
 
     @field_validator("admin_ids", mode="before")
     @classmethod
-    def parse_admin_ids(cls, v: Union[str, List[int], int]) -> List[int]:
-        if isinstance(v, str):
-            return [int(x.strip()) for x in v.split(",") if x.strip()]
+    def parse_admin_ids(cls, v: Union[str, list, int]) -> List[int]:
         if isinstance(v, int):
             return [v]
-        return v or []
+        if isinstance(v, list):
+            return [int(x) for x in v]
+        if isinstance(v, str):
+            stripped = v.strip()
+            if stripped.startswith("["):
+                parsed = json.loads(stripped)
+                return [int(x) for x in parsed]
+            return [int(x.strip()) for x in stripped.split(",") if x.strip()]
+        return []
 
 
 @lru_cache

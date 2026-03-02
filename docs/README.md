@@ -1,54 +1,25 @@
 # Delivery Assistant
 
-В этом репозитории — система Delivery Assistant (Telegram-бот и бэкенд-сервисы) для управления операциями доставки:
-- Смены и опросы
-- ТМЦ (активы)
-- Журнал смены и инциденты
-- Загрузка данных из Superset (CSV/API/DB)
-- Аналитика, алерты, ежедневная отчётность
-- AI Curator (RAG)
+Telegram-бот и бэкенд для управления операциями доставки (смены, ТМЦ, журнал смены, ingest, аналитика, AI Curator).
 
-## Быстрый старт (разработка)
-1. Скопировать `.env.example` в `.env` и заполнить значения
-2. `docker compose up -d --build`
-3. Применить миграции: `make migrate`
-4. Запустить бота локально (опционально): `make bot`
+## Документация
 
-## Подъем через docker-compose (полный цикл)
+**Вся документация собрана в одном файле с оглавлением:**
 
-1. Подготовить `.env`:
-   - `BOT_TOKEN`
-   - `DATABASE_URL` (по умолчанию подходит compose-сеть)
-   - `REDIS_URL`, `CELERY_BROKER_URL`
-   - для AI: `AI_ENABLED=true` и минимум один ключ:
-     - `GROQ_API_KEY` и/или
-     - `OPENAI_API_KEY` и/или
-     - `DEEPSEEK_API_KEY` (+ `DEEPSEEK_BASE_URL`)
+- **[docs/DOCS.md](DOCS.md)** — обзор, быстрый старт, развёртывание, архитектура, словарь данных, runbook, админка, безопасность, AI-куратор.
 
-2. Поднять сервисы:
-   - `docker compose up -d --build`
+Отдельные артефакты: `docs/ADR/`, `docs/AUDIT_STATUS_*.md`.
 
-3. Применить миграции:
-   - `python -m alembic upgrade head`
+## Безопасность
 
-4. Проверить состояние AI:
-   - в Telegram у админа выполнить `/ai_status`
+> **Никогда не коммитьте `.env`.**
 
-5. (Опционально) заполнить FAQ:
-   - `python scripts/seed_faq.py`
-   - или через админ-команду `/ai_add_faq` (FSM-диалог)
+- `.env` добавлен в `.gitignore`; в репозитории хранится только `.env.example` с плейсхолдерами.
+- **Не запускайте `docker compose config`** — он выводит все переменные окружения в открытом виде в stdout и может попасть в логи CI.
+- Если `.env` случайно попал в историю git — смените все скомпрометированные ключи немедленно, затем выполните `git filter-repo` или обратитесь к команде.
 
-6. Локальная smoke-проверка AI без Telegram:
-   - `python scripts/smoke_ai.py`
+## Быстрый старт
 
-7. Полезные команды:
-   - логи бота: `docker compose logs -f bot`
-   - логи воркера: `docker compose logs -f worker`
-   - остановка: `docker compose down`
-   - остановка с удалением данных: `docker compose down -v`
-
-См. также:
-- docs/DEPLOYMENT.md
-- docs/ADMIN_GUIDE.md
-
-Дата: 2026-03-01
+1. `.env.example` → `.env`, заполнить `BOT_TOKEN` и при необходимости ключи AI.
+2. `docker compose up -d --build` → `make migrate` → `make bot` (или `docker compose up bot`).
+3. В Telegram: `/start`, `/admin`. Логи: `docker compose logs -f bot`.
