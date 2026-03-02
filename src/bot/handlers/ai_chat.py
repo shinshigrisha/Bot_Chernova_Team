@@ -36,8 +36,6 @@ async def ai_chat_handler(message: Message, state: FSMContext, ai_service=None) 
         return
 
     if ai_service is None:
-        ai_service = message.bot.get("ai_service")
-    if ai_service is None:
         await message.answer("AI сервис не инициализирован. Проверь запуск.")
         return
 
