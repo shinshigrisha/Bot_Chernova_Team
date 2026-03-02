@@ -56,9 +56,11 @@ class Settings(BaseSettings):
 
     @field_validator("admin_ids", mode="before")
     @classmethod
-    def parse_admin_ids(cls, v: Union[str, List[int]]) -> List[int]:
+    def parse_admin_ids(cls, v: Union[str, List[int], int]) -> List[int]:
         if isinstance(v, str):
             return [int(x.strip()) for x in v.split(",") if x.strip()]
+        if isinstance(v, int):
+            return [v]
         return v or []
 
 

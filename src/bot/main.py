@@ -29,7 +29,8 @@ logging.basicConfig(
 )
 
 
-def _init_ai(bot: Bot) -> None:
+def _init_ai(dp: Dispatcher) -> None:
+    """Initialize AI services and store them on the dispatcher (Bot has no .get/[])."""
     settings = get_settings()
     if not settings.ai_enabled:
         logger.info("AI disabled (AI_ENABLED=false)")
@@ -53,15 +54,15 @@ def _init_ai(bot: Bot) -> None:
         router=ai_router,
     )
 
-    bot["ai_router"] = ai_router
-    bot["provider_router"] = ai_router
-    bot["ai_service"] = ai_service
-    bot["faq_repo"] = FAQAIRepository()
+    dp["ai_router"] = ai_router
+    dp["provider_router"] = ai_router
+    dp["ai_service"] = ai_service
+    dp["faq_repo"] = FAQAIRepository()
     logger.info("AI initialized: providers=%s", list(ai_router.providers.keys()))
 
 
-async def _shutdown_ai(bot: Bot) -> None:
-    ai_router = bot.get("ai_router")
+async def _shutdown_ai(bot: Bot, dp: Dispatcher) -> None:
+    ai_router = dp.get("ai_router")
     if ai_router:
         await ai_router.close()
         logger.info("AI providers closed")
@@ -76,19 +77,14 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN),
     )
 
-    _init_ai(bot)
-
     dp = Dispatcher()
-    dp.update.middleware(InjectAIMiddleware())
-    if bot.get("ai_service") is not None:
-        dp["ai_service"] = bot["ai_service"]
-    if bot.get("ai_router") is not None:
-        dp["ai_router"] = bot["ai_router"]
+    dp.update.middleware(InjectAIMiddleware(dp))
+    _init_ai(dp)
 
     dp.include_router(start_router)
     dp.include_router(admin_router)
     dp.include_router(ai_chat_router)  # last: catches free text after commands
-    dp.shutdown.register(_shutdown_ai)
+    dp.shutdown.register(lambda bot: _shutdown_ai(bot, dp))
     await dp.start_polling(bot)
 
 

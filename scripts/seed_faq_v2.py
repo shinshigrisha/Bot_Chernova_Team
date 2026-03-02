@@ -7,7 +7,7 @@ from pathlib import Path
 
 import asyncpg
 
-from repositories.faq_repo import FAQRepository
+from src.infra.db.repositories.faq_repo import FAQRepository
 
 SEED_PATH = Path("data/ai/faq_seed.jsonl")
 

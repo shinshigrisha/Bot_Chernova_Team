@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from repositories.faq_repo import FAQRepository
+from src.infra.db.repositories.faq_repo import FAQRepository
 from src.services.ai.provider_router import ProviderRouter
 
 logger = logging.getLogger(__name__)
