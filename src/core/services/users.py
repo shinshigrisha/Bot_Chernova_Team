@@ -4,9 +4,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
 from src.infra.db.enums import UserRole, coerce_user_role
 from src.infra.db.repositories.users import UserRepository
-from src.infra.db.session import async_session_factory
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,13 @@ class UserProfile:
 class UserService:
     """Thin facade over UserRepository.
 
-    Manages its own DB session so callers (handlers) stay free of
-    SQLAlchemy imports and session lifecycle boilerplate.
+    Accepts a session factory via constructor (DI) so the service
+    carries no direct dependency on the global ``async_session_factory``
+    singleton and can be tested with any factory stub.
     """
+
+    def __init__(self, session_factory: async_sessionmaker) -> None:
+        self._session_factory = session_factory
 
     async def get_or_create(
         self,
@@ -36,8 +41,8 @@ class UserService:
         Scalars are extracted inside the session context to prevent
         ``DetachedInstanceError`` after the session closes.
         """
-        role = coerce_user_role(role, default=UserRole.VIEWER)
-        async with async_session_factory() as session:
+        role = coerce_user_role(role, default=UserRole.COURIER)
+        async with self._session_factory() as session:
             repo = UserRepository(session)
             user = await repo.get_or_create(
                 tg_user_id, role=role, display_name=display_name
