@@ -14,20 +14,18 @@ from src.infra.db.enums import UserRole
 router = Router(name="start")
 logger = logging.getLogger(__name__)
 
-_user_service = UserService()
-
 
 @router.message(CommandStart())
-async def cmd_start(message: Message) -> None:
+async def cmd_start(message: Message, user_service: UserService) -> None:
     settings = get_settings()
     tg_user_id = message.from_user.id if message.from_user else 0
     display_name = message.from_user.full_name if message.from_user else None
-    role = UserRole.ADMIN if tg_user_id in settings.admin_ids else UserRole.VIEWER
+    role = UserRole.ADMIN if tg_user_id in settings.admin_ids else UserRole.COURIER
 
     logger.info("cmd_start_enter", extra={"tg_user_id": tg_user_id})
 
     try:
-        profile = await _user_service.get_or_create(
+        profile = await user_service.get_or_create(
             tg_user_id, role=role, display_name=display_name
         )
     except Exception:
