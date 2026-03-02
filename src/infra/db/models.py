@@ -10,6 +10,7 @@ from sqlalchemy import (
     Index,
     String,
     Text,
+    TypeDecorator,
     UniqueConstraint,
 )
 from sqlalchemy import text
@@ -30,7 +31,35 @@ from src.infra.db.enums import (
     NotificationType,
     Severity,
     UserRole,
+    coerce_user_role,
 )
+
+
+class UserRoleType(TypeDecorator):
+    """TypeDecorator для колонки user_role.
+
+    Гарантирует, что в PostgreSQL всегда попадает lowercase-значение ('admin',
+    не 'ADMIN'), даже если где-то в коде передана строка или str(enum)-repr
+    вида 'UserRole.ADMIN' (поведение Python ≤3.10).
+    Использует coerce_user_role как единственную точку нормализации.
+    """
+
+    impl = ENUM(
+        *[r.value for r in UserRole],
+        name="user_role",
+        create_type=False,
+    )
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):  # Python → DB
+        if value is None:
+            return None
+        return coerce_user_role(value, default=UserRole.COURIER).value
+
+    def process_result_value(self, value, dialect):  # DB → Python
+        if value is None:
+            return None
+        return coerce_user_role(value, default=UserRole.COURIER)
 
 
 def _pg_enum(enum_class: type, name: str) -> ENUM:
@@ -99,9 +128,7 @@ class User(Base):
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tg_user_id: Mapped[int] = mapped_column(nullable=False, unique=True)
-    role: Mapped[UserRole] = mapped_column(
-        _pg_enum(UserRole, "user_role"), nullable=False
-    )
+    role: Mapped[UserRole] = mapped_column(UserRoleType(), nullable=False)
     display_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

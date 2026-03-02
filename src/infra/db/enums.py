@@ -24,16 +24,21 @@ for _r in UserRole:
 
 
 def coerce_user_role(
-    value: "str | UserRole",
-    default: UserRole = UserRole.VIEWER,
+    value: "str | UserRole | None",
+    default: UserRole = UserRole.COURIER,
 ) -> UserRole:
     """Безопасно приводит произвольную строку к UserRole.
 
     Принимает значения в любом регистре: "ADMIN", "admin", "UserRole.ADMIN".
-    При невалидном значении логирует WARNING и возвращает ``default``.
+    При невалидном или None значении логирует WARNING и возвращает ``default``.
+    Дефолтный fallback — COURIER (минимальные права).
     """
     if isinstance(value, UserRole):
         return value
+    if value is None:
+        logger.warning("coerce_user_role: получен None, используется fallback %s", default)
+        return default
+    # str(UserRole.ADMIN) в Python ≤3.10 → "UserRole.ADMIN"; обрабатываем оба варианта.
     key = str(value).strip().lower().removeprefix("userrole.")
     role = _ROLE_LOOKUP.get(key)
     if role is None:
