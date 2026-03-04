@@ -21,12 +21,12 @@ class UserRepository:
     async def get_or_create(
         self,
         tg_user_id: int,
-        role: UserRole = UserRole.VIEWER,
+        role: UserRole = UserRole.COURIER,
         display_name: str | None = None,
     ) -> User:
         # Нормализуем роль: "ADMIN" / "admin" / UserRole.ADMIN → UserRole.ADMIN.
         # Защита от invalid input value при INSERT в Postgres enum.
-        role = coerce_user_role(role, default=UserRole.VIEWER)
+        role = coerce_user_role(role, default=UserRole.COURIER)
         user = await self.get_by_tg_id(tg_user_id)
         if user:
             if display_name and user.display_name != display_name:
