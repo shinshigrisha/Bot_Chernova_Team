@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+"""
+Seed FAQ from canonical data/ai/faq_seed.jsonl into faq_ai v2.
+
+- Supports: question, answer, category, tag, keywords, is_active.
+- tag: taken from "tag" or fallback "intent" (canonical format).
+- risk_level / when_to_escalate: present in JSONL are kept in source model only;
+  not stored in DB (no columns yet); extension point for future schema.
+- Idempotent: upsert by question (existing rows updated, new rows inserted).
+"""
+
 import asyncio
 import json
 import sys
@@ -14,7 +24,7 @@ from src.config import get_settings
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
-SEED_PATH = Path("data/ai/faq_seed.jsonl")
+SEED_PATH = ROOT / "data" / "ai" / "faq_seed.jsonl"
 
 
 def _normalize_optional(value: Any) -> str | None:
@@ -33,10 +43,12 @@ def _normalize_keywords(raw_keywords: Any) -> list[str]:
 
 
 def _normalize_seed_item(item: dict[str, Any]) -> dict[str, Any]:
+    """Normalize one JSONL row to faq_ai v2 fields. Backward-safe for legacy q/a/tags.
+    Source may include risk_level, when_to_escalate — not persisted (extension point)."""
     question = str(item.get("question") or item.get("q") or "").strip()
     answer = str(item.get("answer") or item.get("a") or "").strip()
     category = _normalize_optional(item.get("category"))
-    tag = _normalize_optional(item.get("tag"))
+    tag = _normalize_optional(item.get("tag") or item.get("intent"))
     keywords = _normalize_keywords(item.get("keywords"))
 
     legacy_tags = _normalize_keywords(item.get("tags"))

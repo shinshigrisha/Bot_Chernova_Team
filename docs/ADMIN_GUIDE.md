@@ -14,7 +14,7 @@
 - Управление территориями/командами, привязками чатов, ID топиков
 - Настройка расписаний и порогов
 - Управление интеграциями (CSV/API/DB)
-- Управление базой знаний и политиками AI: команды `/ai_status`, `/ai_policy_reload`, `/ai_search_faq`, `/ai_add_faq` (FSM). Реализация — `src/core/services/ai/`, данные — `data/ai/` (core_policy.json, prompts).
+- Управление базой знаний и политиками AI: команды `/ai_status`, `/ai_policy_reload`, `/ai_search_faq`, `/ai_add_faq` (FSM). Реализация — `src/core/services/ai/`, данные — `data/ai/` (core_policy.json, prompts). Ответы строятся по принципу regulation-first RAG: сначала must_match/case_engine/FAQ/ML case, затем при необходимости LLM только форматирует; см. [AI_CURATOR.md](AI_CURATOR.md).
 - Мониторинг состояния системы и логов
 
 ## LEAD

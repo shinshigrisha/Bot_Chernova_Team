@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
+from difflib import SequenceMatcher
+from typing import Any, Mapping, Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +23,8 @@ SUPPORTED_INTENTS = (
     "battery_fire",
     "rude_communication",
     "leave_at_door",
+    "no_door_delivery",
+    "temperature_issue",
     "return_order",
     "unknown",
 )
@@ -31,6 +35,7 @@ class IntentDetectionResult:
     intent: str
     confidence: float
     matched_keywords: list[str] = field(default_factory=list)
+    matched_catalog_intent: str | None = None
 
 
 class IntentEngine:
@@ -126,7 +131,7 @@ class IntentEngine:
             ("вернуть заказ", 0.62),
             ("возвращаю заказ", 0.62),
             ("не принял", 0.46),
-            ("отказался", 0.42),
+            ("отказался от заказ", 0.52),
             ("отмена", 0.32),
             ("клиент отказался", 0.48),
         ),
@@ -171,9 +176,24 @@ class IntentEngine:
         *,
         router: ProviderRouter | None = None,
         intent_tags: Mapping[str, Sequence[str]] | None = None,
+        intents_catalog: Sequence[Mapping[str, Any]] | None = None,
     ) -> None:
+        from pathlib import Path
+
+        from src.core.services.ai.intent_ml_classifier import IntentMLClassifier
+
         self._router = router
         self._keyword_rules = self._build_keyword_rules(intent_tags or {})
+        self._catalog_questions: list[tuple[str, str]] = []
+        self._catalog_intents: set[str] = set()
+        self._build_catalog_index(intents_catalog or [])
+
+        # ML-классификатор интентов на основе ml_cases.jsonl (обучение offline).
+        # Ошибки загрузки/отсутствие модели не должны ломать рантайм.
+        model_path = (
+            Path(__file__).resolve().parents[3] / "data" / "ai" / "intent_classifier.joblib"
+        )
+        self._ml_classifier = IntentMLClassifier(model_path=model_path)
 
     @classmethod
     def normalize_intent(cls, intent: str | None) -> str:
@@ -190,7 +210,119 @@ class IntentEngine:
     @staticmethod
     def _normalize_text(text: str) -> str:
         lowered = str(text or "").strip().lower()
-        return re.sub(r"\s+", " ", lowered)
+        lowered = unicodedata.normalize("NFKC", lowered)
+        lowered = lowered.replace("ё", "е")
+        lowered = re.sub(r"[\u200b\u200c\u200d\u2060]", "", lowered)
+        lowered = re.sub(r"\s+", " ", lowered)
+        return lowered.strip()
+
+    @staticmethod
+    def _tokenize(text: str) -> list[str]:
+        return [
+            token
+            for token in re.findall(r"[0-9a-zA-Zа-яА-Я]+", (text or "").lower())
+            if len(token) >= 2
+        ]
+
+    @classmethod
+    def parse_intents_catalog_text(cls, text: str) -> list[dict[str, Any]]:
+        """
+        Robust loader for `data/ai/intents_catalog.json`.
+        Файл может быть валидным JSON (список), либо python-подобным генератором.
+        """
+        raw = str(text or "").strip()
+        if not raw:
+            return []
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [x for x in parsed if isinstance(x, dict)]
+            if isinstance(parsed, dict) and isinstance(parsed.get("intents"), list):
+                return [x for x in parsed["intents"] if isinstance(x, dict)]
+        except Exception:
+            pass
+
+        items: list[dict[str, Any]] = []
+        for m in re.finditer(r'"\s*intent\s*"\s*:\s*"([^"]+)"', raw):
+            items.append({"intent": m.group(1), "questions": []})
+        if not items:
+            return []
+
+        q_matches = re.findall(r'"\s*questions\s*"\s*:\s*\[([^\]]+)\]', raw, flags=re.DOTALL)
+        if q_matches:
+            for idx, q_block in enumerate(q_matches[: len(items)]):
+                qs = re.findall(r'"([^"]{3,200})"', q_block)
+                items[idx]["questions"] = qs[:32]
+        return items
+
+    def _build_catalog_index(self, raw_catalog: Sequence[Mapping[str, Any]]) -> None:
+        self._catalog_questions = []
+        self._catalog_intents = set()
+        for item in raw_catalog:
+            raw_intent = self._normalize_text(str(item.get("intent", "")))
+            if not raw_intent:
+                continue
+            self._catalog_intents.add(raw_intent)
+            qs = item.get("questions") or item.get("question") or []
+            if isinstance(qs, str):
+                qs = [qs]
+            if not isinstance(qs, list):
+                qs = []
+            for q in qs:
+                qn = self._normalize_text(str(q))
+                if qn:
+                    self._catalog_questions.append((raw_intent, qn))
+
+    @classmethod
+    def coarse_intent_for_catalog_intent(cls, catalog_intent: str | None) -> str:
+        name = cls._normalize_text(str(catalog_intent or ""))
+        if not name:
+            return "unknown"
+
+        if any(x in name for x in ("phone", "call", "unreachable", "busy", "contact")):
+            return "contact_customer"
+        if any(x in name for x in ("missing", "package", "water", "frozen", "places", "shortage")):
+            return "missing_items"
+        if any(x in name for x in ("late", "eta", "waited_too_little", "rushes_customer")):
+            return "late_delivery"
+        if any(x in name for x in ("payment", "cash", "terminal", "qr", "transfer", "change")):
+            if "hyperlink" in name or "link" in name:
+                return "payment_hyperlink"
+            return "payment_terminal"
+        # temperature first: "melted" часто встречается в temperature intents
+        if any(x in name for x in ("temperature", "thermal", "hot_food", "cold", "melted")):
+            return "temperature_issue"
+        if any(x in name for x in ("damaged", "throws_bags", "broken")):
+            return "damaged_goods"
+        if any(x in name for x in ("refuse_door", "door", "gate", "elevator", "office", "checkpoint")):
+            return "no_door_delivery"
+        if any(x in name for x in ("leave", "left", "floor", "handle", "photo")):
+            return "leave_at_door"
+        if any(x in name for x in ("rude", "drunk", "smoking", "argues", "personal_messages")):
+            return "rude_communication"
+        return "unknown"
+
+    @staticmethod
+    def _similarity(a: str, b: str) -> float:
+        if not a or not b:
+            return 0.0
+        return SequenceMatcher(a=a, b=b).ratio()
+
+    def _best_catalog_match(self, normalized_text: str) -> tuple[str | None, float]:
+        if not normalized_text or not self._catalog_questions:
+            return None, 0.0
+        tokens = set(self._tokenize(normalized_text))
+        best_intent: str | None = None
+        best_sim = 0.0
+        for intent, q in self._catalog_questions:
+            q_tokens = set(self._tokenize(q))
+            if q_tokens and tokens and len(tokens.intersection(q_tokens)) == 0:
+                continue
+            sim = self._similarity(normalized_text, q)
+            if sim > best_sim:
+                best_sim = sim
+                best_intent = intent
+        return best_intent, best_sim
 
     @classmethod
     def _build_keyword_rules(
@@ -215,16 +347,35 @@ class IntentEngine:
 
     @staticmethod
     def _unknown_result() -> IntentDetectionResult:
-        return IntentDetectionResult(intent="unknown", confidence=0.0, matched_keywords=[])
+        return IntentDetectionResult(
+            intent="unknown",
+            confidence=0.0,
+            matched_keywords=[],
+            matched_catalog_intent=None,
+        )
 
     def detect_from_rules(self, text: str) -> IntentDetectionResult:
         normalized_text = self._normalize_text(text)
         if not normalized_text:
             return self._unknown_result()
 
+        catalog_intent, catalog_sim = self._best_catalog_match(normalized_text)
+        catalog_coarse = (
+            self.coarse_intent_for_catalog_intent(catalog_intent) if catalog_intent else "unknown"
+        )
+        if catalog_intent and catalog_sim >= 0.86 and catalog_coarse != "unknown":
+            confidence = min(0.94, 0.62 + (catalog_sim - 0.86) * 2.0)
+            return IntentDetectionResult(
+                intent=catalog_coarse,
+                confidence=round(confidence, 4),
+                matched_keywords=[],
+                matched_catalog_intent=catalog_intent,
+            )
+
         best_intent = "unknown"
         best_confidence = 0.0
         best_keywords: list[str] = []
+        best_catalog_intent: str | None = None
 
         for intent, rules in self._keyword_rules.items():
             matched_keywords: list[str] = []
@@ -243,6 +394,29 @@ class IntentEngine:
                 best_confidence = confidence
                 best_keywords = matched_keywords
 
+        # Если keyword-матч уже выбрал coarse-интент, но каталог тоже уверенно попал в тот же coarse —
+        # сохраним matched_catalog_intent для логирования/аналитики.
+        if (
+            catalog_intent
+            and catalog_coarse != "unknown"
+            and best_intent != "unknown"
+            and best_intent == catalog_coarse
+            and catalog_sim >= 0.72
+            and best_catalog_intent is None
+        ):
+            best_catalog_intent = catalog_intent
+
+        if (
+            catalog_intent
+            and catalog_coarse != "unknown"
+            and (best_intent == "unknown" or best_confidence < 0.78 or catalog_coarse == best_intent)
+        ):
+            sim_conf = 0.42 + min(1.0, max(0.0, (catalog_sim - 0.70) / 0.25)) * 0.45
+            if best_intent == "unknown" or sim_conf >= best_confidence + 0.05:
+                best_intent = catalog_coarse
+                best_confidence = max(best_confidence, sim_conf)
+                best_catalog_intent = catalog_intent
+
         if best_intent == "unknown":
             return self._unknown_result()
 
@@ -250,6 +424,7 @@ class IntentEngine:
             intent=best_intent,
             confidence=round(best_confidence, 4),
             matched_keywords=best_keywords[:5],
+            matched_catalog_intent=best_catalog_intent,
         )
 
     async def _detect_from_faq(
@@ -293,6 +468,7 @@ class IntentEngine:
             intent=best_intent,
             confidence=round(confidence, 4),
             matched_keywords=[],
+            matched_catalog_intent=None,
         )
 
     @classmethod
@@ -310,6 +486,7 @@ class IntentEngine:
                 intent=rule_result.intent,
                 confidence=round(min(0.98, max(rule_result.confidence, faq_result.confidence) + 0.10), 4),
                 matched_keywords=rule_result.matched_keywords,
+                matched_catalog_intent=rule_result.matched_catalog_intent,
             )
         if rule_result.confidence >= faq_result.confidence + 0.08:
             return rule_result
@@ -354,6 +531,7 @@ class IntentEngine:
                 intent=normalized_intent,
                 confidence=0.55,
                 matched_keywords=[],
+                matched_catalog_intent=None,
             )
 
         try:
@@ -379,6 +557,7 @@ class IntentEngine:
             intent=normalized_intent,
             confidence=round(min(0.74, max(0.45, confidence)), 4),
             matched_keywords=[str(item) for item in matched_keywords[:5]],
+            matched_catalog_intent=None,
         )
 
     async def detect(
@@ -401,16 +580,37 @@ class IntentEngine:
             )
 
         combined_result = self._combine_results(rule_result, faq_result)
-        if combined_result.intent != "unknown" and combined_result.confidence >= 0.65:
-            return combined_result
 
+        # ML-слой: мягко дообогащаем intent, не ломая rule/FAQ.
+        ml_result = (
+            self._ml_classifier.predict(text)
+            if getattr(self, "_ml_classifier", None) is not None
+            else self._unknown_result()
+        )
+
+        # Если правила+FAQ уже очень уверены — оставляем их.
+        if combined_result.intent != "unknown" and combined_result.confidence >= 0.85:
+            base_result = combined_result
+        # Иначе даём шанс ML улучшить или подсказать intent.
+        elif ml_result.intent != "unknown" and ml_result.confidence >= combined_result.confidence + 0.05:
+            base_result = ml_result
+        else:
+            base_result = combined_result
+
+        if base_result.intent != "unknown" and base_result.confidence >= 0.65:
+            return base_result
+
+        # LLM-детекция остаётся как последний, более дорогой слой.
         llm_result = await self._detect_with_llm(text)
         if llm_result.intent == "unknown":
-            return combined_result
-        if combined_result.intent == llm_result.intent and combined_result.intent != "unknown":
+            return base_result
+        if base_result.intent == llm_result.intent and base_result.intent != "unknown":
             return IntentDetectionResult(
                 intent=llm_result.intent,
-                confidence=round(min(0.92, max(llm_result.confidence, combined_result.confidence) + 0.05), 4),
-                matched_keywords=combined_result.matched_keywords or llm_result.matched_keywords,
+                confidence=round(
+                    min(0.92, max(llm_result.confidence, base_result.confidence) + 0.05),
+                    4,
+                ),
+                matched_keywords=base_result.matched_keywords or llm_result.matched_keywords,
             )
         return llm_result

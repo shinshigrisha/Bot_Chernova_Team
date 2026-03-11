@@ -1,0 +1,322 @@
+{"text":"где мой заказ","intent":"late_delivery","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"почему курьер опаздывает","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не поднялся на этаж","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер сказал спускаться","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не хватает одного пакета","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"часть заказа не привезли","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер привез разбитые яйца","intent":"courier_damaged_goods","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"яйца разбиты после доставки","intent":"courier_damaged_goods","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заморозка теплая","intent":"temperature_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"мороженое растаяло","intent":"temperature_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер нагрубил","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер хамил клиенту","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не позвонил перед приездом","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"проигнорировал комментарий позвонить","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставил заказ у подъезда","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"бросил пакет у двери без согласия","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"перепутали заказ","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиенту отдали чужой заказ","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу найти подъезд","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу найти квартиру клиента","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не отвечает на звонки","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не берут трубку","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиента нет дома","intent":"customer_not_home","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"никто не открывает дверь","intent":"delivery_attempt_failed","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит оставить у двери","intent":"leave_at_door","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"можно оставить пакет под дверью","intent":"leave_at_door","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент меняет адрес","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"просят привезти на другой адрес","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу попасть в подъезд","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"домофон не открывают","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"ошибка в приложении","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу завершить заказ","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ отмечен доставленным, но клиент не получил","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент говорит что ничего не получил","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"разлилась вода в пакете","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет с молоком протек","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пустой пакет в заказе","intent":"customer_reports_empty_package","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"в пакете ничего нет","intent":"customer_reports_empty_package","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер долго стоял и не выезжал","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"после забора заказа долго не ехал","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер приехал слишком рано по слоту","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"слотовый заказ привезли раньше времени","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер оставил заказ у консьержа","intent":"third_party_handover","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"отдал соседу без согласия","intent":"third_party_handover","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер уронил пакет","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"уронил коробку с заказом","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не хочет нести воду","intent":"heavy_order_refusal","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"отказывается поднимать тяжелый заказ","intent":"heavy_order_refusal","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент жалуется на опоздание и разбитый товар","intent":"customer_reports_late_and_damaged","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"и опоздали и товар поврежден","intent":"customer_reports_late_and_damaged","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент жалуется на опоздание и недовоз","intent":"customer_reports_late_and_missing","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"опоздали и еще не все привезли","intent":"customer_reports_late_and_missing","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"что делать дальше","intent":"courier_requests_next_step","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"подскажи как действовать","intent":"courier_requests_next_step","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужен короткий разбор кейса","intent":"curator_needs_case_summary","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"дай summary по ситуации","intent":"curator_needs_case_summary","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент требует возврат","intent":"customer_requests_return","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"хочет вернуть деньги из-за доставки","intent":"customer_requests_return","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу понять куда идти","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"запутался в адресе","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит подождать 10 минут","intent":"customer_requests_wait_more","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"сказали подождать у двери","intent":"customer_requests_wait_more","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"уехал раньше чем закончился таймер ожидания","intent":"courier_left_before_wait_time","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не дождался клиента","intent":"courier_left_before_wait_time","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит фото у двери","intent":"customer_requests_photo_proof","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужно фото подтверждение оставленного заказа","intent":"customer_requests_photo_proof","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу закрыть заказ в приложении","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"приложение не дает завершить доставку","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер отметил заказ раньше времени","intent":"order_marked_complete_too_early","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставлено отмечено, но вручения не было","intent":"order_marked_complete_too_early","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не открывает, но отвечает в чате","intent":"customer_refuses_to_open","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"пишет что дома, но дверь не открывает","intent":"customer_refuses_to_open","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставили заказ не там где просили","intent":"courier_left_order_wrong_place","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет лежал не в том месте","intent":"courier_left_order_wrong_place","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит оставить с охраной","intent":"comment_leave_with_security","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"можно передать консьержу","intent":"comment_leave_with_security","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит не звонить","intent":"comment_do_not_call","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"в комментарии написано не звонить","intent":"comment_do_not_call","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит позвонить после приезда","intent":"customer_requests_call_after_arrival","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужно набрать после того как приеду","intent":"customer_requests_call_after_arrival","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер сам говорит что повредил товар","intent":"courier_confirms_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"сам признал что помял продукты","intent":"courier_confirms_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"вскрытая упаковка","intent":"package_tampering","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент говорит пакет был вскрыт","intent":"package_tampering","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не может попасть в подъезд","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"домофон не работает","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу попасть на этаж","intent":"courier_cannot_reach_customer_floor","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"лифт не работает, что делать","intent":"courier_cannot_reach_customer_floor","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит бесконтактно","intent":"customer_requests_contactless","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужна бесконтактная доставка","intent":"customer_requests_contactless","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"бесконтактную доставку сделали неправильно","intent":"contactless_wrong_execution","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставили не по правилам бесконтактной","intent":"contactless_wrong_execution","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер неправильно понял комментарий","intent":"courier_misread_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не так понял комментарий клиента","intent":"courier_misread_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит повторную попытку","intent":"customer_requests_another_attempt","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужно еще раз попробовать вручить","intent":"customer_requests_another_attempt","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не понимаю этот кейс","intent":"courier_unknown_edge_case","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"сложная нестандартная ситуация","intent":"courier_unknown_edge_case","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужна эскалация куратору","intent":"escalate_to_curator","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"передаю кейс куратору","intent":"escalate_to_curator","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужен короткий ответ по кейсу","intent":"curator_needs_short_answer","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"дай краткий регламентный ответ","intent":"curator_needs_short_answer","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужен root cause разбор","intent":"curator_needs_root_cause","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"почему вообще произошел этот кейс","intent":"curator_needs_root_cause","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент жалуется на грубость и задержку","intent":"customer_reports_rude_and_late","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"опоздали и еще хамили","intent":"customer_reports_rude_and_late","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"конфликт с клиентом и уже рискую опоздать","intent":"courier_reports_conflict_and_delay","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"спор с клиентом и SLA горит","intent":"courier_reports_conflict_and_delay","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"faq_id":"faq_0041","question":"Курьер приехал значительно раньше слота. Это нарушение?","answer":"Да, слотовая доставка должна выполняться внутри временного окна. Слишком ранний приезд может нарушить ожидания клиента.","category":"delivery_issue","tag":"slot_delivery_violation","keywords":["раньше слота","слишком рано","слотовая доставка"],"role":"curator","is_active":true,"intent":"slot_delivery_violation","priority":"medium","risk_level":"medium","when_to_escalate":"Если клиент жалуется или отказывается принимать заказ","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0042","question":"Курьер забрал заказ, но долго не выезжает. Что это значит?","answer":"Это риск нарушения обещания доставки. Нужно проверить причину задержки и оценить влияние на SLA.","category":"delivery_issue","tag":"delay_departure","keywords":["долго не выезжает","задержка после забора"],"role":"curator","is_active":true,"intent":"delay_departure","priority":"medium","risk_level":"medium","when_to_escalate":"Если есть риск просрочки доставки","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0043","question":"Клиент просит изменить место передачи возле дома. Что делать?","answer":"Можно изменить точку передачи, если это безопасно и не нарушает правила сервиса.","category":"delivery_issue","tag":"customer_requests_change_handover_point","keywords":["другая точка","передать у подъезда","изменить место"],"role":"courier","is_active":true,"intent":"customer_requests_change_handover_point","priority":"low","risk_level":"low","when_to_escalate":"Если новая точка передачи вызывает риск безопасности","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0044","question":"Клиент говорит, что курьер оставил заказ на улице. Это нарушение?","answer":"Да, если место передачи не было согласовано и заказ оставлен без подтверждения клиента.","category":"delivery_issue","tag":"unsafe_dropoff","keywords":["оставил на улице","небезопасное место"],"role":"curator","is_active":true,"intent":"unsafe_dropoff","priority":"high","risk_level":"high","when_to_escalate":"Если заказ потерян или поврежден","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0045","question":"Курьер перепутал этаж и оставил заказ у другой двери. Как классифицировать?","answer":"Это ошибка передачи из-за неверного адресного ориентира.","category":"delivery_issue","tag":"wrong_floor_or_apartment","keywords":["перепутал этаж","не та квартира"],"role":"curator","is_active":true,"intent":"wrong_floor_or_apartment","priority":"medium","risk_level":"medium","when_to_escalate":"Если заказ был потерян или клиент не получил его","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0046","question":"Клиент жалуется, что хлеб сильно помят. Что это?","answer":"Это повреждение мягкого товара при транспортировке.","category":"order_issue","tag":"crushed_bread","keywords":["помят хлеб","раздавлена выпечка"],"role":"curator","is_active":true,"intent":"crushed_bread","priority":"low","risk_level":"low","when_to_escalate":"Если повреждение значительное или клиент требует возврат","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0047","question":"Бутылка воды треснула и протекла. Какой это кейс?","answer":"Это повреждение жидкого товара при транспортировке.","category":"order_issue","tag":"damaged_bottles","keywords":["треснула бутылка","вода вытекла"],"role":"curator","is_active":true,"intent":"damaged_bottles","priority":"medium","risk_level":"medium","when_to_escalate":"Если повреждено несколько товаров","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0048","question":"Клиент утверждает, что пакет был вскрыт. Как действовать?","answer":"Нужно проверить упаковку, пломбы и обстоятельства передачи.","category":"order_issue","tag":"package_tampering","keywords":["вскрытый пакет","нарушена упаковка"],"role":"curator","is_active":true,"intent":"package_tampering","priority":"high","risk_level":"high","when_to_escalate":"Если есть риск кражи или потери товаров","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0049","question":"Курьер случайно забыл один пакет в машине. Что делать?","answer":"Нужно как можно быстрее вернуть пакет клиенту и зафиксировать ситуацию.","category":"order_issue","tag":"forgot_bag_in_vehicle","keywords":["забыл пакет","пакет остался в машине"],"role":"courier","is_active":true,"intent":"forgot_bag_in_vehicle","priority":"high","risk_level":"medium","when_to_escalate":"Если клиент уже сообщил о недовозе","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0050","question":"Клиент жалуется, что курьер долго ждал у подъезда. Это проблема?","answer":"Нет, если ожидание было в пределах регламента.","category":"delivery_issue","tag":"long_wait_at_address","keywords":["долго ждал","ждал у подъезда"],"role":"curator","is_active":true,"intent":"long_wait_at_address","priority":"low","risk_level":"low","when_to_escalate":"Если ожидание привело к конфликту","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0051","question":"Клиент говорит, что курьер разговаривал грубо. Что делать?","answer":"Зафиксируйте жалобу и передайте кейс на проверку.","category":"communication_issue","tag":"courier_rude_behavior","keywords":["грубость","хамство"],"role":"curator","is_active":true,"intent":"courier_rude_behavior","priority":"medium","risk_level":"medium","when_to_escalate":"Если жалоба подтверждается","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0052","question":"Курьер не может связаться с клиентом и не знает что делать. Какой intent?","answer":"Это ситуация невозможности контакта с клиентом.","category":"customer_interaction","tag":"cannot_contact_customer","keywords":["не могу связаться","клиент недоступен"],"role":"courier","is_active":true,"intent":"cannot_contact_customer","priority":"medium","risk_level":"medium","when_to_escalate":"Если вручение невозможно","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0053","question":"Клиент говорит, что номер телефона в заказе неверный. Что делать?","answer":"Нужно проверить данные заказа и попытаться связаться альтернативным способом.","category":"customer_interaction","tag":"wrong_phone_number","keywords":["неверный номер","телефон клиента"],"role":"courier","is_active":true,"intent":"wrong_phone_number","priority":"low","risk_level":"low","when_to_escalate":"Если связаться невозможно","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0054","question":"Курьер не может попасть на территорию ЖК. Что делать?","answer":"Свяжитесь с клиентом или охраной и уточните порядок входа.","category":"delivery_issue","tag":"building_access_issue","keywords":["жк","закрытая территория"],"role":"courier","is_active":true,"intent":"building_access_issue","priority":"medium","risk_level":"low","when_to_escalate":"Если доступ невозможен","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0055","question":"Клиент требует компенсацию за опоздание. Как действовать?","answer":"Передайте кейс куратору для решения.","category":"customer_interaction","tag":"customer_complaint","keywords":["компенсация","жалоба"],"role":"courier","is_active":true,"intent":"customer_complaint","priority":"medium","risk_level":"medium","when_to_escalate":"Всегда","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0056","question":"Клиент оскорбляет курьера. Как реагировать?","answer":"Сохраняйте профессиональное поведение и зафиксируйте ситуацию.","category":"customer_interaction","tag":"customer_insults_courier","keywords":["оскорбления","клиент грубит"],"role":"courier","is_active":true,"intent":"customer_insults_courier","priority":"medium","risk_level":"medium","when_to_escalate":"Если конфликт усиливается","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0057","question":"Курьер вступил в конфликт с клиентом. Что делать?","answer":"Необходимо стабилизировать ситуацию и передать кейс куратору.","category":"communication_issue","tag":"courier_conflict_behavior","keywords":["конфликт","спор"],"role":"courier","is_active":true,"intent":"courier_conflict_behavior","priority":"high","risk_level":"high","when_to_escalate":"Всегда","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0058","question":"Клиент просит пересобрать заказ. Может ли курьер это сделать?","answer":"Нет, курьер не занимается пересборкой заказов.","category":"order_issue","tag":"customer_requests_repack","keywords":["пересобрать заказ"],"role":"courier","is_active":true,"intent":"customer_requests_repack","priority":"low","risk_level":"low","when_to_escalate":"Если возникает конфликт","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0059","question":"Клиент заявляет о недовозе, но не проверил все пакеты. Что делать?","answer":"Попросите клиента проверить весь заказ.","category":"customer_interaction","tag":"customer_claims_missing_without_check","keywords":["не проверил","недовоз"],"role":"courier","is_active":true,"intent":"customer_claims_missing_without_check","priority":"low","risk_level":"low","when_to_escalate":"Если недовоз подтверждается","source":"faq_seed_v2","version":"2.0"}
+{"faq_id":"faq_0060","question":"Кейс непонятен и не подходит ни под одну категорию. Что делать?","answer":"Передайте кейс куратору для разбора.","category":"support","tag":"courier_needs_guidance","keywords":["что делать","непонятный кейс"],"role":"courier","is_active":true,"intent":"courier_needs_guidance","priority":"medium","risk_level":"medium","when_to_escalate":"Если нет ясного регламентного ответа","source":"faq_seed_v2","version":"2.0"}
+{"text":"курьер опаздывает уже на 20 минут","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ сильно задерживается","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер сказал спуститься за заказом","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"попросил выйти на улицу за заказом","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"в заказе нет одного пакета","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не все товары привезли","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет с продуктами порван","intent":"package_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"коробка мятая после доставки","intent":"package_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"молоко приехало теплым","intent":"warm_dairy","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"йогурт теплый при доставке","intent":"warm_dairy","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер разговаривал очень грубо","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"хамил и спорил с клиентом","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер проигнорировал просьбу позвонить","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не выполнил комментарий клиента","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер оставил пакет у подъезда","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ лежал возле двери без звонка","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент получил чужой пакет","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ перепутан","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу найти нужный подъезд","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"адрес непонятный, где вход","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не берет трубку","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не отвечает уже 5 минут","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиента нет дома по адресу","intent":"customer_not_home","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"дверь никто не открывает","intent":"delivery_attempt_failed","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"можно оставить пакет у двери","intent":"leave_at_door","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит бесконтактную доставку","intent":"customer_requests_contactless","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"адрес изменился","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужно привезти на другой дом","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не работает домофон","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"код домофона не подходит","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"приложение зависло","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"ошибка в приложении курьера","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу закрыть заказ","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"приложение не дает завершить заказ","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент говорит что заказ не получал","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"говорит что ничего не приносили","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"в пакете разлилось молоко","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"бутылка воды протекла","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не выезжал долго","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"долго стоял после забора заказа","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ привезли раньше слота","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"слишком рано приехал","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"отдали заказ консьержу","intent":"third_party_handover","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставили у охраны","intent":"third_party_handover","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"уронил пакет с продуктами","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет упал при передаче","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не хочет нести воду на этаж","intent":"heavy_order_refusal","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"говорит слишком тяжелый заказ","intent":"heavy_order_refusal","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"и опоздали и товар разбит","intent":"customer_reports_late_and_damaged","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставка поздно и продукты повреждены","intent":"customer_reports_late_and_damaged","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"опоздали и не довезли часть заказа","intent":"customer_reports_late_and_missing","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер опоздал и нет одного пакета","intent":"customer_reports_late_and_missing","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"что делать в этой ситуации","intent":"courier_requests_next_step","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"подскажи следующий шаг","intent":"courier_requests_next_step","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужен краткий разбор","intent":"curator_needs_case_summary","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"дай summary кейса","intent":"curator_needs_case_summary","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент требует возврат денег","intent":"customer_requests_return","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"просит вернуть деньги","intent":"customer_requests_return","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"адрес очень запутанный","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не понимаю где подъезд","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит подождать 5 минут","intent":"customer_requests_wait_more","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"сказал подождать у двери","intent":"customer_requests_wait_more","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер уехал слишком рано","intent":"courier_left_before_wait_time","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не дождался клиента","intent":"courier_left_before_wait_time","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужно фото подтверждение","intent":"customer_requests_photo_proof","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"сделать фото у двери","intent":"customer_requests_photo_proof","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не получается закрыть заказ","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"статус заказа завис","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставлено отмечено слишком рано","intent":"order_marked_complete_too_early","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"закрыли заказ без передачи","intent":"order_marked_complete_too_early","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент пишет но дверь не открывает","intent":"customer_refuses_to_open","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"говорит что дома но не открывает","intent":"customer_refuses_to_open","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ оставлен не в том месте","intent":"courier_left_order_wrong_place","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет лежал не там где просили","intent":"courier_left_order_wrong_place","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставить заказ у охраны","intent":"comment_leave_with_security","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"передать консьержу","intent":"comment_leave_with_security","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"в комментарии написано не звонить","intent":"comment_do_not_call","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит не звонить","intent":"comment_do_not_call","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"позвонить после приезда","intent":"customer_requests_call_after_arrival","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужно позвонить когда приеду","intent":"customer_requests_call_after_arrival","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер признал что повредил товар","intent":"courier_confirms_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"сказал что сам уронил пакет","intent":"courier_confirms_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"упаковка вскрыта","intent":"package_tampering","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет был открыт","intent":"package_tampering","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу попасть на этаж","intent":"courier_cannot_reach_customer_floor","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"лифт не работает","intent":"courier_cannot_reach_customer_floor","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"бесконтактную доставку сделали неправильно","intent":"contactless_wrong_execution","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ оставили не по правилам бесконтактной","intent":"contactless_wrong_execution","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"непонятный кейс","intent":"courier_unknown_edge_case","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"сложная ситуация не знаю что делать","intent":"courier_unknown_edge_case","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"передаю кейс куратору","intent":"escalate_to_curator","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужна эскалация","intent":"escalate_to_curator","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер сильно задерживается","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставка уже опаздывает","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не хочет подниматься","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"говорит выходите сами","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"в заказе не хватает товаров","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"привезли не весь заказ","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет порвался по дороге","intent":"package_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"упаковка повреждена","intent":"package_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"молочные продукты теплые","intent":"warm_dairy","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"сыр теплый после доставки","intent":"warm_dairy","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер хамит клиенту","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер грубо разговаривал","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не позвонил как просили","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"игнорировал комментарий в заказе","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет оставили у подъезда","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставили заказ у двери без звонка","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"перепутали пакеты","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставили чужой заказ","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не понимаю где дом","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу найти нужный адрес","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не берет трубку уже долго","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"никто не отвечает по телефону","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"никого нет дома","intent":"customer_not_home","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"по адресу никто не открывает","intent":"delivery_attempt_failed","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"можно оставить заказ у двери","intent":"leave_at_door","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставить пакет под дверью","intent":"leave_at_door","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"адрес доставки изменился","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент просит другой адрес","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не работает домофон у клиента","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"вход закрыт","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"ошибка в приложении курьера","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"приложение не работает","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не получается закрыть доставку","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу отметить заказ доставленным","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент говорит что заказ не получал","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"говорит ничего не привозили","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"молоко разлилось в пакете","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"вода вытекла из бутылки","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер долго не выезжал","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"стоял на точке слишком долго","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставили раньше времени","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"слишком рано приехали","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставили заказ консьержу","intent":"third_party_handover","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"отдали заказ охране","intent":"third_party_handover","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"уронил пакет с едой","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет упал","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер говорит что заказ тяжелый","intent":"heavy_order_refusal","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не хочет нести тяжелый заказ","intent":"heavy_order_refusal","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"опоздали и товар поврежден","intent":"customer_reports_late_and_damaged","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"задержка и разбитые продукты","intent":"customer_reports_late_and_damaged","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"опоздали и не привезли один пакет","intent":"customer_reports_late_and_missing","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставка поздно и не весь заказ","intent":"customer_reports_late_and_missing","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"что мне делать дальше","intent":"courier_requests_next_step","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"подскажите дальнейшие действия","intent":"courier_requests_next_step","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер задерживается на маршруте","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"доставка опаздывает уже давно","intent":"late_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не хочет подниматься в квартиру","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"сказал спуститься за заказом","intent":"courier_refused_door_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"в заказе отсутствует один товар","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не хватает позиции в заказе","intent":"missing_items","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"упаковка сильно повреждена","intent":"package_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет порвался при доставке","intent":"package_damage","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"йогурты теплые","intent":"warm_dairy","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"молочные продукты приехали теплыми","intent":"warm_dairy","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер разговаривал грубо","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер был хамоват","intent":"courier_rude_behavior","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер не выполнил комментарий","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"игнорировал просьбу позвонить","intent":"courier_ignored_comment","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставил заказ возле подъезда","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет лежал у двери","intent":"unauthorized_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент получил чужой пакет","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ перепутан с другим","intent":"wrong_order_delivery","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу найти нужный дом","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"адрес не совпадает","intent":"navigation_issue","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не отвечает на звонок","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"телефон клиента недоступен","intent":"customer_not_answering","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент не открывает дверь","intent":"delivery_attempt_failed","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"по адресу никто не отвечает","intent":"delivery_attempt_failed","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"оставить заказ у двери","intent":"leave_at_door","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"бесконтактная доставка","intent":"customer_requests_contactless","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент изменил адрес","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"другой адрес доставки","intent":"address_change","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу попасть в подъезд","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"домофон не работает","intent":"courier_cannot_find_entrance","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"ошибка в приложении","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"приложение зависло","intent":"app_error","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"не могу завершить заказ","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"приложение не дает закрыть заказ","intent":"cannot_complete_order","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"клиент говорит заказ не получил","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"говорит ничего не привезли","intent":"customer_says_order_not_received","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"бутылка протекла","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"разлилась вода","intent":"spilled_liquids","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер долго не выезжал","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"слишком долго стоял на точке","intent":"delay_departure","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"заказ привезли раньше слота","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"слишком рано приехал","intent":"slot_delivery_violation","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"курьер уронил пакет","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"пакет упал","intent":"courier_dropped_bag","role":"curator","source":"user_phrases_v1","version":"1.0"}
+{"text":"не знаю что делать","intent":"courier_unknown_edge_case","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"сложный кейс","intent":"courier_unknown_edge_case","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"нужна эскалация куратору","intent":"escalate_to_curator","role":"courier","source":"user_phrases_v1","version":"1.0"}
+{"text":"передаю куратору","intent":"escalate_to_curator","role":"courier","source":"user_phrases_v1","version":"1.0"}

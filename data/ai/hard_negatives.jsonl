@@ -1,0 +1,20 @@
+{"text":"курьер приехал очень быстро","intent":"late_delivery","label":"negative"}
+{"text":"доставка была раньше времени","intent":"late_delivery","label":"negative"}
+{"text":"курьер очень вежливый","intent":"courier_rude_behavior","label":"negative"}
+{"text":"курьер отлично общался","intent":"courier_rude_behavior","label":"negative"}
+{"text":"все товары на месте","intent":"missing_items","label":"negative"}
+{"text":"заказ полный","intent":"missing_items","label":"negative"}
+{"text":"товары приехали холодными как надо","intent":"temperature_violation","label":"negative"}
+{"text":"заморозка отлично сохранилась","intent":"temperature_violation","label":"negative"}
+{"text":"курьер поднялся на этаж без проблем","intent":"courier_refused_door_delivery","label":"negative"}
+{"text":"курьер донес заказ до двери","intent":"courier_refused_door_delivery","label":"negative"}
+{"text":"пакет целый","intent":"package_damage","label":"negative"}
+{"text":"упаковка идеальная","intent":"package_damage","label":"negative"}
+{"text":"курьер позвонил заранее","intent":"courier_ignored_comment","label":"negative"}
+{"text":"все комментарии выполнены","intent":"courier_ignored_comment","label":"negative"}
+{"text":"клиент доволен доставкой","intent":"customer_complaint","label":"negative"}
+{"text":"никаких проблем не было","intent":"customer_complaint","label":"negative"}
+{"text":"доставка прошла отлично","intent":"service_violation_general","label":"negative"}
+{"text":"все супер","intent":"service_violation_general","label":"negative"}
+{"text":"клиент поблагодарил курьера","intent":"customer_conflict","label":"negative"}
+{"text":"курьеру сказали спасибо","intent":"customer_conflict","label":"negative"}

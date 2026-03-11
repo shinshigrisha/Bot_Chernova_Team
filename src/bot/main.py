@@ -14,6 +14,7 @@ from src.bot.middlewares.ai_inject import InjectAIMiddleware
 from src.bot.middlewares.log_updates import LogUpdatesMiddleware
 from src.config import get_settings
 from src.core.services.ai.ai_courier_service import AICourierService
+from src.core.services.ai.ai_facade import AIFacade
 from src.core.services.ai.provider_router import ProviderRouter
 from src.core.services.ai.providers.deepseek_provider import DeepSeekProvider
 from src.core.services.ai.providers.groq_provider import GroqProvider
@@ -37,6 +38,7 @@ def _init_ai(dp: Dispatcher) -> None:
     dp["ai_router"] = None
     dp["provider_router"] = None
     dp["ai_service"] = None
+    dp["ai_facade"] = None
     dp["faq_repo"] = FAQRepository()
 
     if not settings.ai_enabled:
@@ -54,10 +56,12 @@ def _init_ai(dp: Dispatcher) -> None:
         session_factory=async_session_factory,
         router=ai_router,
     )
+    ai_facade = AIFacade(ai_service)
 
     dp["ai_router"] = ai_router
     dp["provider_router"] = ai_router
     dp["ai_service"] = ai_service
+    dp["ai_facade"] = ai_facade
     enabled_providers = sorted(ai_router.providers.keys())
     if enabled_providers:
         logger.info("AI initialized: providers=%s", enabled_providers)

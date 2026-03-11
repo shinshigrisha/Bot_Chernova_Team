@@ -110,6 +110,8 @@ class FAQRepository:
         query_embedding: list[float] | str,
         limit: int = 5,
         *,
+        tag: str | None = None,
+        category: str | None = None,
         session: AsyncSession | None = None,
     ) -> list[dict[str, Any]]:
         """Return FAQ rows ordered by vector similarity (cosine). Uses embedding_vector column."""
@@ -133,18 +135,28 @@ class FAQRepository:
                 tag,
                 keywords,
                 is_active,
-                GREATEST(0.0, 1.0 - (embedding_vector <-> CAST(:query_embedding AS vector))) AS score
+                0.0 AS text_score,
+                0.0 AS keyword_score,
+                GREATEST(0.0, 1.0 - (embedding_vector <=> CAST(:query_embedding AS vector))) AS semantic_score,
+                GREATEST(0.0, 1.0 - (embedding_vector <=> CAST(:query_embedding AS vector))) AS score
             FROM faq_ai
             WHERE is_active = TRUE
               AND embedding_vector IS NOT NULL
-            ORDER BY embedding_vector <-> CAST(:query_embedding AS vector)
+              AND (CAST(:tag AS text) IS NULL OR lower(coalesce(tag, '')) = lower(CAST(:tag AS text)))
+              AND (CAST(:category AS text) IS NULL OR lower(coalesce(category, '')) = lower(CAST(:category AS text)))
+            ORDER BY embedding_vector <=> CAST(:query_embedding AS vector)
             LIMIT :limit
             """
         )
         try:
             result = await current_session.execute(
                 sql,
-                {"query_embedding": literal, "limit": limit},
+                {
+                    "query_embedding": literal,
+                    "limit": limit,
+                    "tag": tag,
+                    "category": category,
+                },
             )
         except Exception:
             self._pgvector_available = False
@@ -355,17 +367,13 @@ class FAQRepository:
 
         pgvector_enabled = bool(query_embedding) and await self._has_pgvector_extension(current_session)
 
+        # Use native embedding_vector column (vector(1536)) when available; fallback to 0.0
         semantic_score_sql = (
             """
                     CASE
-                        WHEN nullif(coalesce(f.embedding, ''), '') IS NULL THEN 0.0
-                        ELSE GREATEST(
-                            0.0,
-                            1 - (
-                                CAST(f.embedding AS vector)
-                                <=> CAST(CAST(:query_embedding AS text) AS vector)
-                            )
-                        )
+                        WHEN f.embedding_vector IS NOT NULL THEN
+                            GREATEST(0.0, 1.0 - (f.embedding_vector <=> CAST(:query_embedding AS vector)))
+                        ELSE 0.0
                     END AS semantic_score
             """
             if pgvector_enabled
@@ -443,7 +451,7 @@ class FAQRepository:
                 (
                     CASE
                         WHEN semantic_score > 0
-                        THEN (text_score * 0.4 + keyword_score * 0.2 + semantic_score * 0.4)
+                        THEN (text_score * 0.3 + keyword_score * 0.1 + semantic_score * 0.6)
                         ELSE (text_score * 0.7 + keyword_score * 0.3)
                     END
                 ) AS score

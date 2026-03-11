@@ -1,0 +1,117 @@
+import json
+import random
+from pathlib import Path
+
+random.seed(7)
+
+def load_or_build_intents():
+    path = Path("delivery_intents_90.json")
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    raise FileNotFoundError(
+        "Сначала создай delivery_intents_90.json блоком выше"
+    )
+
+intents = load_or_build_intents()
+
+positive_rows = []
+for idx, item in enumerate(intents, start=1):
+    for j, q in enumerate(item["questions"], start=1):
+        positive_rows.append({
+            "sample_id": f"P{idx:03d}_{j:02d}",
+            "sample_type": "positive",
+            "intent": item["intent"],
+            "intents": [item["intent"]],
+            "category": item["category"],
+            "crm_tag": item["crm_tag"],
+            "complaint_type": item["complaint_type"],
+            "role": item["role"],
+            "question": q,
+            "answer": item["answer"],
+            "entities": item["entities"],
+        })
+
+negative_texts = [
+    "Хочу изменить время доставки",
+    "Как оформить возврат денег за товар",
+    "Где посмотреть состав продукта",
+    "Почему не начислили бонусы",
+    "Как удалить карту из приложения",
+    "Не могу войти в аккаунт",
+    "Хочу перенести самовывоз",
+    "Как восстановить пароль",
+    "У меня не открывается каталог",
+    "Нужна помощь по промокоду",
+    "Где мой чек",
+    "Почему отменили заказ магазином",
+    "Как добавить товар после оформления",
+    "Не работает поиск в приложении",
+    "Как привязать бонусную карту",
+    "Когда вернут деньги за отмену",
+    "Хочу отключить уведомления",
+    "Почему не применился купон",
+    "Не могу выбрать способ оплаты в приложении",
+    "Как сменить номер телефона",
+]
+
+hard_negative_rows = []
+for i in range(240):
+    q = random.choice(negative_texts)
+    variant = random.choice([
+        q,
+        q + "?",
+        "Подскажите, " + q.lower(),
+        "Пожалуйста, " + q.lower(),
+    ])
+    hard_negative_rows.append({
+        "sample_id": f"N{i+1:05d}",
+        "sample_type": "hard_negative",
+        "intent": "other_non_delivery_or_unsupported",
+        "intents": [],
+        "category": "hard_negative",
+        "crm_tag": "",
+        "complaint_type": "",
+        "role": "",
+        "question": variant,
+        "answer": "Этот запрос не относится к жалобам на курьера или куратора доставки. Его нужно направлять в другой сценарий обработки.",
+        "entities": [],
+    })
+
+multi_rows = []
+for i in range(180):
+    a, b = random.sample(intents, 2)
+    qa = random.choice(a["questions"])
+    qb = random.choice(b["questions"])
+    q = random.choice([
+        f"{qa}, и ещё {qb.lower()}",
+        f"{qa}. Кроме того, {qb.lower()}",
+        f"{qa}, при этом {qb.lower()}",
+        f"{qa} — и одновременно {qb.lower()}",
+    ])
+    multi_rows.append({
+        "sample_id": f"M{i+1:05d}",
+        "sample_type": "multi_intent",
+        "intent": "multi_intent",
+        "intents": [a["intent"], b["intent"]],
+        "category": f"{a['category']} + {b['category']}",
+        "crm_tag": f"{a['crm_tag']} | {b['crm_tag']}",
+        "complaint_type": f"{a['complaint_type']} | {b['complaint_type']}",
+        "role": a["role"] if a["role"] == b["role"] else f"{a['role']}+{b['role']}",
+        "question": q,
+        "answer": "В обращении смешано несколько проблем. Его нужно разложить на отдельные интенты и разобрать каждую часть отдельно.",
+        "entities": sorted(set(a["entities"] + b["entities"])),
+    })
+
+all_rows = positive_rows + hard_negative_rows + multi_rows
+random.shuffle(all_rows)
+
+n = len(all_rows)
+train = all_rows[:int(n * 0.8)]
+
+with Path("delivery_dataset_train.jsonl").open("w", encoding="utf-8") as f:
+    for row in train:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+print("Файл создан: delivery_dataset_train.jsonl")
+print("Записей:", len(train))

@@ -294,3 +294,101 @@ async def test_provider_fallback_without_groq(monkeypatch):
     router = ProviderRouter([_NamedProvider("deepseek"), _NamedProvider("openai")])
     resp = await router.complete([{"role": "user", "content": "test"}], mode="chat")
     assert resp.provider in {"deepseek", "openai"}
+
+
+# ---- Regulation-first RAG: answer structure and regression scenarios ----
+@pytest.mark.asyncio
+async def test_rag_answer_structure_has_situation_and_steps(ai_service: AICourierService):
+    """RAG answers from must_match or case_engine must have Ситуация / Что делать / куратор."""
+    result = await ai_service.get_answer(user_id=42, text="Яйца разбиты, пакет цел")
+    assert result.route == "must_match"
+    text_lower = (result.text or "").lower()
+    assert "ситуация" in text_lower or "критично" in text_lower
+    assert "что делать" in text_lower or "действия" in text_lower
+    assert "куратор" in text_lower
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("input_text", "expected_routes", "must_contain"),
+    [
+        ("Не дозвонился клиенту, домофон", ("must_match",), "2–3"),
+        ("Терминал не пробивает оплату", ("case_engine", "faq", "llm_reason"), "терминал"),
+        ("Яйца разбиты, пакет цел", ("must_match",), "фото"),
+        ("Не хватает пакета, недовоз", ("must_match",), "МП"),
+        ("Проколол колесо, опоздаю", ("case_engine", "faq", "llm_reason"), "шаги"),
+        ("Не успеваю в таймер, пробка", ("must_match",), "ETA"),
+        ("АКБ дымит в шкафу", ("must_match",), "безопас"),
+    ],
+)
+async def test_regulation_first_rag_regression_scenarios(
+    ai_service: AICourierService,
+    input_text: str,
+    expected_routes: tuple[str, ...],
+    must_contain: str,
+):
+    """Regression: customer not answering, terminal, broken eggs, missing package, punctured tire, traffic, battery."""
+    result = await ai_service.get_answer(user_id=42, text=input_text)
+    assert result.route in expected_routes, f"route={result.route} not in {expected_routes}"
+    assert must_contain.lower() in (result.text or "").lower(), (
+        f"expected fragment {must_contain!r} not in answer"
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("input_text", "route_expected"),
+    [
+        ("Яйца разбиты, пакет цел", "must_match"),
+        ("Не дозвонился клиенту, домофон", "must_match"),
+        ("Не хватает пакета, недовоз", "must_match"),
+        ("Не успеваю в таймер, пробка", "must_match"),
+        ("АКБ дымит в шкафу", "must_match"),
+    ],
+)
+async def test_known_courier_cases_regression(
+    ai_service: AICourierService, input_text: str, route_expected: str
+):
+    """Regression: known courier cases must hit strict route and RAG format."""
+    result = await ai_service.get_answer(user_id=42, text=input_text)
+    assert result.route == route_expected, f"expected route {route_expected}, got {result.route}"
+    text_lower = (result.text or "").lower()
+    assert "ситуация" in text_lower or "критично" in text_lower
+    assert "что делать" in text_lower or "действия" in text_lower
+    assert "куратор" in text_lower
+
+
+@pytest.mark.asyncio
+async def test_urgent_format_for_dangerous_situations(ai_service: AICourierService):
+    """Dangerous situations (e.g. battery/fire) must use urgent format: Критично / Действия / Немедленно."""
+    result = await ai_service.get_answer(user_id=42, text="АКБ дымит в шкафу")
+    assert result.route == "must_match"
+    text_lower = (result.text or "").lower()
+    assert "критично" in text_lower or "немедленно" in text_lower
+    assert "действия" in text_lower or "1)" in result.text
+
+
+def test_get_risk_recommendation_returns_rag_format():
+    """Proactive risk: AI service calls risk_engine + recommendation_engine, returns RAG-style result."""
+    from src.core.services.risk import RiskInput
+
+    service = AICourierService(session_factory=_DummySession, router=None)
+    risk_input = RiskInput.from_dict({
+        "order_id": "t",
+        "courier_id": "c",
+        "minutes_to_deadline": 10,
+        "eta_minutes": 25,
+        "active_orders_count": 1,
+        "has_customer_comment": False,
+        "address_flags": {},
+        "item_flags": {},
+        "zone": "",
+        "tt": "",
+        "event_type": "en_route",
+    })
+    result = service.get_risk_recommendation(risk_input)
+    assert result.route == "delivery_risk"
+    assert result.debug.get("risk_type") == "late_delivery_risk"
+    assert "Ситуация" in result.text or "что делать" in result.text.lower()
+    assert "куратор" in result.text.lower()
+    assert "1)" in result.text

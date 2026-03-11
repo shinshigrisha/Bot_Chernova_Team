@@ -101,20 +101,31 @@ cp .env.example .env
 # Отредактируй .env — минимум BOT_TOKEN и ADMIN_IDS
 ```
 
-### 2. Поднять сервисы
+### 2. Поднять сервисы (Docker Compose + Makefile)
 
 ```bash
+# Запуск всех сервисов в фоне
 docker compose up -d --build
+# или эквивалент через Makefile
+make up
 ```
 
 Это запустит: `postgres`, `redis`, `minio`, `bot`, `worker`.
 
+Посмотреть статусы контейнеров:
+
+```bash
+docker compose ps
+```
+
 ### 3. Применить миграции
 
 ```bash
+# через Makefile
 make migrate
-# или вручную:
-docker compose run --rm bot python -m alembic upgrade head
+
+# или вручную через docker compose:
+docker compose run --rm bot alembic upgrade head
 ```
 
 ### 4. Проверить работу

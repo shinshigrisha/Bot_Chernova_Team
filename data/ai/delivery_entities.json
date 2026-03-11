@@ -1,0 +1,254 @@
+{
+   "entities": [
+      {
+         "name": "order_id",
+         "type": "number",
+         "description": "Номер заказа или подзаказа"
+      },
+      {
+         "name": "delivery_time",
+         "type": "time",
+         "description": "Время доставки или обещанное окно"
+      },
+      {
+         "name": "pickup_time",
+         "type": "time",
+         "description": "Время забора заказа"
+      },
+      {
+         "name": "delivery_slot",
+         "type": "time_range",
+         "description": "Слотовое окно доставки"
+      },
+      {
+         "name": "delivery_floor",
+         "type": "number",
+         "description": "Этаж доставки"
+      },
+      {
+         "name": "address",
+         "type": "string",
+         "description": "Адрес, дом, корпус, подъезд, квартира"
+      },
+      {
+         "name": "delivery_location",
+         "type": "string",
+         "description": "Фактическое место передачи заказа"
+      },
+      {
+         "name": "delivery_confirmation",
+         "type": "boolean",
+         "description": "Есть ли подтверждение клиента на оставление заказа"
+      },
+      {
+         "name": "courier_name",
+         "type": "string",
+         "description": "ФИО курьера"
+      },
+      {
+         "name": "customer_comment",
+         "type": "string",
+         "description": "Комментарий клиента к заказу"
+      },
+      {
+         "name": "customer_phone",
+         "type": "phone",
+         "description": "Телефон клиента"
+      },
+      {
+         "name": "customer_status",
+         "type": "string",
+         "description": "Клиент отвечает, не отвечает, не дома, просит ждать"
+      },
+      {
+         "name": "item_type",
+         "type": "string",
+         "description": "Тип товара: яйца, молоко, хлеб, вода, заморозка и т.д."
+      },
+      {
+         "name": "item_count",
+         "type": "number",
+         "description": "Количество позиций или пакетов"
+      },
+      {
+         "name": "order_items",
+         "type": "list",
+         "description": "Список товаров или пакетов в заказе"
+      },
+      {
+         "name": "package_condition",
+         "type": "string",
+         "description": "Состояние пакета, коробки, упаковки"
+      },
+      {
+         "name": "temperature",
+         "type": "number",
+         "description": "Оценка температуры товара или режима перевозки"
+      },
+      {
+         "name": "damage_type",
+         "type": "string",
+         "description": "Тип повреждения: разбито, помято, разлито, вскрыто"
+      },
+      {
+         "name": "communication",
+         "type": "string",
+         "description": "Характер общения с клиентом"
+      },
+      {
+         "name": "route_issue",
+         "type": "string",
+         "description": "Тип ошибки маршрута или навигации"
+      },
+      {
+         "name": "waiting_time",
+         "type": "number",
+         "description": "Сколько времени курьер ожидал клиента"
+      },
+      {
+         "name": "service_level",
+         "type": "string",
+         "description": "Уровень нарушения сервиса"
+      },
+      {
+         "name": "risk_signal",
+         "type": "string",
+         "description": "Сигнал риска: конфликт, жалоба, возврат, эскалация"
+      },
+      {
+         "name": "handover_person",
+         "type": "string",
+         "description": "Кому фактически передан заказ"
+      },
+      {
+         "name": "contact_attempts",
+         "type": "number",
+         "description": "Количество попыток связаться с клиентом"
+      },
+      {
+         "name": "courier_action",
+         "type": "string",
+         "description": "Что сделал курьер в кейсе"
+      },
+      {
+         "name": "customer_request",
+         "type": "string",
+         "description": "Что просил клиент"
+      },
+      {
+         "name": "curator_action",
+         "type": "string",
+         "description": "Что должен сделать куратор"
+      },
+      {
+         "name": "app_status",
+         "type": "string",
+         "description": "Статус заказа в приложении"
+      },
+      {
+         "name": "error_text",
+         "type": "string",
+         "description": "Текст ошибки приложения"
+      },
+      {
+         "name": "delay_minutes",
+         "type": "number",
+         "description": "Размер опоздания в минутах"
+      },
+      {
+         "name": "temperature_sensitive",
+         "type": "boolean",
+         "description": "Товар требует контроля температуры"
+      },
+      {
+         "name": "heavy_order",
+         "type": "boolean",
+         "description": "Заказ тяжелый или крупногабаритный"
+      },
+      {
+         "name": "fragile_item",
+         "type": "boolean",
+         "description": "Есть ли хрупкие товары"
+      },
+      {
+         "name": "security_or_concierge",
+         "type": "boolean",
+         "description": "Есть ли консьерж, охрана, КПП"
+      },
+      {
+         "name": "building_access_issue",
+         "type": "boolean",
+         "description": "Есть ли проблема доступа в дом или подъезд"
+      },
+      {
+         "name": "left_without_contact",
+         "type": "boolean",
+         "description": "Оставлен ли заказ без связи с клиентом"
+      },
+      {
+         "name": "photo_proof",
+         "type": "boolean",
+         "description": "Есть ли фото-подтверждение передачи"
+      },
+      {
+         "name": "third_party_handover",
+         "type": "boolean",
+         "description": "Передан ли заказ третьему лицу"
+      },
+      {
+         "name": "partial_handover",
+         "type": "boolean",
+         "description": "Передана ли только часть заказа"
+      },
+      {
+         "name": "tamper_signal",
+         "type": "boolean",
+         "description": "Есть ли признаки вскрытия"
+      },
+      {
+         "name": "spill_signal",
+         "type": "boolean",
+         "description": "Есть ли разлив жидкости"
+      },
+      {
+         "name": "melt_signal",
+         "type": "boolean",
+         "description": "Есть ли признаки растаявшей заморозки"
+      },
+      {
+         "name": "crush_signal",
+         "type": "boolean",
+         "description": "Есть ли признаки смятия/раздавливания"
+      },
+      {
+         "name": "late_signal",
+         "type": "boolean",
+         "description": "Есть ли факт нарушения обещанного времени"
+      },
+      {
+         "name": "rude_signal",
+         "type": "boolean",
+         "description": "Есть ли сигнал грубого общения"
+      },
+      {
+         "name": "missing_signal",
+         "type": "boolean",
+         "description": "Есть ли сигнал недовоза"
+      },
+      {
+         "name": "wrong_order_signal",
+         "type": "boolean",
+         "description": "Есть ли сигнал перепутанного заказа"
+      },
+      {
+         "name": "escalation_needed",
+         "type": "boolean",
+         "description": "Нужна ли эскалация куратору"
+      },
+      {
+         "name": "resolution_type",
+         "type": "string",
+         "description": "Тип решения: FAQ, must-match, case engine, escalation"
+      }
+   ]
+}

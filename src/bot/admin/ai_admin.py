@@ -11,6 +11,7 @@ from sqlalchemy import text
 from src.bot.states import AIAddFAQStates
 from src.config import get_settings
 from src.core.services.ai.ai_courier_service import AICourierService
+from src.core.services.ai.ai_facade import AIFacade
 from src.core.services.ai.provider_router import ProviderRouter
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
@@ -123,16 +124,18 @@ async def status(message: Message, provider_router: ProviderRouter | None = None
 async def ai_policy_reload(
     message: Message,
     ai_service: AICourierService | None = None,
+    ai_facade: AIFacade | None = None,
 ) -> None:
     if not await _require_admin(message):
         return
 
-    if ai_service is None:
+    target = ai_facade or ai_service
+    if target is None:
         await message.answer("AI сервис не инициализирован.")
         return
 
     try:
-        ai_service.reload_policy()
+        target.reload_policy()
         await message.answer("Policy перезагружена.")
     except Exception as exc:
         await message.answer(f"Не удалось перезагрузить policy: {exc}")

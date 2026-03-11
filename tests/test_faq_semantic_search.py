@@ -5,8 +5,24 @@ Cases: similar phrase retrieval, synonym detection, fallback behavior, semantic 
 from __future__ import annotations
 
 import pytest
+from sqlalchemy import text
 
 from src.infra.db.repositories.faq_repo import FAQRepository
+
+
+async def _has_pgvector(async_session) -> bool:
+    result = await async_session.execute(
+        # pgvector extension is named 'vector'
+        text("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
+    )
+    return bool(result.scalar())
+
+
+def _unit_vec(dim: int, index: int) -> str:
+    """Return a vector literal like '[0,0,1,0,...]' for pgvector CAST()."""
+    values = ["0.0"] * dim
+    values[index] = "1.0"
+    return "[" + ",".join(values) + "]"
 
 
 @pytest.mark.asyncio
@@ -73,3 +89,75 @@ async def test_semantic_ranking_order_when_results_returned(async_session) -> No
     if len(result) >= 2:
         scores = [float(r["score"]) for r in result]
         assert scores == sorted(scores, reverse=True), "semantic results must be ranked by score desc"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("query", "faq_question", "faq_answer"),
+    [
+        ("не берет трубку", "Не дозвонился клиенту", "Сделай 2–3 попытки связи и подожди у подъезда."),
+        ("яйца побились", "Разбитые яйца", "Зафиксируй фото повреждения и оформи кейс."),
+        ("не хватает пакета", "Недовоз", "Проверь состав заказа и сообщи в канал смены."),
+        ("не хочет подниматься", "Отказ до двери", "Сообщи куратору и действуй по сценарию вручения."),
+    ],
+)
+async def test_search_hybrid_semantic_pairs(
+    async_session,
+    query: str,
+    faq_question: str,
+    faq_answer: str,
+) -> None:
+    """
+    Semantic retrieval should find relevant FAQ even when courier uses a different phrase.
+    This test uses fixed embeddings stored in embedding_vector and passes query_embedding explicitly.
+    """
+    if not await _has_pgvector(async_session):
+        pytest.skip("pgvector extension is not available in test DB")
+
+    repo = FAQRepository(session=async_session)
+    faq_id = await repo.add_faq(question=faq_question, answer=faq_answer, session=async_session)
+
+    # Use unique one-hot embeddings for each parametrized case.
+    # We pick index based on faq_id to avoid collisions across tests within same DB transaction.
+    dim = 1536
+    idx = int(faq_id) % dim
+    literal = _unit_vec(dim, idx)
+    await repo.set_embedding_vector(faq_id=int(faq_id), embedding_literal=literal, session=async_session)
+    await async_session.commit()
+
+    hits = await repo.search_hybrid(
+        query=query,
+        limit=3,
+        query_embedding=literal,
+        session=async_session,
+    )
+    assert hits, "expected at least one semantic hit"
+    top = hits[0]
+    assert int(top["id"]) == int(faq_id)
+    assert top["question"] == faq_question
+    assert top["answer"] == faq_answer
+    assert float(top.get("semantic_score", 0.0)) > 0.95
+    assert float(top.get("score", 0.0)) > 0.5
+
+
+@pytest.mark.asyncio
+async def test_search_hybrid_graceful_without_embeddings(async_session) -> None:
+    """Hybrid retrieval must not fail when embeddings are unavailable (query_embedding=None)."""
+    repo = FAQRepository(session=async_session)
+    faq_id = await repo.add_faq(
+        question="Не дозвонился клиенту",
+        answer="Сделай 2–3 попытки связи.",
+        session=async_session,
+    )
+    await async_session.commit()
+
+    hits = await repo.search_hybrid(
+        query="не берет трубку",
+        limit=3,
+        query_embedding=None,
+        session=async_session,
+    )
+    assert isinstance(hits, list)
+    # With no text/keyword match, it may be empty; but it must not raise.
+    if hits:
+        assert all("id" in h and "question" in h and "answer" in h for h in hits)

@@ -69,19 +69,39 @@ flowchart LR
 - Scheduler (опционально) запускает задачи в очереди; один экземпляр или распределённая блокировка.
 
 ## AI (куратор)
-- **Канонический стек:** `src/core/services/ai/` — AICourierService, ProviderRouter, providers (Groq, DeepSeek, OpenAI), CaseEngine, IntentEngine, EmbeddingsService.
+
+### Regulation-first RAG
+Ответы строятся по принципу «сначала регламент»: правила, FAQ и кейсы доминируют над свободной генерацией. LLM используется только для оформления и пояснения уже найденных фактов; придумывать операционные правила запрещено.
+
+**Порядок маршрутизации:**
+1. **must_match** — жёсткие операционные кейсы из core_policy (повреждение, недозвон, недовоз, опоздание, АКБ).
+2. **case_engine** — типовые интенты (damaged_goods, contact_customer, missing_items, late_delivery, battery_fire, payment_terminal и др.) с фиксированными шагами.
+3. **FAQ** — keyword → semantic → hybrid; при сильном совпадении ответ из базы.
+4. **ML case memory (semantic_case)** — семантическое совпадение по ml_cases.jsonl (кэш эмбеддингов в ml_cases_embeddings.json).
+5. **llm_reason** — только форматирование/пояснение по переданному контексту; при отсутствии доказательств — один уточняющий вопрос.
+6. **fallback** — только если нет ни must_match, ни case_engine, ни сильного FAQ, ни сильного ML case и LLM недоступен или не дал ответа.
+
+### RAG-формат ответа
+Итоговый текст собирается единообразно:
+- **Ситуация:** краткое описание (или **Критично:** для опасных кейсов).
+- **Что делать сейчас:** нумерованные шаги (1) … 2) …).
+- **Когда писать куратору:** когда эскалировать.
+
+Для опасных кейсов (АКБ, пожар и т.п.) используется срочный формат: «Критично / Действия / Немедленно сообщи куратору».
+
+### Канонический стек и данные
+- **Код:** `src/core/services/ai/` — AICourierService, ProviderRouter, providers (Groq, DeepSeek, OpenAI), CaseEngine, IntentEngine, EmbeddingsService, CaseClassifier.
 - **Репозиторий FAQ (v2):** единственный источник — `src/infra/db/repositories/faq_repo.py`; таблица `faq_ai`.
 - **Политика и промпты:** `data/ai/` (core_policy.json, intent_tags.json, prompts/).
-- Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты `scripts/smoke_ai.py`, `scripts/smoke_provider_router.py`, `scripts/rebuild_faq_embeddings.py` — все используют core.
-- Legacy-модули удалены (src/services/ai, src/core/services/ai_service.py, плоские base/router/провайдеры в core/services/ai, src/ai_policy); импорты только из core и faq_repo.
+- **ML case memory:** `data/ai/ml_cases.jsonl` (id, input, label, decision, explanation); опционально `ml_cases_embeddings.json` для семантического поиска (скрипт `scripts/rebuild_case_embeddings.py`).
+- Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты `scripts/smoke_ai.py`, `scripts/rebuild_faq_embeddings.py`, `scripts/rebuild_case_embeddings.py`.
 
-**Гибридный retrieval FAQ (must_match → keyword → semantic → LLM):**
-- Сначала проверяются must_match и case_engine, затем поиск по FAQ: keyword (search_by_keywords), при недостаточной уверенности — семантический поиск (search_semantic по embedding_vector), при отсутствии — hybrid (search_hybrid) для контекста LLM. Эмбеддинги: таблица `faq_ai`, колонки `embedding` (TEXT, legacy) и `embedding_vector` (vector(1536), pgvector); скрипт пересборки — `scripts/rebuild_faq_embeddings.py`. Подробнее: [AI_FAQ_SEARCH.md](AI_FAQ_SEARCH.md).
+**Гибридный retrieval FAQ (keyword → semantic → hybrid):** см. [AI_FAQ_SEARCH.md](AI_FAQ_SEARCH.md). Эмбеддинги: `embedding_vector` (vector(1536), pgvector); пересборка — `scripts/rebuild_faq_embeddings.py`.
 
 **Canonical paths (reference):**
-- Код: `src/core/services/ai/ai_courier_service.py`, `provider_router.py`, `providers/*`, `case_engine.py`, `intent_engine.py`, `embeddings_service.py`, `embedding_service.py`
+- Код: `src/core/services/ai/ai_courier_service.py`, `provider_router.py`, `providers/*`, `case_engine.py`, `intent_engine.py`, `case_classifier.py`, `embeddings_service.py`, `embedding_service.py`
 - FAQ: `src/infra/db/repositories/faq_repo.py`
-- Данные: `data/ai/` (core_policy.json, intent_tags.json, prompts/, golden_cases.jsonl)
+- Данные: `data/ai/` (core_policy.json, intent_tags.json, prompts/, golden_cases.jsonl, ml_cases.jsonl)
 
 ## RBAC
 - Роли: ADMIN, LEAD, CURATOR, VIEWER, COURIER.

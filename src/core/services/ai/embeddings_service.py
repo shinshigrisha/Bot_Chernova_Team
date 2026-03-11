@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import Sequence
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI  # type: ignore[import]
 
 from src.config import get_settings
 

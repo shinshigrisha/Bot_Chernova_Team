@@ -1,0 +1,29 @@
+{
+   "dataset": "delivery_ai_dataset",
+   "version": "2.0",
+   "description": "Production-style dataset for courier/curator support bot with FAQ, case engine, intent classification, entity extraction and RAG routing.",
+   "roles": [
+      "courier",
+      "curator"
+   ],
+   "faq_cases_target": 1200,
+   "ml_cases_target": 800,
+   "user_phrases_target": 10000,
+   "intents_target": 120,
+   "entities_target": 50,
+   "languages": [
+      "ru"
+   ],
+   "routing_layers": [
+      "must_match",
+      "case_engine",
+      "faq",
+      "llm_reason",
+      "escalation"
+   ],
+   "sources": [
+      "faq_seed_v2",
+      "crm_dataset_v1",
+      "user_phrases_v1"
+   ]
+}

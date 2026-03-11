@@ -44,10 +44,10 @@ services:
     command: python -m src.bot.main
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://user:pass@postgres:5432/delivery_assistant
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      S3_ENDPOINT: http://minio:9000
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      S3_ENDPOINT: ${S3_ENDPOINT}
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,10 +59,10 @@ services:
     command: celery -A src.infra.queue.celery_app worker --loglevel=info
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://user:pass@postgres:5432/delivery_assistant
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      S3_ENDPOINT: http://minio:9000
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      S3_ENDPOINT: ${S3_ENDPOINT}
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,0 +1,1838 @@
+[
+   {
+      "intent": "courier_late_general",
+      "category": "доставка",
+      "crm_tag": "Опоздание доставки",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "time_slot"
+      ],
+      "answer": "Извините за задержку. Курьер уже в пути. По таким обращениям обычно проверяют маршрут, текущий статус заказа и факт опоздания, после чего предлагают подходящее решение.",
+      "questions": [
+         "Курьер опаздывает",
+         "Где мой заказ, он задерживается",
+         "Почему доставка ещё не приехала",
+         "Заказ должен был быть уже у меня",
+         "Курьер задержал доставку",
+         "Почему так долго везут заказ",
+         "Заказ не привезли вовремя",
+         "Доставка сильно опаздывает"
+      ]
+   },
+   {
+      "intent": "courier_missing_package",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "package_count"
+      ],
+      "answer": "Похоже, вам не передали часть заказа. По таким обращениям сверяют количество мест в заказе, что было отсканировано курьером и что фактически передано покупателю.",
+      "questions": [
+         "Мне не привезли один пакет",
+         "В заказе не хватает пакета",
+         "Курьер не отдал один пакет",
+         "Из заказа пропал пакет",
+         "Не довезли часть заказа в пакете",
+         "Где второй пакет из заказа",
+         "Курьер привез не все пакеты",
+         "Мне отдали не весь заказ"
+      ]
+   },
+   {
+      "intent": "courier_missing_water",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "item_type"
+      ],
+      "answer": "Если в заказе не хватает воды, обращение относят к недовозу части заказа. Обычно проверяют, была ли вода отдельным местом и была ли она передана покупателю.",
+      "questions": [
+         "Не привезли воду",
+         "Курьер забыл воду",
+         "Воды из заказа нет",
+         "Где бутылки воды из моего заказа",
+         "Заказ пришел без воды",
+         "Воду не доставили",
+         "Курьер не отдал воду",
+         "В заказе отсутствует вода"
+      ]
+   },
+   {
+      "intent": "courier_missing_frozen",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "item_type"
+      ],
+      "answer": "Если покупателю не передали пакет с заморозкой, это оформляют как недовоз. Проверяют, была ли заморозка отдельным местом и забрал ли её курьер полностью.",
+      "questions": [
+         "Не привезли заморозку",
+         "Мороженое и пельмени не доставили",
+         "Курьер не отдал пакет с заморозкой",
+         "Замороженные товары не приехали",
+         "Пропал пакет с заморозкой",
+         "Из заказа исчезла заморозка",
+         "Где мои замороженные продукты",
+         "Заморозка не доехала"
+      ]
+   },
+   {
+      "intent": "courier_wrong_order",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Если вам привезли чужие товары или не ваш заказ, ситуацию относят к перепутанному заказу. Проверяют номер заказа, количество мест и какие пакеты были переданы.",
+      "questions": [
+         "Мне привезли чужой заказ",
+         "Это не мои продукты",
+         "Курьер перепутал заказ",
+         "В пакетах чужие товары",
+         "Заказ не соответствует моему",
+         "Мне отдали не тот заказ",
+         "Получил не свой заказ",
+         "Мне доставили не мои покупки"
+      ]
+   },
+   {
+      "intent": "courier_left_without_permission",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "delivery_instruction",
+         "location"
+      ],
+      "answer": "Если покупатель не выбирал бесконтактную доставку или курьер не смог связаться с покупателем, заказ нельзя самовольно оставлять на адресе. Такие случаи проверяют отдельно.",
+      "questions": [
+         "Курьер оставил заказ у двери без разрешения",
+         "Заказ просто оставили на площадке",
+         "Я не просил оставлять заказ без меня",
+         "Курьер бросил пакеты у двери и ушел",
+         "Заказ оставили без согласования",
+         "Курьер самовольно оставил заказ",
+         "Пакеты лежали у двери без звонка",
+         "Курьер оставил заказ и не дождался меня"
+      ]
+   },
+   {
+      "intent": "courier_refuse_door_delivery",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "floor",
+         "address_type"
+      ],
+      "answer": "Заказ должен доставляться до двери покупателя. Если курьер просит выйти на улицу, забрать из машины или отказывается подниматься, это отдельный тип жалобы.",
+      "questions": [
+         "Курьер просит выйти за заказом",
+         "Курьер не хочет подниматься до квартиры",
+         "Мне сказали забрать заказ из машины",
+         "Курьер отказался нести до двери",
+         "Заставляют спускаться на улицу за заказом",
+         "Курьер не донес заказ до квартиры",
+         "Курьер не поднялся на этаж",
+         "Мне отказались приносить заказ к двери"
+      ]
+   },
+   {
+      "intent": "courier_ignore_comment",
+      "category": "комментарии",
+      "crm_tag": "Игнор комментариев",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "delivery_instruction"
+      ],
+      "answer": "Если курьер проигнорировал комментарий к адресу или способу передачи заказа, обращение относят к игнору комментариев.",
+      "questions": [
+         "Курьер не прочитал комментарий к заказу",
+         "Мои инструкции в заказе проигнорировали",
+         "Я писал куда оставить, но это не учли",
+         "Комментарий к доставке не прочитали",
+         "Курьер сделал не так, как было указано",
+         "Заказ передали не по инструкции",
+         "Курьер не учел примечание к адресу",
+         "Инструкции к заказу не были соблюдены"
+      ]
+   },
+   {
+      "intent": "courier_no_precall",
+      "category": "комментарии",
+      "crm_tag": "Игнор комментариев",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "delivery_instruction"
+      ],
+      "answer": "Если покупатель просил предварительно позвонить, а курьер не сделал этого, обращение относят к игнору комментариев.",
+      "questions": [
+         "Я просил позвонить заранее, но мне не позвонили",
+         "Курьер не сделал предварительный звонок",
+         "Не предупредили о приезде, хотя я просил",
+         "В комментарии был звонок заранее, его не было",
+         "Курьер не связался до доставки",
+         "Не позвонили перед приездом",
+         "Предварительного звонка не было",
+         "Курьер приехал без звонка, хотя это было указано"
+      ]
+   },
+   {
+      "intent": "courier_rude_communication",
+      "category": "сервис",
+      "crm_tag": "Коммуникация с покупателем",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Если курьер грубо разговаривал, хамил или недоброжелательно общался с покупателем, это относят к жалобам на коммуникацию с покупателем.",
+      "questions": [
+         "Курьер грубо разговаривал",
+         "Курьер хамил мне при доставке",
+         "Общение курьера было очень неприятным",
+         "Курьер разговаривал в грубой форме",
+         "Со мной общались по-хамски",
+         "Курьер вел себя невежливо",
+         "Курьер нагрубил",
+         "Обращение курьера было неприемлемым"
+      ]
+   },
+   {
+      "intent": "courier_requests_tip",
+      "category": "сервис",
+      "crm_tag": "Коммуникация с покупателем",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Курьер не должен выпрашивать чаевые или дополнительную оплату за сервис. Такие обращения относят к жалобам на коммуникацию с покупателем.",
+      "questions": [
+         "Курьер просит чаевые",
+         "Мне намекали на доплату курьеру",
+         "Курьер требовал вознаграждение",
+         "Доставщик выпрашивал чаевые",
+         "Курьер просил деньги сверх заказа",
+         "Курьер навязывал доплату",
+         "Курьер требует чаевые за доставку",
+         "Доставщик выпрашивал дополнительную оплату"
+      ]
+   },
+   {
+      "intent": "courier_temperature_melted",
+      "category": "качество",
+      "crm_tag": "Температурный режим",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "item_type"
+      ],
+      "answer": "Если товар приехал растаявшим, остывшим или без термооборудования, обращение относят к температурному режиму и проверяют условия перевозки.",
+      "questions": [
+         "Мороженое полностью растаяло",
+         "Заморозка приехала мягкая",
+         "Холодные продукты оказались теплыми",
+         "Заказ приехал без холода",
+         "Замороженные продукты растаяли",
+         "Продукты приехали не в той температуре",
+         "Холодильный товар привезли теплым",
+         "Температурный режим при доставке нарушен"
+      ]
+   },
+   {
+      "intent": "courier_damaged_goods",
+      "category": "качество",
+      "crm_tag": "Неаккуратная доставка",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "item_type"
+      ],
+      "answer": "Если товары помялись, разбились или были повреждены в пути, обращение относят к неаккуратной доставке.",
+      "questions": [
+         "Продукты приехали помятыми",
+         "Яйца разбились по дороге",
+         "Торт поврежден после доставки",
+         "Пакет порвался и товар пострадал",
+         "Заказ доставили неаккуратно",
+         "Хрупкие товары были смяты",
+         "Покупки приехали поврежденными",
+         "Неаккуратная доставка повредила товары"
+      ]
+   },
+   {
+      "intent": "courier_payment_terminal_problem",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Если у курьера не проходит оплата терминалом, обращение относят к проблемам с оплатой.",
+      "questions": [
+         "Не проходит оплата терминалом",
+         "Терминал курьера не работает",
+         "Курьер не может принять оплату картой",
+         "Оплата картой при получении не сработала",
+         "Терминал разряжен или сломан",
+         "У курьера проблемы с терминалом",
+         "Картой оплатить не удалось",
+         "Терминал не принимает платеж"
+      ]
+   },
+   {
+      "intent": "courier_requests_transfer",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Курьер не должен просить перевод на личную карту или телефон. Если такое произошло, ситуацию относят к проблемам с оплатой.",
+      "questions": [
+         "Курьер просит перевести деньги на карту",
+         "Мне предложили оплатить на личный номер",
+         "Курьер хочет перевод вместо терминала",
+         "Сказали перевести деньги лично курьеру",
+         "Предлагают перевод на карту курьера",
+         "Курьер просит оплату на телефон",
+         "Оплату хотят принять переводом",
+         "Меня попросили перевести деньги лично"
+      ]
+   },
+   {
+      "intent": "courier_drunk",
+      "category": "безопасность",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Если курьер приехал в состоянии алкогольного опьянения, такую ситуацию относят к серьёзным нестандартным жалобам и требуют отдельной проверки.",
+      "questions": [
+         "Курьер был пьян",
+         "Доставщик приехал нетрезвым",
+         "От курьера пахло алкоголем",
+         "Курьер был в состоянии опьянения",
+         "Мне кажется курьер был пьяный",
+         "Нетрезвый курьер привез заказ",
+         "Курьер приехал выпившим",
+         "Курьер выглядел нетрезвым"
+      ]
+   },
+   {
+      "intent": "curator_wrong_handover_taxi_missing_package",
+      "category": "куратор",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_5 Куратор курьеров",
+      "role": "куратор",
+      "entities": [
+         "order_id",
+         "package_count"
+      ],
+      "answer": "Если часть заказа не доехала у курьера такси или сторонней доставки из-за некорректной выдачи, это относят к ответственности куратора.",
+      "questions": [
+         "Таксисту выдали не все пакеты",
+         "Похоже куратор отдал курьеру не весь заказ",
+         "Часть заказа потерялась еще на выдаче",
+         "Стороннему курьеру выдали не все места",
+         "Куратор некорректно выдал заказ курьеру",
+         "Курьер такси получил не весь заказ от точки",
+         "На выдаче отдали не все пакеты",
+         "Проблема с выдачей заказа стороннему курьеру"
+      ]
+   },
+   {
+      "intent": "courier_left_wrong_place",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер left wrong place' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер left wrong place",
+         "Жалоба: курьер left wrong place",
+         "По доставке случилось следующее: курьер left wrong place",
+         "Нужен разбор: курьер left wrong place",
+         "курьер left wrong place",
+         "Это жалоба по доставке: курьер left wrong place",
+         "Хочу пожаловаться: курьер left wrong place",
+         "Ситуация с доставкой: курьер left wrong place"
+      ]
+   },
+   {
+      "intent": "courier_called_instead_of_silent_leave",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер called instead of silent leave' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер called instead of silent leave",
+         "Жалоба: курьер called instead of silent leave",
+         "По доставке случилось следующее: курьер called instead of silent leave",
+         "Нужен разбор: курьер called instead of silent leave",
+         "курьер called instead of silent leave",
+         "Это жалоба по доставке: курьер called instead of silent leave",
+         "Хочу пожаловаться: курьер called instead of silent leave",
+         "Ситуация с доставкой: курьер called instead of silent leave"
+      ]
+   },
+   {
+      "intent": "courier_contact_way_wrong",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер contact way wrong' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер contact way wrong",
+         "Жалоба: курьер contact way wrong",
+         "По доставке случилось следующее: курьер contact way wrong",
+         "Нужен разбор: курьер contact way wrong",
+         "курьер contact way wrong",
+         "Это жалоба по доставке: курьер contact way wrong",
+         "Хочу пожаловаться: курьер contact way wrong",
+         "Ситуация с доставкой: курьер contact way wrong"
+      ]
+   },
+   {
+      "intent": "courier_personal_messages",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер personal messages' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер personal messages",
+         "Жалоба: курьер personal messages",
+         "По доставке случилось следующее: курьер personal messages",
+         "Нужен разбор: курьер personal messages",
+         "курьер personal messages",
+         "Это жалоба по доставке: курьер personal messages",
+         "Хочу пожаловаться: курьер personal messages",
+         "Ситуация с доставкой: курьер personal messages"
+      ]
+   },
+   {
+      "intent": "courier_temperature_no_thermal_bag",
+      "category": "качество",
+      "crm_tag": "Температурный режим",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "thermal_equipment"
+      ],
+      "answer": "Обращение 'курьер temperature no thermal bag' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер temperature no thermal bag",
+         "Жалоба: курьер temperature no thermal bag",
+         "По доставке случилось следующее: курьер temperature no thermal bag",
+         "Нужен разбор: курьер temperature no thermal bag",
+         "курьер temperature no thermal bag",
+         "Это жалоба по доставке: курьер temperature no thermal bag",
+         "Хочу пожаловаться: курьер temperature no thermal bag",
+         "Ситуация с доставкой: курьер temperature no thermal bag"
+      ]
+   },
+   {
+      "intent": "courier_hot_food_cold",
+      "category": "качество",
+      "crm_tag": "Температурный режим",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер hot food cold' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер hot food cold",
+         "Жалоба: курьер hot food cold",
+         "По доставке случилось следующее: курьер hot food cold",
+         "Нужен разбор: курьер hot food cold",
+         "курьер hot food cold",
+         "Это жалоба по доставке: курьер hot food cold",
+         "Хочу пожаловаться: курьер hot food cold",
+         "Ситуация с доставкой: курьер hot food cold"
+      ]
+   },
+   {
+      "intent": "courier_refused_cash",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "cash_amount"
+      ],
+      "answer": "Обращение 'курьер refused cash' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер refused cash",
+         "Жалоба: курьер refused cash",
+         "По доставке случилось следующее: курьер refused cash",
+         "Нужен разбор: курьер refused cash",
+         "курьер refused cash",
+         "Это жалоба по доставке: курьер refused cash",
+         "Хочу пожаловаться: курьер refused cash",
+         "Ситуация с доставкой: курьер refused cash"
+      ]
+   },
+   {
+      "intent": "courier_no_change",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер no change' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер no change",
+         "Жалоба: курьер no change",
+         "По доставке случилось следующее: курьер no change",
+         "Нужен разбор: курьер no change",
+         "курьер no change",
+         "Это жалоба по доставке: курьер no change",
+         "Хочу пожаловаться: курьер no change",
+         "Ситуация с доставкой: курьер no change"
+      ]
+   },
+   {
+      "intent": "courier_forgot_close_order",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Обращение 'курьер forgot close order' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер forgot close order",
+         "Жалоба: курьер forgot close order",
+         "По доставке случилось следующее: курьер forgot close order",
+         "Нужен разбор: курьер forgot close order",
+         "курьер forgot close order",
+         "Это жалоба по доставке: курьер forgot close order",
+         "Хочу пожаловаться: курьер forgot close order",
+         "Ситуация с доставкой: курьер forgot close order"
+      ]
+   },
+   {
+      "intent": "courier_refuse_private_house_gate",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер refuse private house gate' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер refuse private house gate",
+         "Жалоба: курьер refuse private house gate",
+         "По доставке случилось следующее: курьер refuse private house gate",
+         "Нужен разбор: курьер refuse private house gate",
+         "курьер refuse private house gate",
+         "Это жалоба по доставке: курьер refuse private house gate",
+         "Хочу пожаловаться: курьер refuse private house gate",
+         "Ситуация с доставкой: курьер refuse private house gate"
+      ]
+   },
+   {
+      "intent": "courier_request_meet_at_checkpoint",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер request meet at checkpoint' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер request meet at checkpoint",
+         "Жалоба: курьер request meet at checkpoint",
+         "По доставке случилось следующее: курьер request meet at checkpoint",
+         "Нужен разбор: курьер request meet at checkpoint",
+         "курьер request meet at checkpoint",
+         "Это жалоба по доставке: курьер request meet at checkpoint",
+         "Хочу пожаловаться: курьер request meet at checkpoint",
+         "Ситуация с доставкой: курьер request meet at checkpoint"
+      ]
+   },
+   {
+      "intent": "courier_waited_too_little",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер waited too little' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер waited too little",
+         "Жалоба: курьер waited too little",
+         "По доставке случилось следующее: курьер waited too little",
+         "Нужен разбор: курьер waited too little",
+         "курьер waited too little",
+         "Это жалоба по доставке: курьер waited too little",
+         "Хочу пожаловаться: курьер waited too little",
+         "Ситуация с доставкой: курьер waited too little"
+      ]
+   },
+   {
+      "intent": "courier_left_on_floor",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер left on floor' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер left on floor",
+         "Жалоба: курьер left on floor",
+         "По доставке случилось следующее: курьер left on floor",
+         "Нужен разбор: курьер left on floor",
+         "курьер left on floor",
+         "Это жалоба по доставке: курьер left on floor",
+         "Хочу пожаловаться: курьер left on floor",
+         "Ситуация с доставкой: курьер left on floor"
+      ]
+   },
+   {
+      "intent": "courier_hanging_on_handle",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер hanging on handle' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер hanging on handle",
+         "Жалоба: курьер hanging on handle",
+         "По доставке случилось следующее: курьер hanging on handle",
+         "Нужен разбор: курьер hanging on handle",
+         "курьер hanging on handle",
+         "Это жалоба по доставке: курьер hanging on handle",
+         "Хочу пожаловаться: курьер hanging on handle",
+         "Ситуация с доставкой: курьер hanging on handle"
+      ]
+   },
+   {
+      "intent": "courier_entered_without_permission",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер entered without permission' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер entered without permission",
+         "Жалоба: курьер entered without permission",
+         "По доставке случилось следующее: курьер entered without permission",
+         "Нужен разбор: курьер entered without permission",
+         "курьер entered without permission",
+         "Это жалоба по доставке: курьер entered without permission",
+         "Хочу пожаловаться: курьер entered without permission",
+         "Ситуация с доставкой: курьер entered without permission"
+      ]
+   },
+   {
+      "intent": "courier_held_door_with_foot",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер held door with foot' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер held door with foot",
+         "Жалоба: курьер held door with foot",
+         "По доставке случилось следующее: курьер held door with foot",
+         "Нужен разбор: курьер held door with foot",
+         "курьер held door with foot",
+         "Это жалоба по доставке: курьер held door with foot",
+         "Хочу пожаловаться: курьер held door with foot",
+         "Ситуация с доставкой: курьер held door with foot"
+      ]
+   },
+   {
+      "intent": "courier_throws_bags",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер throws bags' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер throws bags",
+         "Жалоба: курьер throws bags",
+         "По доставке случилось следующее: курьер throws bags",
+         "Нужен разбор: курьер throws bags",
+         "курьер throws bags",
+         "Это жалоба по доставке: курьер throws bags",
+         "Хочу пожаловаться: курьер throws bags",
+         "Ситуация с доставкой: курьер throws bags"
+      ]
+   },
+   {
+      "intent": "courier_vehicle_dirty_smelly",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер vehicle dirty smelly' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер vehicle dirty smelly",
+         "Жалоба: курьер vehicle dirty smelly",
+         "По доставке случилось следующее: курьер vehicle dirty smelly",
+         "Нужен разбор: курьер vehicle dirty smelly",
+         "курьер vehicle dirty smelly",
+         "Это жалоба по доставке: курьер vehicle dirty smelly",
+         "Хочу пожаловаться: курьер vehicle dirty smelly",
+         "Ситуация с доставкой: курьер vehicle dirty smelly"
+      ]
+   },
+   {
+      "intent": "courier_smoking_near_order",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Обращение 'курьер smoking near order' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер smoking near order",
+         "Жалоба: курьер smoking near order",
+         "По доставке случилось следующее: курьер smoking near order",
+         "Нужен разбор: курьер smoking near order",
+         "курьер smoking near order",
+         "Это жалоба по доставке: курьер smoking near order",
+         "Хочу пожаловаться: курьер smoking near order",
+         "Ситуация с доставкой: курьер smoking near order"
+      ]
+   },
+   {
+      "intent": "courier_phone_busy_unreachable",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "channel"
+      ],
+      "answer": "Обращение 'курьер phone busy unreachable' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер phone busy unreachable",
+         "Жалоба: курьер phone busy unreachable",
+         "По доставке случилось следующее: курьер phone busy unreachable",
+         "Нужен разбор: курьер phone busy unreachable",
+         "курьер phone busy unreachable",
+         "Это жалоба по доставке: курьер phone busy unreachable",
+         "Хочу пожаловаться: курьер phone busy unreachable",
+         "Ситуация с доставкой: курьер phone busy unreachable"
+      ]
+   },
+   {
+      "intent": "courier_wrong_phone_calling",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "channel"
+      ],
+      "answer": "Обращение 'курьер wrong phone calling' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер wrong phone calling",
+         "Жалоба: курьер wrong phone calling",
+         "По доставке случилось следующее: курьер wrong phone calling",
+         "Нужен разбор: курьер wrong phone calling",
+         "курьер wrong phone calling",
+         "Это жалоба по доставке: курьер wrong phone calling",
+         "Хочу пожаловаться: курьер wrong phone calling",
+         "Ситуация с доставкой: курьер wrong phone calling"
+      ]
+   },
+   {
+      "intent": "courier_demands_open_cash",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "cash_amount"
+      ],
+      "answer": "Обращение 'курьер demands open cash' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер demands open cash",
+         "Жалоба: курьер demands open cash",
+         "По доставке случилось следующее: курьер demands open cash",
+         "Нужен разбор: курьер demands open cash",
+         "курьер demands open cash",
+         "Это жалоба по доставке: курьер demands open cash",
+         "Хочу пожаловаться: курьер demands open cash",
+         "Ситуация с доставкой: курьер demands open cash"
+      ]
+   },
+   {
+      "intent": "courier_rejects_small_change",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер rejects small change' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер rejects small change",
+         "Жалоба: курьер rejects small change",
+         "По доставке случилось следующее: курьер rejects small change",
+         "Нужен разбор: курьер rejects small change",
+         "курьер rejects small change",
+         "Это жалоба по доставке: курьер rejects small change",
+         "Хочу пожаловаться: курьер rejects small change",
+         "Ситуация с доставкой: курьер rejects small change"
+      ]
+   },
+   {
+      "intent": "courier_forgot_water_in_car",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "item_type"
+      ],
+      "answer": "Обращение 'курьер forgot water in car' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер forgot water in car",
+         "Жалоба: курьер forgot water in car",
+         "По доставке случилось следующее: курьер forgot water in car",
+         "Нужен разбор: курьер forgot water in car",
+         "курьер forgot water in car",
+         "Это жалоба по доставке: курьер forgot water in car",
+         "Хочу пожаловаться: курьер forgot water in car",
+         "Ситуация с доставкой: курьер forgot water in car"
+      ]
+   },
+   {
+      "intent": "courier_forgot_frozen_in_bag",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "item_type"
+      ],
+      "answer": "Обращение 'курьер forgot frozen in bag' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер forgot frozen in bag",
+         "Жалоба: курьер forgot frozen in bag",
+         "По доставке случилось следующее: курьер forgot frozen in bag",
+         "Нужен разбор: курьер forgot frozen in bag",
+         "курьер forgot frozen in bag",
+         "Это жалоба по доставке: курьер forgot frozen in bag",
+         "Хочу пожаловаться: курьер forgot frozen in bag",
+         "Ситуация с доставкой: курьер forgot frozen in bag"
+      ]
+   },
+   {
+      "intent": "courier_mixed_orders_one_bag",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Обращение 'курьер mixed orders one bag' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер mixed orders one bag",
+         "Жалоба: курьер mixed orders one bag",
+         "По доставке случилось следующее: курьер mixed orders one bag",
+         "Нужен разбор: курьер mixed orders one bag",
+         "курьер mixed orders one bag",
+         "Это жалоба по доставке: курьер mixed orders one bag",
+         "Хочу пожаловаться: курьер mixed orders one bag",
+         "Ситуация с доставкой: курьер mixed orders one bag"
+      ]
+   },
+   {
+      "intent": "courier_wrong_count_of_places",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер wrong count of places' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер wrong count of places",
+         "Жалоба: курьер wrong count of places",
+         "По доставке случилось следующее: курьер wrong count of places",
+         "Нужен разбор: курьер wrong count of places",
+         "курьер wrong count of places",
+         "Это жалоба по доставке: курьер wrong count of places",
+         "Хочу пожаловаться: курьер wrong count of places",
+         "Ситуация с доставкой: курьер wrong count of places"
+      ]
+   },
+   {
+      "intent": "courier_wrong_completed_before_handover",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер wrong completed before handover' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер wrong completed before handover",
+         "Жалоба: курьер wrong completed before handover",
+         "По доставке случилось следующее: курьер wrong completed before handover",
+         "Нужен разбор: курьер wrong completed before handover",
+         "курьер wrong completed before handover",
+         "Это жалоба по доставке: курьер wrong completed before handover",
+         "Хочу пожаловаться: курьер wrong completed before handover",
+         "Ситуация с доставкой: курьер wrong completed before handover"
+      ]
+   },
+   {
+      "intent": "courier_wrong_payment_info",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Обращение 'курьер wrong payment info' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер wrong payment info",
+         "Жалоба: курьер wrong payment info",
+         "По доставке случилось следующее: курьер wrong payment info",
+         "Нужен разбор: курьер wrong payment info",
+         "курьер wrong payment info",
+         "Это жалоба по доставке: курьер wrong payment info",
+         "Хочу пожаловаться: курьер wrong payment info",
+         "Ситуация с доставкой: курьер wrong payment info"
+      ]
+   },
+   {
+      "intent": "courier_no_qr_offer_when_terminal_failed",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Обращение 'курьер no qr offer when terminal failed' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер no qr offer when terminal failed",
+         "Жалоба: курьер no qr offer when terminal failed",
+         "По доставке случилось следующее: курьер no qr offer when terminal failed",
+         "Нужен разбор: курьер no qr offer when terminal failed",
+         "курьер no qr offer when terminal failed",
+         "Это жалоба по доставке: курьер no qr offer when terminal failed",
+         "Хочу пожаловаться: курьер no qr offer when terminal failed",
+         "Ситуация с доставкой: курьер no qr offer when terminal failed"
+      ]
+   },
+   {
+      "intent": "courier_refuses_apartment_climb_without_elevator",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер refuses apartment climb without elevator' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер refuses apartment climb without elevator",
+         "Жалоба: курьер refuses apartment climb without elevator",
+         "По доставке случилось следующее: курьер refuses apartment climb without elevator",
+         "Нужен разбор: курьер refuses apartment climb without elevator",
+         "курьер refuses apartment climb without elevator",
+         "Это жалоба по доставке: курьер refuses apartment climb without elevator",
+         "Хочу пожаловаться: курьер refuses apartment climb without elevator",
+         "Ситуация с доставкой: курьер refuses apartment climb without elevator"
+      ]
+   },
+   {
+      "intent": "courier_refuses_office_reception_delivery",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер refuses office reception delivery' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер refuses office reception delivery",
+         "Жалоба: курьер refuses office reception delivery",
+         "По доставке случилось следующее: курьер refuses office reception delivery",
+         "Нужен разбор: курьер refuses office reception delivery",
+         "курьер refuses office reception delivery",
+         "Это жалоба по доставке: курьер refuses office reception delivery",
+         "Хочу пожаловаться: курьер refuses office reception delivery",
+         "Ситуация с доставкой: курьер refuses office reception delivery"
+      ]
+   },
+   {
+      "intent": "courier_leaves_before_photo",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер leaves before photo' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер leaves before photo",
+         "Жалоба: курьер leaves before photo",
+         "По доставке случилось следующее: курьер leaves before photo",
+         "Нужен разбор: курьер leaves before photo",
+         "курьер leaves before photo",
+         "Это жалоба по доставке: курьер leaves before photo",
+         "Хочу пожаловаться: курьер leaves before photo",
+         "Ситуация с доставкой: курьер leaves before photo"
+      ]
+   },
+   {
+      "intent": "courier_rushes_customer",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер rushes customer' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер rushes customer",
+         "Жалоба: курьер rushes customer",
+         "По доставке случилось следующее: курьер rushes customer",
+         "Нужен разбор: курьер rushes customer",
+         "курьер rushes customer",
+         "Это жалоба по доставке: курьер rushes customer",
+         "Хочу пожаловаться: курьер rushes customer",
+         "Ситуация с доставкой: курьер rushes customer"
+      ]
+   },
+   {
+      "intent": "courier_argues_about_address",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "address"
+      ],
+      "answer": "Обращение 'курьер argues about address' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер argues about address",
+         "Жалоба: курьер argues about address",
+         "По доставке случилось следующее: курьер argues about address",
+         "Нужен разбор: курьер argues about address",
+         "курьер argues about address",
+         "Это жалоба по доставке: курьер argues about address",
+         "Хочу пожаловаться: курьер argues about address",
+         "Ситуация с доставкой: курьер argues about address"
+      ]
+   },
+   {
+      "intent": "courier_demands_cancel_order",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Обращение 'курьер demands cancel order' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер demands cancel order",
+         "Жалоба: курьер demands cancel order",
+         "По доставке случилось следующее: курьер demands cancel order",
+         "Нужен разбор: курьер demands cancel order",
+         "курьер demands cancel order",
+         "Это жалоба по доставке: курьер demands cancel order",
+         "Хочу пожаловаться: курьер demands cancel order",
+         "Ситуация с доставкой: курьер demands cancel order"
+      ]
+   },
+   {
+      "intent": "curator_no_thermal_stock",
+      "category": "куратор",
+      "crm_tag": "Другое",
+      "complaint_type": "чек-лист куратора",
+      "role": "куратор",
+      "entities": [
+         "thermal_equipment"
+      ],
+      "answer": "Обращение 'куратор no thermal stock' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: куратор no thermal stock",
+         "Жалоба: куратор no thermal stock",
+         "По доставке случилось следующее: куратор no thermal stock",
+         "Нужен разбор: куратор no thermal stock",
+         "куратор no thermal stock",
+         "Это жалоба по доставке: куратор no thermal stock",
+         "Хочу пожаловаться: куратор no thermal stock",
+         "Ситуация с доставкой: куратор no thermal stock"
+      ]
+   },
+   {
+      "intent": "curator_bad_zone_handover",
+      "category": "куратор",
+      "crm_tag": "Другое",
+      "complaint_type": "чек-лист куратора",
+      "role": "куратор",
+      "entities": [],
+      "answer": "Обращение 'куратор bad zone handover' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: куратор bad zone handover",
+         "Жалоба: куратор bad zone handover",
+         "По доставке случилось следующее: куратор bad zone handover",
+         "Нужен разбор: куратор bad zone handover",
+         "куратор bad zone handover",
+         "Это жалоба по доставке: куратор bad zone handover",
+         "Хочу пожаловаться: куратор bad zone handover",
+         "Ситуация с доставкой: куратор bad zone handover"
+      ]
+   },
+   {
+      "intent": "curator_no_control_of_comments",
+      "category": "куратор",
+      "crm_tag": "Другое",
+      "complaint_type": "чек-лист куратора",
+      "role": "куратор",
+      "entities": [],
+      "answer": "Обращение 'куратор no control of comments' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: куратор no control of comments",
+         "Жалоба: куратор no control of comments",
+         "По доставке случилось следующее: куратор no control of comments",
+         "Нужен разбор: куратор no control of comments",
+         "куратор no control of comments",
+         "Это жалоба по доставке: куратор no control of comments",
+         "Хочу пожаловаться: куратор no control of comments",
+         "Ситуация с доставкой: куратор no control of comments"
+      ]
+   },
+   {
+      "intent": "curator_not_enough_couriers_by_zone",
+      "category": "куратор",
+      "crm_tag": "Другое",
+      "complaint_type": "чек-лист куратора",
+      "role": "куратор",
+      "entities": [],
+      "answer": "Обращение 'куратор not enough couriers by zone' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: куратор not enough couriers by zone",
+         "Жалоба: куратор not enough couriers by zone",
+         "По доставке случилось следующее: куратор not enough couriers by zone",
+         "Нужен разбор: куратор not enough couriers by zone",
+         "куратор not enough couriers by zone",
+         "Это жалоба по доставке: куратор not enough couriers by zone",
+         "Хочу пожаловаться: куратор not enough couriers by zone",
+         "Ситуация с доставкой: куратор not enough couriers by zone"
+      ]
+   },
+   {
+      "intent": "courier_partner_order_delivered_separately_wrong",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Обращение 'курьер partner order delivered separately wrong' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер partner order delivered separately wrong",
+         "Жалоба: курьер partner order delivered separately wrong",
+         "По доставке случилось следующее: курьер partner order delivered separately wrong",
+         "Нужен разбор: курьер partner order delivered separately wrong",
+         "курьер partner order delivered separately wrong",
+         "Это жалоба по доставке: курьер partner order delivered separately wrong",
+         "Хочу пожаловаться: курьер partner order delivered separately wrong",
+         "Ситуация с доставкой: курьер partner order delivered separately wrong"
+      ]
+   },
+   {
+      "intent": "courier_nonstandard_behavior_other",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер nonstandard behavior other' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер nonstandard behavior other",
+         "Жалоба: курьер nonstandard behavior other",
+         "По доставке случилось следующее: курьер nonstandard behavior other",
+         "Нужен разбор: курьер nonstandard behavior other",
+         "курьер nonstandard behavior other",
+         "Это жалоба по доставке: курьер nonstandard behavior other",
+         "Хочу пожаловаться: курьер nonstandard behavior other",
+         "Ситуация с доставкой: курьер nonstandard behavior other"
+      ]
+   },
+   {
+      "intent": "courier_late_general_v59",
+      "category": "доставка",
+      "crm_tag": "Опоздание доставки",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "time_slot"
+      ],
+      "answer": "Извините за задержку. Курьер уже в пути. По таким обращениям обычно проверяют маршрут, текущий статус заказа и факт опоздания, после чего предлагают подходящее решение.",
+      "questions": [
+         "Курьер опаздывает",
+         "Где мой заказ, он задерживается снова",
+         "Почему доставка ещё не приехала",
+         "Заказ должен был быть уже у меня снова",
+         "Курьер задержал доставку",
+         "Почему так долго везут заказ снова",
+         "Заказ не привезли вовремя",
+         "Доставка сильно опаздывает снова"
+      ]
+   },
+   {
+      "intent": "courier_missing_package_v60",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "package_count"
+      ],
+      "answer": "Похоже, вам не передали часть заказа. По таким обращениям сверяют количество мест в заказе, что было отсканировано курьером и что фактически передано покупателю.",
+      "questions": [
+         "Мне не привезли один пакет",
+         "В заказе не хватает пакета снова",
+         "Курьер не отдал один пакет",
+         "Из заказа пропал пакет снова",
+         "Не довезли часть заказа в пакете",
+         "Где второй пакет из заказа снова",
+         "Курьер привез не все пакеты",
+         "Мне отдали не весь заказ снова"
+      ]
+   },
+   {
+      "intent": "courier_missing_water_v61",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "item_type"
+      ],
+      "answer": "Если в заказе не хватает воды, обращение относят к недовозу части заказа. Обычно проверяют, была ли вода отдельным местом и была ли она передана покупателю.",
+      "questions": [
+         "Не привезли воду",
+         "Курьер забыл воду снова",
+         "Воды из заказа нет",
+         "Где бутылки воды из моего заказа снова",
+         "Заказ пришел без воды",
+         "Воду не доставили снова",
+         "Курьер не отдал воду",
+         "В заказе отсутствует вода снова"
+      ]
+   },
+   {
+      "intent": "courier_missing_frozen_v62",
+      "category": "недовоз",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id",
+         "item_type"
+      ],
+      "answer": "Если покупателю не передали пакет с заморозкой, это оформляют как недовоз. Проверяют, была ли заморозка отдельным местом и забрал ли её курьер полностью.",
+      "questions": [
+         "Не привезли заморозку",
+         "Мороженое и пельмени не доставили снова",
+         "Курьер не отдал пакет с заморозкой",
+         "Замороженные товары не приехали снова",
+         "Пропал пакет с заморозкой",
+         "Из заказа исчезла заморозка снова",
+         "Где мои замороженные продукты",
+         "Заморозка не доехала снова"
+      ]
+   },
+   {
+      "intent": "courier_wrong_order_v63",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Если вам привезли чужие товары или не ваш заказ, ситуацию относят к перепутанному заказу. Проверяют номер заказа, количество мест и какие пакеты были переданы.",
+      "questions": [
+         "Мне привезли чужой заказ",
+         "Это не мои продукты снова",
+         "Курьер перепутал заказ",
+         "В пакетах чужие товары снова",
+         "Заказ не соответствует моему",
+         "Мне отдали не тот заказ снова",
+         "Получил не свой заказ",
+         "Мне доставили не мои покупки снова"
+      ]
+   },
+   {
+      "intent": "courier_left_without_permission_v64",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "delivery_instruction",
+         "location"
+      ],
+      "answer": "Если покупатель не выбирал бесконтактную доставку или курьер не смог связаться с покупателем, заказ нельзя самовольно оставлять на адресе. Такие случаи проверяют отдельно.",
+      "questions": [
+         "Курьер оставил заказ у двери без разрешения",
+         "Заказ просто оставили на площадке снова",
+         "Я не просил оставлять заказ без меня",
+         "Курьер бросил пакеты у двери и ушел снова",
+         "Заказ оставили без согласования",
+         "Курьер самовольно оставил заказ снова",
+         "Пакеты лежали у двери без звонка",
+         "Курьер оставил заказ и не дождался меня снова"
+      ]
+   },
+   {
+      "intent": "courier_refuse_door_delivery_v65",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "floor",
+         "address_type"
+      ],
+      "answer": "Заказ должен доставляться до двери покупателя. Если курьер просит выйти на улицу, забрать из машины или отказывается подниматься, это отдельный тип жалобы.",
+      "questions": [
+         "Курьер просит выйти за заказом",
+         "Курьер не хочет подниматься до квартиры снова",
+         "Мне сказали забрать заказ из машины",
+         "Курьер отказался нести до двери снова",
+         "Заставляют спускаться на улицу за заказом",
+         "Курьер не донес заказ до квартиры снова",
+         "Курьер не поднялся на этаж",
+         "Мне отказались приносить заказ к двери снова"
+      ]
+   },
+   {
+      "intent": "courier_ignore_comment_v66",
+      "category": "комментарии",
+      "crm_tag": "Игнор комментариев",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "delivery_instruction"
+      ],
+      "answer": "Если курьер проигнорировал комментарий к адресу или способу передачи заказа, обращение относят к игнору комментариев.",
+      "questions": [
+         "Курьер не прочитал комментарий к заказу",
+         "Мои инструкции в заказе проигнорировали снова",
+         "Я писал куда оставить, но это не учли",
+         "Комментарий к доставке не прочитали снова",
+         "Курьер сделал не так, как было указано",
+         "Заказ передали не по инструкции снова",
+         "Курьер не учел примечание к адресу",
+         "Инструкции к заказу не были соблюдены снова"
+      ]
+   },
+   {
+      "intent": "courier_no_precall_v67",
+      "category": "комментарии",
+      "crm_tag": "Игнор комментариев",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "delivery_instruction"
+      ],
+      "answer": "Если покупатель просил предварительно позвонить, а курьер не сделал этого, обращение относят к игнору комментариев.",
+      "questions": [
+         "Я просил позвонить заранее, но мне не позвонили",
+         "Курьер не сделал предварительный звонок снова",
+         "Не предупредили о приезде, хотя я просил",
+         "В комментарии был звонок заранее, его не было снова",
+         "Курьер не связался до доставки",
+         "Не позвонили перед приездом снова",
+         "Предварительного звонка не было",
+         "Курьер приехал без звонка, хотя это было указано снова"
+      ]
+   },
+   {
+      "intent": "courier_rude_communication_v68",
+      "category": "сервис",
+      "crm_tag": "Коммуникация с покупателем",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Если курьер грубо разговаривал, хамил или недоброжелательно общался с покупателем, это относят к жалобам на коммуникацию с покупателем.",
+      "questions": [
+         "Курьер грубо разговаривал",
+         "Курьер хамил мне при доставке снова",
+         "Общение курьера было очень неприятным",
+         "Курьер разговаривал в грубой форме снова",
+         "Со мной общались по-хамски",
+         "Курьер вел себя невежливо снова",
+         "Курьер нагрубил",
+         "Обращение курьера было неприемлемым снова"
+      ]
+   },
+   {
+      "intent": "courier_requests_tip_v69",
+      "category": "сервис",
+      "crm_tag": "Коммуникация с покупателем",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Курьер не должен выпрашивать чаевые или дополнительную оплату за сервис. Такие обращения относят к жалобам на коммуникацию с покупателем.",
+      "questions": [
+         "Курьер просит чаевые",
+         "Мне намекали на доплату курьеру снова",
+         "Курьер требовал вознаграждение",
+         "Доставщик выпрашивал чаевые снова",
+         "Курьер просил деньги сверх заказа",
+         "Курьер навязывал доплату снова",
+         "Курьер требует чаевые за доставку",
+         "Доставщик выпрашивал дополнительную оплату снова"
+      ]
+   },
+   {
+      "intent": "courier_temperature_melted_v70",
+      "category": "качество",
+      "crm_tag": "Температурный режим",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "item_type"
+      ],
+      "answer": "Если товар приехал растаявшим, остывшим или без термооборудования, обращение относят к температурному режиму и проверяют условия перевозки.",
+      "questions": [
+         "Мороженое полностью растаяло",
+         "Заморозка приехала мягкая снова",
+         "Холодные продукты оказались теплыми",
+         "Заказ приехал без холода снова",
+         "Замороженные продукты растаяли",
+         "Продукты приехали не в той температуре снова",
+         "Холодильный товар привезли теплым",
+         "Температурный режим при доставке нарушен снова"
+      ]
+   },
+   {
+      "intent": "courier_damaged_goods_v71",
+      "category": "качество",
+      "crm_tag": "Неаккуратная доставка",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "item_type"
+      ],
+      "answer": "Если товары помялись, разбились или были повреждены в пути, обращение относят к неаккуратной доставке.",
+      "questions": [
+         "Продукты приехали помятыми",
+         "Яйца разбились по дороге снова",
+         "Торт поврежден после доставки",
+         "Пакет порвался и товар пострадал снова",
+         "Заказ доставили неаккуратно",
+         "Хрупкие товары были смяты снова",
+         "Покупки приехали поврежденными",
+         "Неаккуратная доставка повредила товары снова"
+      ]
+   },
+   {
+      "intent": "courier_payment_terminal_problem_v72",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Если у курьера не проходит оплата терминалом, обращение относят к проблемам с оплатой.",
+      "questions": [
+         "Не проходит оплата терминалом",
+         "Терминал курьера не работает снова",
+         "Курьер не может принять оплату картой",
+         "Оплата картой при получении не сработала снова",
+         "Терминал разряжен или сломан",
+         "У курьера проблемы с терминалом снова",
+         "Картой оплатить не удалось",
+         "Терминал не принимает платеж снова"
+      ]
+   },
+   {
+      "intent": "courier_requests_transfer_v73",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "payment_method"
+      ],
+      "answer": "Курьер не должен просить перевод на личную карту или телефон. Если такое произошло, ситуацию относят к проблемам с оплатой.",
+      "questions": [
+         "Курьер просит перевести деньги на карту",
+         "Мне предложили оплатить на личный номер снова",
+         "Курьер хочет перевод вместо терминала",
+         "Сказали перевести деньги лично курьеру снова",
+         "Предлагают перевод на карту курьера",
+         "Курьер просит оплату на телефон снова",
+         "Оплату хотят принять переводом",
+         "Меня попросили перевести деньги лично снова"
+      ]
+   },
+   {
+      "intent": "courier_drunk_v74",
+      "category": "безопасность",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Если курьер приехал в состоянии алкогольного опьянения, такую ситуацию относят к серьёзным нестандартным жалобам и требуют отдельной проверки.",
+      "questions": [
+         "Курьер был пьян",
+         "Доставщик приехал нетрезвым снова",
+         "От курьера пахло алкоголем",
+         "Курьер был в состоянии опьянения снова",
+         "Мне кажется курьер был пьяный",
+         "Нетрезвый курьер привез заказ снова",
+         "Курьер приехал выпившим",
+         "Курьер выглядел нетрезвым снова"
+      ]
+   },
+   {
+      "intent": "curator_wrong_handover_taxi_missing_package_v75",
+      "category": "куратор",
+      "crm_tag": "Не отдали пакет/воду/заморозку",
+      "complaint_type": "47_5 Куратор курьеров",
+      "role": "куратор",
+      "entities": [
+         "order_id",
+         "package_count"
+      ],
+      "answer": "Если часть заказа не доехала у курьера такси или сторонней доставки из-за некорректной выдачи, это относят к ответственности куратора.",
+      "questions": [
+         "Таксисту выдали не все пакеты",
+         "Похоже куратор отдал курьеру не весь заказ снова",
+         "Часть заказа потерялась еще на выдаче",
+         "Стороннему курьеру выдали не все места снова",
+         "Куратор некорректно выдал заказ курьеру",
+         "Курьер такси получил не весь заказ от точки снова",
+         "На выдаче отдали не все пакеты",
+         "Проблема с выдачей заказа стороннему курьеру снова"
+      ]
+   },
+   {
+      "intent": "courier_left_wrong_place_v76",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер left wrong place' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер left wrong place",
+         "Жалоба: курьер left wrong place снова",
+         "По доставке случилось следующее: курьер left wrong place",
+         "Нужен разбор: курьер left wrong place снова",
+         "курьер left wrong place",
+         "Это жалоба по доставке: курьер left wrong place снова",
+         "Хочу пожаловаться: курьер left wrong place",
+         "Ситуация с доставкой: курьер left wrong place снова"
+      ]
+   },
+   {
+      "intent": "courier_called_instead_of_silent_leave_v77",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер called instead of silent leave' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер called instead of silent leave",
+         "Жалоба: курьер called instead of silent leave снова",
+         "По доставке случилось следующее: курьер called instead of silent leave",
+         "Нужен разбор: курьер called instead of silent leave снова",
+         "курьер called instead of silent leave",
+         "Это жалоба по доставке: курьер called instead of silent leave снова",
+         "Хочу пожаловаться: курьер called instead of silent leave",
+         "Ситуация с доставкой: курьер called instead of silent leave снова"
+      ]
+   },
+   {
+      "intent": "courier_contact_way_wrong_v78",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер contact way wrong' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер contact way wrong",
+         "Жалоба: курьер contact way wrong снова",
+         "По доставке случилось следующее: курьер contact way wrong",
+         "Нужен разбор: курьер contact way wrong снова",
+         "курьер contact way wrong",
+         "Это жалоба по доставке: курьер contact way wrong снова",
+         "Хочу пожаловаться: курьер contact way wrong",
+         "Ситуация с доставкой: курьер contact way wrong снова"
+      ]
+   },
+   {
+      "intent": "courier_personal_messages_v79",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер personal messages' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер personal messages",
+         "Жалоба: курьер personal messages снова",
+         "По доставке случилось следующее: курьер personal messages",
+         "Нужен разбор: курьер personal messages снова",
+         "курьер personal messages",
+         "Это жалоба по доставке: курьер personal messages снова",
+         "Хочу пожаловаться: курьер personal messages",
+         "Ситуация с доставкой: курьер personal messages снова"
+      ]
+   },
+   {
+      "intent": "courier_temperature_no_thermal_bag_v80",
+      "category": "качество",
+      "crm_tag": "Температурный режим",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "thermal_equipment"
+      ],
+      "answer": "Обращение 'курьер temperature no thermal bag' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер temperature no thermal bag",
+         "Жалоба: курьер temperature no thermal bag снова",
+         "По доставке случилось следующее: курьер temperature no thermal bag",
+         "Нужен разбор: курьер temperature no thermal bag снова",
+         "курьер temperature no thermal bag",
+         "Это жалоба по доставке: курьер temperature no thermal bag снова",
+         "Хочу пожаловаться: курьер temperature no thermal bag",
+         "Ситуация с доставкой: курьер temperature no thermal bag снова"
+      ]
+   },
+   {
+      "intent": "courier_hot_food_cold_v81",
+      "category": "качество",
+      "crm_tag": "Температурный режим",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер hot food cold' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер hot food cold",
+         "Жалоба: курьер hot food cold снова",
+         "По доставке случилось следующее: курьер hot food cold",
+         "Нужен разбор: курьер hot food cold снова",
+         "курьер hot food cold",
+         "Это жалоба по доставке: курьер hot food cold снова",
+         "Хочу пожаловаться: курьер hot food cold",
+         "Ситуация с доставкой: курьер hot food cold снова"
+      ]
+   },
+   {
+      "intent": "courier_refused_cash_v82",
+      "category": "оплата",
+      "crm_tag": "Проблемы с оплатой нал/терминал",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "cash_amount"
+      ],
+      "answer": "Обращение 'курьер refused cash' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер refused cash",
+         "Жалоба: курьер refused cash снова",
+         "По доставке случилось следующее: курьер refused cash",
+         "Нужен разбор: курьер refused cash снова",
+         "курьер refused cash",
+         "Это жалоба по доставке: курьер refused cash снова",
+         "Хочу пожаловаться: курьер refused cash",
+         "Ситуация с доставкой: курьер refused cash снова"
+      ]
+   },
+   {
+      "intent": "courier_no_change_v83",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер no change' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер no change",
+         "Жалоба: курьер no change снова",
+         "По доставке случилось следующее: курьер no change",
+         "Нужен разбор: курьер no change снова",
+         "курьер no change",
+         "Это жалоба по доставке: курьер no change снова",
+         "Хочу пожаловаться: курьер no change",
+         "Ситуация с доставкой: курьер no change снова"
+      ]
+   },
+   {
+      "intent": "courier_forgot_close_order_v84",
+      "category": "ошибка заказа",
+      "crm_tag": "Перепутали заказ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "order_id"
+      ],
+      "answer": "Обращение 'курьер forgot close order' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер forgot close order",
+         "Жалоба: курьер forgot close order снова",
+         "По доставке случилось следующее: курьер forgot close order",
+         "Нужен разбор: курьер forgot close order снова",
+         "курьер forgot close order",
+         "Это жалоба по доставке: курьер forgot close order снова",
+         "Хочу пожаловаться: курьер forgot close order",
+         "Ситуация с доставкой: курьер forgot close order снова"
+      ]
+   },
+   {
+      "intent": "courier_refuse_private_house_gate_v85",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер refuse private house gate' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер refuse private house gate",
+         "Жалоба: курьер refuse private house gate снова",
+         "По доставке случилось следующее: курьер refuse private house gate",
+         "Нужен разбор: курьер refuse private house gate снова",
+         "курьер refuse private house gate",
+         "Это жалоба по доставке: курьер refuse private house gate снова",
+         "Хочу пожаловаться: курьер refuse private house gate",
+         "Ситуация с доставкой: курьер refuse private house gate снова"
+      ]
+   },
+   {
+      "intent": "courier_request_meet_at_checkpoint_v86",
+      "category": "доставка",
+      "crm_tag": "Отказ курьера доставлять до двери",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер request meet at checkpoint' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер request meet at checkpoint",
+         "Жалоба: курьер request meet at checkpoint снова",
+         "По доставке случилось следующее: курьер request meet at checkpoint",
+         "Нужен разбор: курьер request meet at checkpoint снова",
+         "курьер request meet at checkpoint",
+         "Это жалоба по доставке: курьер request meet at checkpoint снова",
+         "Хочу пожаловаться: курьер request meet at checkpoint",
+         "Ситуация с доставкой: курьер request meet at checkpoint снова"
+      ]
+   },
+   {
+      "intent": "courier_waited_too_little_v87",
+      "category": "сервис",
+      "crm_tag": "Другое",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [],
+      "answer": "Обращение 'курьер waited too little' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер waited too little",
+         "Жалоба: курьер waited too little снова",
+         "По доставке случилось следующее: курьер waited too little",
+         "Нужен разбор: курьер waited too little снова",
+         "курьер waited too little",
+         "Это жалоба по доставке: курьер waited too little снова",
+         "Хочу пожаловаться: курьер waited too little",
+         "Ситуация с доставкой: курьер waited too little снова"
+      ]
+   },
+   {
+      "intent": "courier_left_on_floor_v88",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер left on floor' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер left on floor",
+         "Жалоба: курьер left on floor снова",
+         "По доставке случилось следующее: курьер left on floor",
+         "Нужен разбор: курьер left on floor снова",
+         "курьер left on floor",
+         "Это жалоба по доставке: курьер left on floor снова",
+         "Хочу пожаловаться: курьер left on floor",
+         "Ситуация с доставкой: курьер left on floor снова"
+      ]
+   },
+   {
+      "intent": "courier_hanging_on_handle_v89",
+      "category": "доставка",
+      "crm_tag": "Оставил заказ на адресе/не вернул на ТТ",
+      "complaint_type": "47_2 Курьер ЗиЗ",
+      "role": "курьер",
+      "entities": [
+         "location"
+      ],
+      "answer": "Обращение 'курьер hanging on handle' нужно разбирать по соответствующему сценарию качества доставки.",
+      "questions": [
+         "Проблема: курьер hanging on handle",
+         "Жалоба: курьер hanging on handle снова",
+         "По доставке случилось следующее: курьер hanging on handle",
+         "Нужен разбор: курьер hanging on handle снова",
+         "курьер hanging on handle",
+         "Это жалоба по доставке: курьер hanging on handle снова",
+         "Хочу пожаловаться: курьер hanging on handle",
+         "Ситуация с доставкой: курьер hanging on handle снова"
+      ]
+   }
+]

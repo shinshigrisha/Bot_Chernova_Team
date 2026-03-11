@@ -1,0 +1,10 @@
+{"text":"курьер опоздал и еще разбил яйца","intents":["late_delivery","courier_damaged_goods"],"severity":"high"}
+{"text":"доставка поздно и не хватает одного пакета","intents":["late_delivery","missing_items"],"severity":"critical"}
+{"text":"курьер хамил и еще не поднялся на этаж","intents":["courier_rude_behavior","courier_refused_door_delivery"],"severity":"high"}
+{"text":"опоздали и заморозка растаяла","intents":["late_delivery","temperature_violation"],"severity":"high"}
+{"text":"курьер не позвонил и оставил заказ у двери","intents":["courier_ignored_comment","unauthorized_delivery"],"severity":"medium"}
+{"text":"заказ перепутали и еще опоздали","intents":["wrong_order_delivery","late_delivery"],"severity":"critical"}
+{"text":"курьер нагрубил и еще сказал спуститься","intents":["courier_rude_behavior","courier_refused_door_delivery"],"severity":"high"}
+{"text":"не довезли пакет и упаковка повреждена","intents":["missing_items","package_damage"],"severity":"high"}
+{"text":"заказ оставили не там и клиент его не нашел","intents":["courier_left_order_wrong_place","customer_says_order_not_received"],"severity":"critical"}
+{"text":"курьер уронил пакет и часть товаров разбилась","intents":["courier_dropped_bag","courier_damaged_goods"],"severity":"high"}
