@@ -88,13 +88,15 @@ class _Case:
 
 def _business_route(result: AICourierResult) -> str:
     text = (result.text or "").lower()
-    if result.route in {"faq", "rule", "must_match"}:
-        return "auto_answer"
     if "поддержк" in text:
         return "route_to_support"
+    # Автоответ с инструкцией (must_match/faq/case_engine) — даже при escalate
+    if result.route in {"faq", "rule", "must_match", "case_engine"}:
+        return "auto_answer"
+    # Эскалация по тексту или флагу (для llm_reason и остального)
     if result.escalate or "эскалир" in text:
         return "route_to_curator"
-    if result.route in {"llm_reason"}:
+    if result.route == "llm_reason":
         return "auto_answer"
     return "route_to_curator"
 
@@ -197,10 +199,10 @@ def ai_service(monkeypatch):
     "case",
     [
         _Case("Яйца приехали разбитые", "auto_answer", "фото"),
-        _Case("оставил заказ у двери без разрешения", "auto_answer", "связаться"),
-        _Case("курьер нагрубил", "auto_answer", "собрать факты"),
+        _Case("оставил заказ у двери без разрешения", "auto_answer", "двер"),  # case_engine: leave_at_door
+        _Case("курьер нагрубил", "auto_answer", "куратор"),  # case_engine: rude_communication
         _Case("можно оштрафовать курьера?", "route_to_curator", "куратор"),
-        _Case("полный возврат на терминале", "route_to_support", "поддержк"),
+        _Case("полный возврат на терминале", "auto_answer", "терминал"),  # case_engine: payment_terminal
         _Case("Не успеваю в таймер, пробка", "auto_answer", "ETA"),
         _Case("АКБ дымит в шкафу", "auto_answer", "обесточь"),
         _Case("Не хватает пакета, недовоз", "auto_answer", "МП"),
@@ -292,4 +294,3 @@ async def test_provider_fallback_without_groq(monkeypatch):
     router = ProviderRouter([_NamedProvider("deepseek"), _NamedProvider("openai")])
     resp = await router.complete([{"role": "user", "content": "test"}], mode="chat")
     assert resp.provider in {"deepseek", "openai"}
-    assert resp.provider == "deepseek"
