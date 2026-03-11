@@ -68,6 +68,13 @@ flowchart LR
 ## Планировщик
 - Scheduler (опционально) запускает задачи в очереди; один экземпляр или распределённая блокировка.
 
+## AI (куратор)
+- **Канонический стек:** `src/core/services/ai/` — AICourierService, ProviderRouter, providers (Groq, DeepSeek, OpenAI), CaseEngine, IntentEngine, EmbeddingsService.
+- **Репозиторий FAQ:** единственный источник — `src/infra/db/repositories/faq_repo.py`.
+- **Политика и промпты:** `data/ai/` (core_policy.json, intent_tags.json, prompts/).
+- Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты smoke_ai / smoke_provider_router (используют core).
+- Legacy-модули (src/services/ai, src/core/services/ai_service.py, плоские base/router/провайдеры в core/services/ai, src/ai_policy) удалены; импорты только из core и faq_repo.
+
 ## RBAC
 - Роли: ADMIN, LEAD, CURATOR, VIEWER, COURIER.
 - Доступ к /admin: роль из (ADMIN, LEAD, CURATOR) или ID в ADMIN_IDS.

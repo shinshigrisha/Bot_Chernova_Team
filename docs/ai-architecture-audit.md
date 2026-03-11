@@ -3,6 +3,8 @@
 **Задача:** Audit current AI architecture — canonical modules, duplicate FAQ repos, duplicate provider routing, legacy entrypoints.  
 **Правила:** без новой функциональности, без слепого рефакторинга; инспекция → карта → дубликаты → канон → план миграции.
 
+**Статус после cleanup (2026-03-11):** миграция выполнена. Удалены: `src/services/ai/`, `src/core/services/ai_service.py`, `src/core/services/ai/base.py`, `router.py`, плоские провайдеры в корне `ai/`, `src/ai_policy/core_policy.json`. Скрипт `scripts/smoke_provider_router.py` переведён на core. Документ сохранён как историческая справка; актуальная схема — в ARCHITECTURE.md (раздел «AI (куратор)»).
+
 ---
 
 ## 1. Current AI map (текущая карта AI)
