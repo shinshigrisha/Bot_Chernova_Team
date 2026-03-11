@@ -1,8 +1,8 @@
 # Аудит AI-архитектуры (исторический документ)
 
-**Статус:** миграция выполнена (2026-03-11). Удалены: `src/services/ai/`, `src/core/services/ai_service.py`, мёртвая ветка base/router/плоские провайдеры в `core/services/ai/`, `src/ai_policy/`. Скрипт `scripts/smoke_provider_router.py` переведён на core.
+> **Исторический документ.** Отражает состояние до и после миграции 2026-03-11. Актуальная схема AI — в [ARCHITECTURE.md](ARCHITECTURE.md) (раздел «AI (куратор)»).
 
-**Актуальная схема:** см. [ARCHITECTURE.md](ARCHITECTURE.md) (раздел «AI (куратор)»).
+**Статус:** миграция выполнена (2026-03-11). Удалены: `src/services/ai/`, `src/core/services/ai_service.py`, мёртвая ветка base/router/плоские провайдеры в `core/services/ai/`, `src/ai_policy/`. Скрипт `scripts/smoke_provider_router.py` переведён на core.
 
 ---
 

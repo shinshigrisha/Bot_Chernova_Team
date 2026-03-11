@@ -19,7 +19,7 @@
 - `infra/notifications`: channel plugins (telegram/email/web)
 - `infra/integrations`: superset api/db/csv parsers
 - `bot/`: aiogram handlers, FSM, keyboards (thin adapter)
-- `ai/`: RAG KB, policies, prompts
+- **AI (куратор):** код — `src/core/services/ai/`, политика и промпты — `data/ai/` (RAG KB, policies, prompts)
 
 ## Non-negotiables
 - Idempotent ingest with `ingest_batches.content_hash`
