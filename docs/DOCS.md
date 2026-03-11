@@ -288,7 +288,8 @@
 
 ## 9. Прочие артефакты
 
-- **ADR** (Architecture Decision Records): шаблон и записи в `docs/ADR/`.
+- **ADR** (Architecture Decision Records): шаблон в `docs/ADR/000-template.md`, записи решений — `docs/ADR/` (в т.ч. 001 — canonical AI stack).
+- **Task Master:** планирование и задачи — `.cursor/rules/taskmaster/`, backlog — `docs/taskmaster-backlog.md`; CLI: `task-master list`, `task-master next`, `task-master show <id>`.
 - **AUDIT_STATUS_2026-03-01.md** — отчёт аудита на дату.
 
 ---

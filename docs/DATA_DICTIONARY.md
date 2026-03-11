@@ -48,3 +48,6 @@
 ## Ограничение по зонам (Zone gating)
 - `zone_coverage` считается по батчу/дню.
 - Если ниже порога → отчётность только в режиме Store-only.
+
+## FAQ (AI Curator, v2)
+- **faq_ai**: id, question, answer, category (nullable), tag (nullable), keywords (jsonb), embedding (text, nullable), is_active (bool), created_at, updated_at. Репозиторий — `src/infra/db/repositories/faq_repo.py`. Эмбеддинги пересобираются скриптом `scripts/rebuild_faq_embeddings.py`.

@@ -70,10 +70,15 @@ flowchart LR
 
 ## AI (куратор)
 - **Канонический стек:** `src/core/services/ai/` — AICourierService, ProviderRouter, providers (Groq, DeepSeek, OpenAI), CaseEngine, IntentEngine, EmbeddingsService.
-- **Репозиторий FAQ:** единственный источник — `src/infra/db/repositories/faq_repo.py`.
+- **Репозиторий FAQ (v2):** единственный источник — `src/infra/db/repositories/faq_repo.py`; таблица `faq_ai`.
 - **Политика и промпты:** `data/ai/` (core_policy.json, intent_tags.json, prompts/).
-- Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты smoke_ai / smoke_provider_router (используют core).
-- Legacy-модули (src/services/ai, src/core/services/ai_service.py, плоские base/router/провайдеры в core/services/ai, src/ai_policy) удалены; импорты только из core и faq_repo.
+- Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты `scripts/smoke_ai.py`, `scripts/smoke_provider_router.py`, `scripts/rebuild_faq_embeddings.py` — все используют core.
+- Legacy-модули удалены (src/services/ai, src/core/services/ai_service.py, плоские base/router/провайдеры в core/services/ai, src/ai_policy); импорты только из core и faq_repo.
+
+**Canonical paths (reference):**
+- Код: `src/core/services/ai/ai_courier_service.py`, `provider_router.py`, `providers/*`, `case_engine.py`, `intent_engine.py`, `embeddings_service.py`
+- FAQ: `src/infra/db/repositories/faq_repo.py`
+- Данные: `data/ai/` (core_policy.json, intent_tags.json, prompts/, golden_cases.jsonl)
 
 ## RBAC
 - Роли: ADMIN, LEAD, CURATOR, VIEWER, COURIER.

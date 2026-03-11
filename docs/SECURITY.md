@@ -3,6 +3,7 @@
 ## Секреты
 - Не коммитить токены и пароли
 - В разработке использовать .env, в проде — secret manager
+- API-ключи AI (GROQ_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY) хранить только в окружении; код AI — `src/core/services/ai/`, конфиг политики — `data/ai/` (без секретов в репозитории)
 
 ## Сеть
 - Postgres и Redis в docker-compose не публикуются наружу (без ports); доступ только из внутренней сети (bot, worker).

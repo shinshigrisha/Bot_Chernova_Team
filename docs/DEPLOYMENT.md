@@ -14,6 +14,8 @@
 
 **Тесты:** требуют запущенный Postgres с применёнными миграциями. После `make up` и `make migrate`: `pytest tests/ -v` (используется `DATABASE_URL` из окружения).
 
+**AI:** политика и промпты — каталог `data/ai/` (core_policy.json, intent_tags.json, prompts/). Опционально после миграций: пересборка эмбеддингов FAQ — `python scripts/rebuild_faq_embeddings.py`; проверка без Telegram — `python scripts/smoke_ai.py`, `python scripts/smoke_provider_router.py`.
+
 ## Службы (docker-compose)
 - **postgres** (postgres:16-alpine): БД, без публичных портов (только внутренняя сеть).
 - **redis** (redis:7-alpine): брокер/бэкенд Celery, без публичных портов.

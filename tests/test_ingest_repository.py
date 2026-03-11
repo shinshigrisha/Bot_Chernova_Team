@@ -1,4 +1,6 @@
 """Tests for IngestRepository: idempotent batch by source+content_hash."""
+import uuid
+
 import pytest
 
 from src.infra.db.enums import IngestSource, IngestStatus
@@ -11,7 +13,7 @@ async def test_ingest_batch_idempotent_by_content_hash(async_session) -> None:
     """Two create_batch with same source+content_hash: second does not create duplicate."""
     repo = IngestRepository(async_session)
     source = IngestSource.CSV_UPLOAD
-    content_hash = "a" * 64
+    content_hash = ("a" * 32 + uuid.uuid4().hex)[:64]  # уникальный хэш на прогон, изоляция от других прогонов
 
     existing = await repo.get_batch_by_source_hash(source, content_hash)
     assert existing is None

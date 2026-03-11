@@ -4,8 +4,6 @@
     DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/delivery_assistant \
         pytest tests/test_user_smoke.py -v
 """
-import os
-
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -13,16 +11,20 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.infra.db.enums import UserRole, coerce_user_role
 from src.infra.db.repositories.users import UserRepository
 
-_TEST_DB_URL = os.environ.get(
-    "TEST_DATABASE_URL",
-    os.environ.get("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost:5432/delivery_assistant"),
-)
+from tests.conftest import TEST_DATABASE_URL, _TEST_CONNECT_ARGS
+
+_TEST_DB_URL = TEST_DATABASE_URL
 
 
 @pytest_asyncio.fixture
 async def db_session():
     """Отдельный engine + session для каждого теста, с rollback в конце."""
-    engine = create_async_engine(_TEST_DB_URL, echo=False, pool_pre_ping=False)
+    engine = create_async_engine(
+        _TEST_DB_URL,
+        echo=False,
+        pool_pre_ping=False,
+        connect_args=_TEST_CONNECT_ARGS,
+    )
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as session:
         yield session

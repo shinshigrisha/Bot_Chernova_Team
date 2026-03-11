@@ -48,8 +48,8 @@ async def test_issue_asset_one_active_assignment(async_session) -> None:
     assert active.id == a1.id
 
     # Second assignment on same asset while first is active must violate unique
-    await repo.create_assignment(asset.id, courier_id)
     with pytest.raises(IntegrityError):
+        await repo.create_assignment(asset.id, courier_id)
         await async_session.flush()
     await async_session.rollback()
 

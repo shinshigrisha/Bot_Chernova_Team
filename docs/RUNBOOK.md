@@ -54,3 +54,8 @@
 
 Решение:
 - Выполнить /admin → Аналитика → Перерасчёт за период (через очередь)
+
+## AI Curator / куратор
+- **Политика не подхватывается:** перезагрузить без рестарта — команда `/ai_policy_reload` (админ). Файлы политики — `data/ai/core_policy.json`, `intent_tags.json`, `prompts/`.
+- **Проверка маршрутизации без бота:** `python scripts/smoke_ai.py` (golden_cases.jsonl), `python scripts/smoke_provider_router.py`. Код — только `src/core/services/ai/`.
+- **Поиск по FAQ не находит записи / устаревшие эмбеддинги:** пересобрать эмбеддинги: `python scripts/rebuild_faq_embeddings.py` (требует БД и миграции). Репозиторий FAQ — `src/infra/db/repositories/faq_repo.py`, таблица `faq_ai`.
