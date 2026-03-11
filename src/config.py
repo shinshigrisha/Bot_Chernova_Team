@@ -2,6 +2,7 @@
 import json
 from functools import lru_cache
 from typing import List, Union
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -36,6 +37,27 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://user:pass@postgres:5432/delivery_assistant",
         alias="DATABASE_URL",
     )
+    database_ssl: bool = Field(default=False, alias="DATABASE_SSL")
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def normalize_database_url_sslmode(cls, v: str) -> str:
+        """Strip sslmode/ssl_mode from URL so SQLAlchemy+asyncpg don't get invalid or unsupported kwargs.
+        asyncpg.connect() does not accept sslmode as a keyword when called via SQLAlchemy; invalid values
+        cause ClientConfigurationError. Removing these params lets asyncpg use its default connection behavior."""
+        scheme = (v.split(":")[0] or "").lower()
+        if "postgres" not in scheme:
+            return v
+        parsed = urlparse(v)
+        if not parsed.query:
+            return v
+        params = parse_qs(parsed.query, keep_blank_values=True)
+        params.pop("sslmode", None)
+        params.pop("ssl_mode", None)
+        if not params:
+            return urlunparse(parsed._replace(query=""))
+        new_query = urlencode(params, doseq=True)
+        return urlunparse(parsed._replace(query=new_query))
 
     # Redis
     redis_url: str = Field(default="redis://redis:6379/0", alias="REDIS_URL")

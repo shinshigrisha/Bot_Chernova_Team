@@ -8,10 +8,13 @@ from src.infra.db.models import Base
 
 _settings = get_settings()
 
+# When DATABASE_SSL=false, pass ssl=False so asyncpg does not use PGSSLMODE from env (can be invalid).
+_connect_args = {} if _settings.database_ssl else {"ssl": False}
 engine = create_async_engine(
     _settings.database_url,
     echo=False,
     pool_pre_ping=True,
+    connect_args=_connect_args,
 )
 
 async_session_factory = async_sessionmaker(
