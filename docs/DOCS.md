@@ -262,7 +262,7 @@
 
 ### Назначение
 
-Сервис отвечает по многоуровневой схеме: rule-based → FAQ (RAG) → LLM-провайдеры → эскалация к человеку. Поведение задаётся policy в `data/ai/` (core_policy.json, intent_tags.json, prompts/*).
+Сервис отвечает по многоуровневой схеме: rule-based → FAQ (RAG) → LLM-провайдеры → эскалация к человеку. Реализация: код — `src/core/services/ai/`, политика и промпты — `data/ai/` (core_policy.json, intent_tags.json, prompts/*).
 
 ### Формат ответа
 

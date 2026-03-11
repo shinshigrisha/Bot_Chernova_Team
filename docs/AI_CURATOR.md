@@ -9,6 +9,8 @@ AI-куратор в этом проекте — это сервис, котор
 - при необходимости использует LLM-провайдеров для формулировки ответа;
 - если уверенности недостаточно или кейс рискованный, маршрутизирует вопрос к человеку (эскалация).
 
+**Реализация:** код AI-куратора — `src/core/services/ai/` (AICourierService, ProviderRouter, providers, CaseEngine, IntentEngine, EmbeddingsService); политика и промпты — `data/ai/`. Единственный репозиторий FAQ — `src/infra/db/repositories/faq_repo.py`.
+
 Поведение AI регулируется policy-файлами в `data/ai/`:
 
 - `core_policy.json` — правила маршрутизации, fallback, риск-темы;

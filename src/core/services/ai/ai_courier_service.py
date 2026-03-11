@@ -111,13 +111,9 @@ class AICourierService:
             if self._intent_engine.normalize_intent(str(x).lower()) != "unknown"
         }
 
-    def _resolve_rule_reply_fn(self):
-        try:
-            from src.core.services.ai_response_service import build_courier_quick_reply
-
-            return build_courier_quick_reply
-        except Exception:
-            return None
+    def _resolve_rule_reply_fn(self) -> None:
+        """Optional quick-reply builder; module ai_response_service not in use. Returns None."""
+        return None
 
     def _load_json(self, rel_path: str, default: dict[str, Any]) -> dict[str, Any]:
         path = self._data_root / rel_path

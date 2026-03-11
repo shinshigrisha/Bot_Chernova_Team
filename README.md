@@ -62,6 +62,8 @@ CSV/API → IngestService → Repositories + MinIO → Celery Queue → увед
 **Поток AI-ответа:**
 Сообщение → rule-based → FAQ (PostgreSQL ILIKE) → LLM (Groq / DeepSeek / OpenAI) → ответ или эскалация куратору
 
+Реализация AI: код — `src/core/services/ai/` (AICourierService, ProviderRouter, providers), политика и промпты — `data/ai/`, FAQ — `src/infra/db/repositories/faq_repo.py`.
+
 ---
 
 ## Стек технологий
@@ -237,7 +239,9 @@ python scripts/smoke_ai.py
 │           └── clarify_questions.json # Уточняющие вопросы
 ├── scripts/
 │   ├── seed_faq.py                    # Загрузка начальных FAQ в БД
-│   └── smoke_ai.py                    # Smoke-тест AI-конвейера
+│   ├── smoke_ai.py                    # Smoke-тест AI-конвейера (golden cases)
+│   ├── smoke_provider_router.py       # Smoke роутера LLM-провайдеров
+│   └── rebuild_faq_embeddings.py       # Пересборка эмбеддингов FAQ
 ├── tests/
 │   ├── test_ai_policy_routes.py       # Тесты AI-маршрутизации
 │   ├── test_assets_repository.py
@@ -427,12 +431,17 @@ docker compose up bot --build
 
 ## Документация
 
-Полная документация находится в папке `docs/`:
+Полная документация в `docs/`:
 
-- `docs/DOCS.md` — единый справочник (главная документация)
-- `docs/ARCHITECTURE.md` — архитектурные решения
-- `docs/DEPLOYMENT.md` — развёртывание и обновление
-- `docs/AI_CURATOR.md` — детальное описание AI-куратора
-- `docs/ADMIN_GUIDE.md` — руководство администратора
-- `docs/SECURITY.md` — безопасность и управление секретами
-- `docs/RUNBOOK.md` — типовые проблемы и их диагностика
+| Файл | Описание |
+|------|----------|
+| `docs/DOCS.md` | Единый справочник (запуск, развёртывание, архитектура, данные, AI, runbook) |
+| `docs/ARCHITECTURE.md` | Слои, сервисы, потоки данных, AI (куратор), RBAC |
+| `docs/DEPLOYMENT.md` | Развёртывание и обновление |
+| `docs/AI_CURATOR.md` | AI-куратор: реализация (`src/core/services/ai/`, `data/ai/`), провайдеры, FAQ, policy |
+| `docs/ADMIN_GUIDE.md` | Роли и пункты админ-меню |
+| `docs/TROUBLESHOOTING.md` | ADMIN_IDS, enum user_role, миграции, сеть, AI disabled |
+| `docs/SECURITY.md` | Безопасность и секреты |
+| `docs/RUNBOOK.md` | Типовые проблемы и диагностика |
+| `docs/DATA_DICTIONARY.md` | Словарь данных |
+| `docs/CLEANUP_AUDIT_REPORT.md` | Отчёт аудита cleanup (мусор, legacy, импорты, docs) |
