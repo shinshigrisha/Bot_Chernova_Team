@@ -82,6 +82,75 @@ class FAQRepository:
             .values(embedding=embedding, updated_at=func.now())
         )
 
+    async def set_embedding_vector(
+        self,
+        faq_id: int,
+        embedding_literal: str | None,
+        *,
+        session: AsyncSession | None = None,
+    ) -> None:
+        """Set native vector(1536) column for semantic search. embedding_literal format: '[0.1,0.2,...]'."""
+        if not embedding_literal or not embedding_literal.strip():
+            return
+        current_session = self._get_session(session)
+        await current_session.execute(
+            text(
+                """
+                UPDATE faq_ai
+                SET embedding_vector = CAST(:embedding_literal AS vector),
+                    updated_at = NOW()
+                WHERE id = :faq_id
+                """
+            ),
+            {"embedding_literal": embedding_literal.strip(), "faq_id": faq_id},
+        )
+
+    async def search_semantic(
+        self,
+        query_embedding: list[float] | str,
+        limit: int = 5,
+        *,
+        session: AsyncSession | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return FAQ rows ordered by vector similarity (cosine). Uses embedding_vector column."""
+        current_session = self._get_session(session)
+        if not await self._has_pgvector_extension(session=current_session):
+            return []
+        literal = (
+            self.serialize_embedding(query_embedding)
+            if isinstance(query_embedding, (list, tuple))
+            else str(query_embedding).strip()
+        )
+        if not literal or literal == "null":
+            return []
+        sql = text(
+            """
+            SELECT
+                id,
+                question,
+                answer,
+                category,
+                tag,
+                keywords,
+                is_active,
+                GREATEST(0.0, 1.0 - (embedding_vector <-> CAST(:query_embedding AS vector))) AS score
+            FROM faq_ai
+            WHERE is_active = TRUE
+              AND embedding_vector IS NOT NULL
+            ORDER BY embedding_vector <-> CAST(:query_embedding AS vector)
+            LIMIT :limit
+            """
+        )
+        try:
+            result = await current_session.execute(
+                sql,
+                {"query_embedding": literal, "limit": limit},
+            )
+        except Exception:
+            self._pgvector_available = False
+            return []
+        return self._normalize_rows(result.mappings().all())
+
     async def _has_pgvector_extension(
         self,
         session: AsyncSession | None = None,

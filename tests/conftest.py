@@ -35,6 +35,7 @@ _TEST_CONNECT_ARGS = {"ssl": False}
 
 @pytest_asyncio.fixture
 async def async_engine():
+    """Engine создаётся и уничтожается на каждый тест (тот же event loop, что и у теста)."""
     engine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
@@ -47,16 +48,19 @@ async def async_engine():
 
 @pytest_asyncio.fixture
 async def async_session(async_engine):
-    """Session with rollback after test. Requires DB schema (run migrations first)."""
+    """Сессия в рамках одной транзакции; после теста транзакция откатывается — без загрязнения БД между тестами.
+    Тесты могут вызывать commit(); откат внешней транзакции в teardown отменяет все изменения (create_savepoint)."""
+    connection = await async_engine.connect()
+    transaction = await connection.begin()
     factory = async_sessionmaker(
-        async_engine,
+        bind=connection,
         class_=AsyncSession,
         expire_on_commit=False,
         autocommit=False,
         autoflush=False,
+        join_transaction_mode="create_savepoint",
     )
     async with factory() as session:
         yield session
-        await session.rollback()
-
-
+    await transaction.rollback()
+    await connection.close()

@@ -6,30 +6,11 @@
 """
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.infra.db.enums import UserRole, coerce_user_role
 from src.infra.db.repositories.users import UserRepository
 
-from tests.conftest import TEST_DATABASE_URL, _TEST_CONNECT_ARGS
-
-_TEST_DB_URL = TEST_DATABASE_URL
-
-
-@pytest_asyncio.fixture
-async def db_session():
-    """Отдельный engine + session для каждого теста, с rollback в конце."""
-    engine = create_async_engine(
-        _TEST_DB_URL,
-        echo=False,
-        pool_pre_ping=False,
-        connect_args=_TEST_CONNECT_ARGS,
-    )
-    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with factory() as session:
-        yield session
-        await session.rollback()
-    await engine.dispose()
+# Используем async_session из conftest (единый lifecycle, изоляция через rollback транзакции).
 
 # ---------------------------------------------------------------------------
 # Юнит-тесты coerce_user_role (без БД)
@@ -79,9 +60,9 @@ def test_coerce_invalid_custom_default() -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_get_or_create_admin(db_session) -> None:
+async def test_get_or_create_admin(async_session) -> None:
     """INSERT users с ролью ADMIN не падает с 'invalid input value'."""
-    repo = UserRepository(db_session)
+    repo = UserRepository(async_session)
     user = await repo.get_or_create(
         tg_user_id=88_000_001,
         role=UserRole.ADMIN,
@@ -93,9 +74,9 @@ async def test_get_or_create_admin(db_session) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_or_create_string_role(db_session) -> None:
+async def test_get_or_create_string_role(async_session) -> None:
     """Строка 'ADMIN' принимается без ошибки (coerce внутри репозитория)."""
-    repo = UserRepository(db_session)
+    repo = UserRepository(async_session)
     user = await repo.get_or_create(
         tg_user_id=88_000_002,
         role="ADMIN",  # type: ignore[arg-type]  — намеренно строка
@@ -105,9 +86,9 @@ async def test_get_or_create_string_role(db_session) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_or_create_idempotent(db_session) -> None:
+async def test_get_or_create_idempotent(async_session) -> None:
     """Повторный вызов возвращает тот же объект, display_name обновляется."""
-    repo = UserRepository(db_session)
+    repo = UserRepository(async_session)
     u1 = await repo.get_or_create(88_000_003, role=UserRole.VIEWER, display_name="First")
     u2 = await repo.get_or_create(88_000_003, role=UserRole.VIEWER, display_name="Updated")
     assert u1.id == u2.id
@@ -115,9 +96,9 @@ async def test_get_or_create_idempotent(db_session) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_or_create_invalid_role_fallback(db_session) -> None:
-    """Невалидная роль → fallback VIEWER, INSERT не падает."""
-    repo = UserRepository(db_session)
+async def test_get_or_create_invalid_role_fallback(async_session) -> None:
+    """Невалидная роль → fallback VIEWER (canonical coerce_user_role default), INSERT не падает."""
+    repo = UserRepository(async_session)
     user = await repo.get_or_create(
         tg_user_id=88_000_004,
         role="SUPERADMIN",  # type: ignore[arg-type]

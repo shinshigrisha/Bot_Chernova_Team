@@ -75,8 +75,11 @@ flowchart LR
 - Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты `scripts/smoke_ai.py`, `scripts/smoke_provider_router.py`, `scripts/rebuild_faq_embeddings.py` — все используют core.
 - Legacy-модули удалены (src/services/ai, src/core/services/ai_service.py, плоские base/router/провайдеры в core/services/ai, src/ai_policy); импорты только из core и faq_repo.
 
+**Гибридный retrieval FAQ (must_match → keyword → semantic → LLM):**
+- Сначала проверяются must_match и case_engine, затем поиск по FAQ: keyword (search_by_keywords), при недостаточной уверенности — семантический поиск (search_semantic по embedding_vector), при отсутствии — hybrid (search_hybrid) для контекста LLM. Эмбеддинги: таблица `faq_ai`, колонки `embedding` (TEXT, legacy) и `embedding_vector` (vector(1536), pgvector); скрипт пересборки — `scripts/rebuild_faq_embeddings.py`. Подробнее: [AI_FAQ_SEARCH.md](AI_FAQ_SEARCH.md).
+
 **Canonical paths (reference):**
-- Код: `src/core/services/ai/ai_courier_service.py`, `provider_router.py`, `providers/*`, `case_engine.py`, `intent_engine.py`, `embeddings_service.py`
+- Код: `src/core/services/ai/ai_courier_service.py`, `provider_router.py`, `providers/*`, `case_engine.py`, `intent_engine.py`, `embeddings_service.py`, `embedding_service.py`
 - FAQ: `src/infra/db/repositories/faq_repo.py`
 - Данные: `data/ai/` (core_policy.json, intent_tags.json, prompts/, golden_cases.jsonl)
 

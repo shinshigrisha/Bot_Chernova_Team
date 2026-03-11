@@ -380,45 +380,109 @@ class AICourierService:
             log.info("ai_explainability", user_id=user_id, **asdict(result))
             return result
 
-        # 3) FAQ search
+        # 3) FAQ: must_match → keyword → semantic → LLM (hybrid retrieval)
+        faq_hits = []
+        retrieval_stage = "none"
+        semantic_hit = False
+        semantic_score = 0.0
+        query_embedding_literal: str | None = None
+        faq_tag = self._intent_engine.faq_tag_for_intent(intent)
         try:
-            query_embedding = await self._embeddings_service.embed_text(question)
-            query_embedding_literal = self._embeddings_service.serialize_embedding(query_embedding)
             async with self._session_factory() as session:
-                faq_hits = await self._faq_repo.search_hybrid(
-                    session=session,
+                # 3a) Keyword search first
+                keyword_hits = await self._faq_repo.search_by_keywords(
                     query=question,
-                    limit=3,
-                    tag=self._intent_engine.faq_tag_for_intent(intent),
-                    query_embedding=query_embedding_literal,
+                    limit=5,
+                    tag=faq_tag,
+                    session=session,
                 )
-            if faq_hits:
-                top = faq_hits[0]
-                evidence.append(f"faq:{top['id']}")
-                debug["faq_top_score"] = top["score"]
-                debug["faq_top_id"] = top["id"]
-                debug["faq_text_score"] = top.get("text_score", 0.0)
-                debug["faq_keyword_score"] = top.get("keyword_score", 0.0)
-                debug["faq_semantic_score"] = top.get("semantic_score", 0.0)
-                faq_evidence_source = f"faq:{top['id']}"
-                log.info(
-                    "faq_search_result",
-                    faq_top_score=round(float(top["score"]), 4),
-                    faq_top_id=top["id"],
-                    faq_evidence_source=faq_evidence_source,
-                    faq_text_score=round(float(top.get("text_score", 0.0)), 4),
-                    faq_keyword_score=round(float(top.get("keyword_score", 0.0)), 4),
-                    faq_semantic_score=round(float(top.get("semantic_score", 0.0)), 4),
-                )
+                if keyword_hits:
+                    effective_score, faq_debug = self._faq_effective_score(
+                        question, intent, keyword_hits[0]
+                    )
+                    debug.update(faq_debug)
+                    debug["faq_top_score"] = keyword_hits[0].get("score", 0.0)
+                    debug["faq_top_id"] = keyword_hits[0].get("id")
+                    debug["faq_keyword_score"] = keyword_hits[0].get("score", 0.0)
+                    strong_keyword = effective_score >= self._faq_threshold or (
+                        effective_score >= self._faq_strong_threshold
+                        and intent in self._strict_intents
+                        and (
+                            faq_debug.get("faq_top_tag") == intent
+                            or "token_overlap>=3" in faq_debug.get("faq_bonus_reasons", [])
+                        )
+                    )
+                    if strong_keyword:
+                        retrieval_stage = "keyword"
+                        faq_hits = keyword_hits
+                # 3b) If keyword not strong, try semantic search
+                if retrieval_stage != "keyword":
+                    query_embedding = await self._embeddings_service.embed_text(question)
+                    query_embedding_literal = self._embeddings_service.serialize_embedding(
+                        query_embedding
+                    )
+                    if query_embedding_literal:
+                        semantic_hits = await self._faq_repo.search_semantic(
+                            query_embedding=query_embedding_literal,
+                            limit=5,
+                            session=session,
+                        )
+                        if semantic_hits:
+                            top_sem = semantic_hits[0]
+                            sem_score = float(top_sem.get("score", 0.0))
+                            semantic_score = sem_score
+                            semantic_hit = True
+                            debug["semantic_score"] = round(sem_score, 4)
+                            debug["semantic_hit"] = True
+                            debug["faq_semantic_score"] = sem_score
+                            if sem_score >= self._faq_threshold:
+                                retrieval_stage = "semantic_faq"
+                                faq_hits = semantic_hits
+                                effective_score = sem_score
+                                debug["faq_top_score"] = sem_score
+                                debug["faq_top_id"] = top_sem.get("id")
+                    # 3c) Fallback: hybrid (keyword + text) for context if still no strong hit
+                    if retrieval_stage == "none" and not faq_hits:
+                        faq_hits = await self._faq_repo.search_hybrid(
+                            session=session,
+                            query=question,
+                            limit=3,
+                            tag=faq_tag,
+                            query_embedding=query_embedding_literal if query_embedding_literal else None,
+                        )
+                        if faq_hits:
+                            effective_score, faq_debug = self._faq_effective_score(
+                                question, intent, faq_hits[0]
+                            )
+                            debug.update(faq_debug)
+                            debug["faq_top_score"] = faq_hits[0].get("score", 0.0)
+                            debug["faq_top_id"] = faq_hits[0].get("id")
+                            debug["faq_text_score"] = faq_hits[0].get("text_score", 0.0)
+                            debug["faq_keyword_score"] = faq_hits[0].get("keyword_score", 0.0)
+                            debug["faq_semantic_score"] = faq_hits[0].get("semantic_score", 0.0)
+                debug["retrieval_stage"] = retrieval_stage
+                debug["semantic_hit"] = semantic_hit
+                debug["semantic_score"] = round(semantic_score, 4)
         except Exception as exc:
             debug["faq_error"] = str(exc)
 
-        # 3) FAQ confident answer without LLM rewrite
+        effective_score = 0.0
         if faq_hits:
             effective_score, faq_debug = self._faq_effective_score(question, intent, faq_hits[0])
             debug.update(faq_debug)
-        else:
-            effective_score = 0.0
+            evidence.append(f"faq:{faq_hits[0]['id']}")
+            log.info(
+                "faq_search_result",
+                faq_top_score=round(float(faq_hits[0].get("score", 0.0)), 4),
+                faq_top_id=faq_hits[0].get("id"),
+                faq_evidence_source=f"faq:{faq_hits[0]['id']}",
+                faq_text_score=round(float(faq_hits[0].get("text_score", 0.0)), 4),
+                faq_keyword_score=round(float(faq_hits[0].get("keyword_score", 0.0)), 4),
+                faq_semantic_score=round(float(faq_hits[0].get("semantic_score", semantic_score)), 4),
+                semantic_score=round(semantic_score, 4),
+                semantic_hit=semantic_hit,
+                retrieval_stage=retrieval_stage,
+            )
 
         strong_faq_match = faq_hits and (
             effective_score >= self._faq_threshold
@@ -432,19 +496,31 @@ class AICourierService:
             )
         )
         if strong_faq_match:
+            route_label = "semantic_faq" if retrieval_stage == "semantic_faq" else "faq"
             faq_answer = self._normalize_reply(str(faq_hits[0]["answer"]))
             result = AICourierResult(
                 text=faq_answer,
-                route="faq",
+                route=route_label,
                 confidence=effective_score,
                 intent=intent,
                 need_clarify=False,
                 clarify_question="",
                 escalate=False,
                 evidence=evidence or ["faq"],
-                debug=self._debug_with_route_decision(debug, "faq_search"),
+                debug=self._debug_with_route_decision(
+                    debug | {"retrieval_stage": retrieval_stage, "semantic_score": semantic_score, "semantic_hit": semantic_hit},
+                    "faq_search",
+                ),
             )
-            log.info("ai_explainability", user_id=user_id, **asdict(result))
+            log.info(
+                "ai_explainability",
+                user_id=user_id,
+                route=route_label,
+                semantic_score=round(semantic_score, 4),
+                semantic_hit=semantic_hit,
+                retrieval_stage=retrieval_stage,
+                **asdict(result),
+            )
             return result
 
         # 5) LLM reason mode + one clarify

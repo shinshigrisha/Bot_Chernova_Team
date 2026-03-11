@@ -523,13 +523,100 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-03-11T00:00:00.000Z"
+      },
+      {
+        "id": "26",
+        "title": "Repository Cleanup and Legacy Removal",
+        "description": "Cleanup repository and remove legacy AI code; consolidate to canonical AI stack.",
+        "details": "Repository cleanup completed.\nCanonical AI stack confirmed.\nLegacy imports removed from runtime.\nDocs synchronized.\nFull pytest suite stable: 46 passed, repeated 3x.\nSmoke and seed scripts working.",
+        "testStrategy": "pytest -q (46 passed); pytest -q && pytest -q && pytest -q; scripts/seed_faq.py; scripts/smoke_ai.py; AI routing ANSWERED=5/5, GOLDEN_MATCH=5/5, FALLBACK_COUNT=0.",
+        "status": "done",
+        "dependencies": ["12", "13"],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-03-11T12:00:00.000Z"
+      },
+      {
+        "id": "27",
+        "title": "Stabilize full test suite and async DB test isolation",
+        "description": "Stabilize full pytest suite and async DB test isolation.",
+        "details": "Repository cleanup completed.\nCanonical AI stack confirmed.\nLegacy imports removed from runtime.\nDocs synchronized.\nFull pytest suite stable: 46 passed, repeated 3x.\nSmoke and seed scripts working.",
+        "testStrategy": "pytest -q (46 passed in ~6s); repeated runs stable; smoke and seed scripts OK.",
+        "status": "done",
+        "dependencies": ["9", "14"],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-03-11T12:00:00.000Z"
+      },
+      {
+        "id": "28",
+        "title": "Semantic FAQ Search and Embeddings Integration",
+        "description": "Add semantic FAQ search via embeddings and integrate into AI routing.",
+        "details": "Add embeddings column and index for FAQ; implement semantic FAQ search; integrate semantic retrieval into AI routing; add embedding rebuild script; add regression tests for semantic search.",
+        "testStrategy": "Regression tests for semantic search; smoke_ai passes; rebuild script runs.",
+        "status": "in-progress",
+        "dependencies": ["26", "27", "24"],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add embeddings column and index for FAQ",
+            "description": "Add embeddings column and index for FAQ table.",
+            "dependencies": [],
+            "details": "DB migration: embeddings column (vector type) and index for semantic search.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "28"
+          },
+          {
+            "id": 2,
+            "title": "Implement semantic FAQ search",
+            "description": "Implement semantic FAQ search in repository/service layer.",
+            "dependencies": [1],
+            "details": "Semantic search using embeddings; integrate with existing hybrid retrieval.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "28"
+          },
+          {
+            "id": 3,
+            "title": "Integrate semantic retrieval into AI routing",
+            "description": "Integrate semantic retrieval into AI routing pipeline.",
+            "dependencies": [2],
+            "details": "Wire semantic FAQ results into ai_courier_service routing.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "28"
+          },
+          {
+            "id": 4,
+            "title": "Add embedding rebuild script",
+            "description": "Add script to rebuild FAQ embeddings.",
+            "dependencies": [1],
+            "details": "Script to (re)compute and store embeddings for all FAQ rows.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "28"
+          },
+          {
+            "id": 5,
+            "title": "Add regression tests for semantic search",
+            "description": "Add regression tests for semantic search behavior.",
+            "dependencies": [2, 3],
+            "details": "Tests covering semantic search and routing integration.",
+            "status": "pending",
+            "testStrategy": "pytest tests for semantic search",
+            "parentId": "28"
+          }
+        ],
+        "updatedAt": "2026-03-11T12:00:00.000Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-11T00:00:00.000Z",
-      "taskCount": 25,
-      "completedCount": 5,
+      "lastModified": "2026-03-11T12:00:00.000Z",
+      "taskCount": 28,
+      "completedCount": 7,
       "tags": [
         "master"
       ]

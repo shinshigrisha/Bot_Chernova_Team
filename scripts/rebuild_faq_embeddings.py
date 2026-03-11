@@ -42,9 +42,15 @@ async def main() -> None:
                 if embedding is None:
                     skipped += 1
                     continue
+                literal = EmbeddingsService.serialize_embedding(embedding)
                 await repo.set_embedding(
                     faq_id=int(row["id"]),
-                    embedding=EmbeddingsService.serialize_embedding(embedding),
+                    embedding=literal,
+                    session=session,
+                )
+                await repo.set_embedding_vector(
+                    faq_id=int(row["id"]),
+                    embedding_literal=literal,
                     session=session,
                 )
                 updated += 1

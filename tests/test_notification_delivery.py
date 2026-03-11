@@ -1,4 +1,6 @@
-"""Tests for notification delivery: attempt recorded on failure (e.g. 429)."""
+"""Tests for notification delivery: attempt recorded on failure (e.g. 429).
+
+Cleanup: async_session из conftest — после теста транзакция откатывается, записи в БД не остаются."""
 import pytest
 
 from src.infra.db.enums import AttemptStatus, NotificationChannel, NotificationStatus, NotificationType
