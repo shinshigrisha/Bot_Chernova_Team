@@ -52,8 +52,23 @@ class Settings(BaseSettings):
     # AI
     ai_enabled: bool = Field(default=False, alias="AI_ENABLED")
     groq_api_key: str = Field(default="", alias="GROQ_API_KEY")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", alias="GROQ_MODEL")
     deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
+    deepseek_base_url: str = Field(
+        default="https://api.deepseek.com",
+        alias="DEEPSEEK_BASE_URL",
+    )
+    deepseek_model: str = Field(default="deepseek-chat", alias="DEEPSEEK_MODEL")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    ai_provider_order_chat: str = Field(
+        default="groq,deepseek,openai",
+        alias="AI_PROVIDER_ORDER_CHAT",
+    )
+    ai_provider_order_reason: str = Field(
+        default="openai,deepseek,groq",
+        alias="AI_PROVIDER_ORDER_REASON",
+    )
 
     @field_validator("admin_ids", mode="before")
     @classmethod

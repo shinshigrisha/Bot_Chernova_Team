@@ -1,3 +1,4 @@
+"""Legacy compatibility wrapper. Canonical AI stack is in src/core/services/ai/."""
 from __future__ import annotations
 
 import asyncio

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Iterable
 
+from src.config import get_settings
 from src.core.services.ai.providers.base import BaseProvider, ProviderResponse
 
 logger = logging.getLogger(__name__)
+
+
+class NoProviderAvailable(RuntimeError):
+    """Raised when no provider succeeded (all failed or none enabled)."""
 
 
 class ProviderRouter:
@@ -16,10 +20,11 @@ class ProviderRouter:
 
     @staticmethod
     def _ordered_names(mode: str) -> list[str]:
+        settings = get_settings()
         if mode == "reason":
-            raw = os.getenv("AI_PROVIDER_ORDER_REASON", "openai,deepseek,groq")
+            raw = settings.ai_provider_order_reason
         else:
-            raw = os.getenv("AI_PROVIDER_ORDER_CHAT", "groq,deepseek,openai")
+            raw = settings.ai_provider_order_chat
         return [x.strip() for x in raw.split(",") if x.strip()]
 
     async def complete(
@@ -47,7 +52,9 @@ class ProviderRouter:
                 logger.warning("Provider %s failed in mode=%s: %s", name, mode, exc)
                 last_exc = exc
 
-        raise RuntimeError(f"No available provider for mode={mode}") from last_exc
+        raise NoProviderAvailable(
+            f"No available provider for mode={mode} (all failed or none enabled)"
+        ) from last_exc
 
     async def close(self) -> None:
         for provider in self.providers.values():

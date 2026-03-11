@@ -1,0 +1,28 @@
+---
+description: Layered architecture enforcement
+alwaysApply: true
+---
+
+Use the existing project architecture consistently.
+
+Expected structure:
+- src/bot            -> Telegram entrypoints, routers, FSM, admin menu
+- src/core           -> domain logic and services
+- src/infra/db       -> models, session, repositories
+- src/infra/queue    -> celery app and tasks
+- src/infra/storage  -> S3 / MinIO
+- src/infra/notifications -> delivery channels
+- migrations         -> Alembic
+- tests              -> test coverage
+
+Rules:
+- Handlers should remain thin.
+- Service layer owns use-case orchestration.
+- Repositories own persistence concerns.
+- Infrastructure code should not leak into domain logic more than necessary.
+- Database schema changes require migration awareness.
+- New async integrations should follow the project’s async style consistently.
+- Prefer adding small modules over bloated multi-purpose files.
+- Keep imports and dependencies directional:
+  bot -> core -> infra abstractions / repos
+- Avoid circular dependencies.

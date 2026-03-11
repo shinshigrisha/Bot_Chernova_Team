@@ -1,3 +1,4 @@
+"""Legacy compatibility wrapper. Canonical AI stack is in src/core/services/ai/."""
 from __future__ import annotations
 
 import json
@@ -6,7 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from src.infra.db.repositories.faq_repo import FAQRepository
-from src.services.ai.provider_router import ProviderRouter
+
+from .provider_router import ProviderRouter
 
 logger = logging.getLogger(__name__)
 

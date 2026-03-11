@@ -1,4 +1,4 @@
-from src.core.services.ai.base import BaseProvider
-from src.core.services.ai.router import ProviderRouter
+from src.core.services.ai.provider_router import ProviderRouter
+from src.core.services.ai.providers.base import BaseProvider
 
 __all__ = ["BaseProvider", "ProviderRouter"]

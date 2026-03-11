@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import os
-
 from groq import AsyncGroq
 
+from src.config import get_settings
 from src.core.services.ai.providers.base import BaseProvider, ProviderResponse
 
 
@@ -11,9 +10,10 @@ class GroqProvider(BaseProvider):
     name = "groq"
 
     def __init__(self) -> None:
-        api_key = os.getenv("GROQ_API_KEY", "").strip()
+        settings = get_settings()
+        api_key = settings.groq_api_key.strip()
         self.enabled = bool(api_key)
-        self._model = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+        self._model = settings.groq_model
         self._client = AsyncGroq(api_key=api_key) if self.enabled else None
 
     async def complete(

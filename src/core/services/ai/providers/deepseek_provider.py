@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import os
-
 from openai import AsyncOpenAI
 
+from src.config import get_settings
 from src.core.services.ai.providers.base import BaseProvider, ProviderResponse
 
 
@@ -11,10 +10,11 @@ class DeepSeekProvider(BaseProvider):
     name = "deepseek"
 
     def __init__(self) -> None:
-        api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+        settings = get_settings()
+        api_key = settings.deepseek_api_key.strip()
         self.enabled = bool(api_key)
-        self._model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-        base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
+        self._model = settings.deepseek_model
+        base_url = settings.deepseek_base_url.rstrip("/")
         self._client = (
             AsyncOpenAI(api_key=api_key, base_url=f"{base_url}/v1")
             if self.enabled

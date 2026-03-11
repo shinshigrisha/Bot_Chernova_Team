@@ -1,4 +1,4 @@
-"""AI assistant service for courier FAQ and LLM answers."""
+"""Legacy compatibility wrapper for AI assistant service."""
 from __future__ import annotations
 
 import logging
@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from src.core.services.ai.router import ProviderRouter
-from src.infra.db.repositories.faq import FAQRepository
+from src.core.services.ai.provider_router import ProviderRouter
+from src.infra.db.repositories.faq_repo import FAQRepository
 
 logger = logging.getLogger(__name__)
 
@@ -39,18 +39,18 @@ class AICourierService:
     async def get_answer(self, user_id: int, text: str) -> AIResponse:
         async with self._session_factory() as session:
             faq_repo = FAQRepository(session)
-            faq_hits = await faq_repo.search(text=text, top_k=3)
+            faq_hits = await faq_repo.search_hybrid(query=text, limit=3)
 
         if faq_hits and faq_hits[0]["score"] >= FAQ_SCORE_THRESHOLD:
             best = faq_hits[0]
             return AIResponse(
-                text=best["a"],
+                text=best["answer"],
                 source="faq",
             )
 
         context_parts: list[str] = []
         for hit in faq_hits:
-            context_parts.append(f"Q: {hit['q']}\nA: {hit['a']}")
+            context_parts.append(f"Q: {hit['question']}\nA: {hit['answer']}")
 
         context_block = ""
         if context_parts:
@@ -74,7 +74,7 @@ class AICourierService:
             logger.exception("LLM call failed for user %s", user_id)
             if faq_hits:
                 return AIResponse(
-                    text=faq_hits[0]["a"],
+                    text=faq_hits[0]["answer"],
                     source="faq",
                 )
             return AIResponse(

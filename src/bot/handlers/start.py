@@ -29,6 +29,7 @@ async def cmd_start(message: Message, user_service: UserService) -> None:
             tg_user_id, role=role, display_name=display_name
         )
     except Exception:
+        logger.info("cmd_start_fail", extra={"tg_user_id": tg_user_id})
         logger.exception("cmd_start_fail", extra={"tg_user_id": tg_user_id})
         await message.answer("Сервис временно недоступен. Попробуйте позже.")
         return

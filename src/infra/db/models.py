@@ -404,17 +404,27 @@ class DeliveryOrderRaw(Base):
 class FAQItem(Base):
     __tablename__ = "faq_ai"
 
-    id: Mapped[str] = mapped_column(Text, primary_key=True)
-    tags: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
-    q: Mapped[str] = mapped_column(Text, nullable=False)
-    a: Mapped[str] = mapped_column(Text, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tag: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    keywords: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    embedding: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
     )
-
-
-# Backward-compatible alias for faq_ai model naming.
-FAQAI = FAQItem

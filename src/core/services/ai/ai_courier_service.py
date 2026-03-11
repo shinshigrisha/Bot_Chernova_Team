@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -8,8 +9,11 @@ from typing import Any
 import structlog
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from src.core.services.ai.case_engine import CaseEngine
+from src.core.services.ai.embeddings_service import EmbeddingsService
+from src.core.services.ai.intent_engine import IntentDetectionResult, IntentEngine
 from src.core.services.ai.provider_router import ProviderRouter
-from src.infra.db.repositories.faq_ai import FAQAIRepository
+from src.infra.db.repositories.faq_repo import FAQRepository
 
 log = structlog.get_logger(__name__)
 
@@ -28,6 +32,14 @@ class AICourierResult:
 
 
 class AICourierService:
+    _STRICT_INTENTS_DEFAULT = {
+        "battery_fire",
+        "contact_customer",
+        "damaged_goods",
+        "late_delivery",
+        "missing_items",
+    }
+
     def __init__(
         self,
         session_factory: async_sessionmaker,
@@ -36,11 +48,14 @@ class AICourierService:
     ) -> None:
         self._session_factory = session_factory
         self._router = router
-        self._faq_repo = FAQAIRepository()
+        self._faq_repo = FAQRepository()
+        self._case_engine = CaseEngine()
+        self._embeddings_service = EmbeddingsService()
         self._data_root = Path(data_root)
 
         self._policy = self._load_json("core_policy.json", default={})
         self._intent_tags = self._load_json("intent_tags.json", default={})
+        self._intent_engine = IntentEngine(router=self._router, intent_tags=self._intent_tags)
         self._clarify_questions = self._load_json(
             "prompts/clarify_questions.json", default={}
         )
@@ -49,15 +64,28 @@ class AICourierService:
 
         self._fallbacks = self._policy.get("fallbacks", {})
         self._faq_threshold = float(self._policy.get("routing", {}).get("faq_threshold", 0.72))
+        self._faq_strong_threshold = float(
+            self._policy.get("routing", {}).get("faq_strong_threshold", 0.6)
+        )
+        self._clarify_questions = self._normalize_intent_mapping(self._clarify_questions)
         self._high_risk_topics = [
             str(x).lower() for x in self._policy.get("high_risk_topics", [])
         ]
+        self._must_match_cases = list(self._policy.get("must_match_cases", []))
+        self._strict_intents = {
+            self._intent_engine.normalize_intent(str(x).lower())
+            for x in self._policy.get("routing", {}).get(
+                "strict_intents", list(self._STRICT_INTENTS_DEFAULT)
+            )
+            if self._intent_engine.normalize_intent(str(x).lower()) != "unknown"
+        }
 
         self._rule_reply_fn = self._resolve_rule_reply_fn()
 
     def reload_policy(self) -> None:
         self._policy = self._load_json("core_policy.json", default={})
         self._intent_tags = self._load_json("intent_tags.json", default={})
+        self._intent_engine = IntentEngine(router=self._router, intent_tags=self._intent_tags)
         self._clarify_questions = self._load_json(
             "prompts/clarify_questions.json", default={}
         )
@@ -67,9 +95,21 @@ class AICourierService:
         self._faq_threshold = float(
             self._policy.get("routing", {}).get("faq_threshold", 0.72)
         )
+        self._faq_strong_threshold = float(
+            self._policy.get("routing", {}).get("faq_strong_threshold", 0.6)
+        )
+        self._clarify_questions = self._normalize_intent_mapping(self._clarify_questions)
         self._high_risk_topics = [
             str(x).lower() for x in self._policy.get("high_risk_topics", [])
         ]
+        self._must_match_cases = list(self._policy.get("must_match_cases", []))
+        self._strict_intents = {
+            self._intent_engine.normalize_intent(str(x).lower())
+            for x in self._policy.get("routing", {}).get(
+                "strict_intents", list(self._STRICT_INTENTS_DEFAULT)
+            )
+            if self._intent_engine.normalize_intent(str(x).lower()) != "unknown"
+        }
 
     def _resolve_rule_reply_fn(self):
         try:
@@ -97,21 +137,142 @@ class AICourierService:
         except Exception:
             return default
 
+    def _normalize_intent_mapping(self, mapping: dict[str, str]) -> dict[str, str]:
+        normalized: dict[str, str] = {}
+        for raw_intent, value in mapping.items():
+            canonical_intent = self._intent_engine.normalize_intent(raw_intent)
+            if canonical_intent == "unknown" and str(raw_intent).strip().lower() != "unknown":
+                continue
+            normalized[canonical_intent] = value
+        return normalized
+
+    @staticmethod
+    def _debug_with_route_decision(debug: dict[str, Any], route_decision: str) -> dict[str, Any]:
+        return debug | {"route_decision": route_decision}
+
     def detect_intent(self, text: str) -> str:
-        lowered = text.lower()
-        best_intent = "unknown"
-        best_score = 0
-        for intent, keywords in self._intent_tags.items():
-            score = sum(1 for kw in keywords if kw.lower() in lowered)
-            if score > best_score:
-                best_intent = intent
-                best_score = score
-        return best_intent
+        return self._intent_engine.detect_from_rules(text).intent
 
     def _is_high_risk(self, text: str, intent: str) -> bool:
         lowered = text.lower()
         topic_match = any(topic in lowered for topic in self._high_risk_topics)
-        return topic_match or intent in {"battery_fire", "conflict"}
+        return topic_match or intent in {"battery_fire", "rude_communication"}
+
+    @staticmethod
+    def _tokenize(text: str) -> set[str]:
+        return {
+            token
+            for token in re.findall(r"[0-9a-zA-Zа-яА-ЯёЁ]+", (text or "").lower())
+            if len(token) >= 2
+        }
+
+    def _match_must_case(self, text: str, intent: str) -> dict[str, Any] | None:
+        lowered = (text or "").strip().lower()
+        if not lowered or not self._must_match_cases:
+            return None
+
+        user_tokens = self._tokenize(lowered)
+        best_case: dict[str, Any] | None = None
+        best_score = 0.0
+
+        for case in self._must_match_cases:
+            trigger = str(case.get("trigger", "")).strip().lower()
+            keywords = [str(x).strip().lower() for x in case.get("keywords", []) if str(x).strip()]
+            case_intents = {
+                self._intent_engine.normalize_intent(str(x).strip().lower())
+                for x in case.get("intents", [])
+                if str(x).strip()
+            }
+            trigger_tokens = self._tokenize(trigger)
+            keyword_tokens = self._tokenize(" ".join(keywords))
+
+            direct_hit = bool(trigger) and trigger in lowered
+            keyword_hit = any(keyword in lowered for keyword in keywords)
+            intent_hit = intent != "unknown" and intent in case_intents
+            overlap_tokens = user_tokens.intersection(trigger_tokens | keyword_tokens)
+            overlap = len(overlap_tokens)
+            ref_len = max(1, len(trigger_tokens or keyword_tokens))
+            overlap_ratio = overlap / ref_len
+
+            score = 0.0
+            if direct_hit:
+                score += 1.0
+            if keyword_hit:
+                score += 0.75
+            if intent_hit:
+                score += 0.45
+            score += min(0.35, overlap_ratio * 0.35)
+
+            strong_match = (
+                direct_hit
+                or (intent_hit and keyword_hit)
+                or (intent_hit and overlap >= 2)
+                or (keyword_hit and overlap >= 2)
+            )
+            if strong_match and score > best_score:
+                best_case = case
+                best_score = score
+
+        return best_case
+
+    def _faq_effective_score(
+        self, question: str, intent: str, top_hit: dict[str, Any]
+    ) -> tuple[float, dict[str, Any]]:
+        raw_score = float(top_hit.get("score", 0.0))
+        faq_question = str(top_hit.get("question") or "")
+        faq_answer = str(top_hit.get("answer") or "")
+        faq_tag = self._intent_engine.normalize_intent(top_hit.get("tag"))
+
+        query_tokens = self._tokenize(question)
+        faq_tokens = self._tokenize(faq_question)
+        answer_tokens = self._tokenize(faq_answer)
+
+        token_overlap = len(query_tokens.intersection(faq_tokens | answer_tokens))
+        question_overlap = len(query_tokens.intersection(faq_tokens))
+        bonus = 0.0
+        reasons: list[str] = []
+
+        if faq_tag and faq_tag == intent:
+            bonus += 0.12
+            reasons.append("intent_tag_match")
+        if token_overlap >= 3:
+            bonus += 0.08
+            reasons.append("token_overlap>=3")
+        elif question_overlap >= 2:
+            bonus += 0.05
+            reasons.append("question_overlap>=2")
+        if intent in self._strict_intents and faq_tag == intent:
+            bonus += 0.08
+            reasons.append("strict_intent_bonus")
+
+        return min(1.0, raw_score + bonus), {
+            "faq_raw_score": raw_score,
+            "faq_bonus": round(bonus, 4),
+            "faq_bonus_reasons": reasons,
+            "faq_top_tag": faq_tag,
+        }
+
+    @staticmethod
+    def _normalize_reply(text: str) -> str:
+        lines = [line.strip() for line in str(text).splitlines() if line.strip()]
+        return "\n".join(lines).strip()
+
+    def _build_must_match_reply(
+        self, case: dict[str, Any], *, high_risk: bool, intent: str
+    ) -> str:
+        response = self._normalize_reply(str(case.get("response") or ""))
+        if response:
+            return response
+
+        actions = [str(x).strip() for x in case.get("actions", []) if str(x).strip()]
+        if not actions:
+            fallback = self._fallbacks.get("generic") or "Опиши ситуацию коротко."
+            return self._normalize_reply(fallback)
+
+        lines = [f"{idx}) {action}" for idx, action in enumerate(actions, start=1)]
+        if high_risk and intent in {"battery_fire", "rude_communication"}:
+            lines.append("Если риск для безопасности сохраняется — сразу сообщи куратору.")
+        return "\n".join(lines)
 
     async def _format_with_llm(
         self, *, text: str, context: str, mode: str = "chat"
@@ -141,77 +302,179 @@ class AICourierService:
 
     async def get_answer(self, user_id: int, text: str) -> AICourierResult:
         question = (text or "").strip()
-        intent = self.detect_intent(question)
-        high_risk = self._is_high_risk(question, intent)
+        intent = "unknown"
+        high_risk = False
         evidence: list[str] = []
-        debug: dict[str, Any] = {"high_risk": high_risk}
-
-        # 1) RULE layer (optional)
-        if self._rule_reply_fn is not None:
-            try:
-                quick = self._rule_reply_fn(question)
-                if quick:
-                    result = AICourierResult(
-                        text=str(quick),
-                        route="rule",
-                        confidence=0.9,
-                        intent=intent,
-                        need_clarify=False,
-                        clarify_question="",
-                        escalate=False,
-                        evidence=["rule_based"],
-                        debug=debug,
-                    )
-                    log.info("ai_explainability", user_id=user_id, **asdict(result))
-                    return result
-            except Exception as exc:
-                debug["rule_error"] = str(exc)
-
-        # 2) FAQ search
+        debug: dict[str, Any] = {}
+        intent_result = IntentDetectionResult(intent="unknown", confidence=0.0, matched_keywords=[])
         faq_hits: list[dict[str, Any]] = []
+
         try:
             async with self._session_factory() as session:
-                faq_hits = await self._faq_repo.search(
+                intent_result = await self._intent_engine.detect(
+                    question,
+                    faq_repo=self._faq_repo,
                     session=session,
-                    text=question,
-                    tags=[intent] if intent != "unknown" else None,
-                    top_k=3,
+                )
+                intent = intent_result.intent
+                high_risk = self._is_high_risk(question, intent)
+                debug = {
+                    "high_risk": high_risk,
+                    "intent": intent,
+                    "intent_confidence": intent_result.confidence,
+                    "matched_keywords": intent_result.matched_keywords,
+                }
+                log.info(
+                    "intent_detected",
+                    intent=intent,
+                    intent_confidence=intent_result.confidence,
+                )
+        except Exception as exc:
+            debug = {
+                "high_risk": high_risk,
+                "intent": intent,
+                "intent_confidence": intent_result.confidence,
+                "matched_keywords": intent_result.matched_keywords,
+                "intent_engine_error": str(exc),
+            }
+
+        # 1) Must-match layer for strict operational cases
+        must_case = self._match_must_case(question, intent)
+        if must_case is not None:
+            response = self._build_must_match_reply(
+                must_case,
+                high_risk=high_risk,
+                intent=intent,
+            )
+            result = AICourierResult(
+                text=response,
+                route="must_match",
+                confidence=float(must_case.get("confidence", 0.96)),
+                intent=intent,
+                need_clarify=False,
+                clarify_question="",
+                escalate=bool(must_case.get("escalate", high_risk and intent == "battery_fire")),
+                evidence=[f"must_match:{must_case.get('id') or must_case.get('trigger') or intent}"],
+                debug=self._debug_with_route_decision(
+                    debug | {"must_match_trigger": must_case.get("trigger", "")},
+                    f"must_match:{must_case.get('id') or intent}",
+                ),
+            )
+            log.info("ai_explainability", user_id=user_id, **asdict(result))
+            return result
+
+        # 2) Case engine for typical courier situations
+        case_result = self._case_engine.resolve(
+            intent=intent,
+            confidence=float(intent_result.confidence),
+            clarify_question=self._clarify_questions.get(intent, ""),
+        )
+        if case_result is not None:
+            result = AICourierResult(
+                text=case_result.answer,
+                route=case_result.route,
+                confidence=max(0.78, float(intent_result.confidence)),
+                intent=intent,
+                need_clarify=case_result.need_clarify,
+                clarify_question=case_result.clarify_question,
+                escalate=case_result.escalate,
+                evidence=evidence or [f"case:{intent}"],
+                debug=self._debug_with_route_decision(debug, f"case_engine:{intent}"),
+            )
+            log.info("ai_explainability", user_id=user_id, **asdict(result))
+            return result
+
+        # 3) FAQ search
+        try:
+            query_embedding = await self._embeddings_service.embed_text(question)
+            query_embedding_literal = self._embeddings_service.serialize_embedding(query_embedding)
+            async with self._session_factory() as session:
+                faq_hits = await self._faq_repo.search_hybrid(
+                    session=session,
+                    query=question,
+                    limit=3,
+                    tag=self._intent_engine.faq_tag_for_intent(intent),
+                    query_embedding=query_embedding_literal,
                 )
             if faq_hits:
-                evidence.append(f"faq:{faq_hits[0]['id']}")
-                debug["faq_top_score"] = faq_hits[0]["score"]
+                top = faq_hits[0]
+                evidence.append(f"faq:{top['id']}")
+                debug["faq_top_score"] = top["score"]
+                debug["faq_top_id"] = top["id"]
+                debug["faq_text_score"] = top.get("text_score", 0.0)
+                debug["faq_keyword_score"] = top.get("keyword_score", 0.0)
+                debug["faq_semantic_score"] = top.get("semantic_score", 0.0)
+                faq_evidence_source = f"faq:{top['id']}"
+                log.info(
+                    "faq_search_result",
+                    faq_top_score=round(float(top["score"]), 4),
+                    faq_top_id=top["id"],
+                    faq_evidence_source=faq_evidence_source,
+                    faq_text_score=round(float(top.get("text_score", 0.0)), 4),
+                    faq_keyword_score=round(float(top.get("keyword_score", 0.0)), 4),
+                    faq_semantic_score=round(float(top.get("semantic_score", 0.0)), 4),
+                )
         except Exception as exc:
             debug["faq_error"] = str(exc)
 
-        # 3) FAQ confident answer (+ optional LLM formatting)
-        if faq_hits and float(faq_hits[0]["score"]) >= self._faq_threshold:
-            faq_answer = str(faq_hits[0]["a"])
-            formatted = await self._format_with_llm(
-                text=question,
-                context=f"FAQ answer:\n{faq_answer}",
-                mode="chat",
+        # 3) FAQ confident answer without LLM rewrite
+        if faq_hits:
+            effective_score, faq_debug = self._faq_effective_score(question, intent, faq_hits[0])
+            debug.update(faq_debug)
+        else:
+            effective_score = 0.0
+
+        strong_faq_match = faq_hits and (
+            effective_score >= self._faq_threshold
+            or (
+                effective_score >= self._faq_strong_threshold
+                and intent in self._strict_intents
+                and (
+                    debug.get("faq_top_tag") == intent
+                    or "token_overlap>=3" in debug.get("faq_bonus_reasons", [])
+                )
             )
+        )
+        if strong_faq_match:
+            faq_answer = self._normalize_reply(str(faq_hits[0]["answer"]))
             result = AICourierResult(
-                text=formatted or faq_answer,
+                text=faq_answer,
                 route="faq",
-                confidence=min(1.0, float(faq_hits[0]["score"])),
+                confidence=effective_score,
                 intent=intent,
                 need_clarify=False,
                 clarify_question="",
                 escalate=False,
                 evidence=evidence or ["faq"],
-                debug=debug,
+                debug=self._debug_with_route_decision(debug, "faq_search"),
             )
             log.info("ai_explainability", user_id=user_id, **asdict(result))
             return result
 
-        # 4) LLM reason mode + one clarify
-        llm_text = await self._format_with_llm(text=question, context="", mode="reason")
+        # 5) LLM reason mode + one clarify
+        llm_context_parts: list[str] = []
+        for hit in faq_hits[:2]:
+            llm_context_parts.append(
+                f"FAQ candidate (score={float(hit.get('score', 0.0)):.2f}):\n"
+                f"Q: {hit.get('question', '')}\n"
+                f"A: {hit.get('answer', '')}"
+            )
+        if intent in self._strict_intents:
+            llm_context_parts.append(
+                "Ответ должен быть коротким и операционным: только конкретные шаги, "
+                "без общих советов и без рассуждений."
+            )
+
+        llm_text = await self._format_with_llm(
+            text=question,
+            context="\n\n".join(llm_context_parts),
+            mode="reason",
+        )
         if llm_text:
             need_clarify = intent in self._clarify_questions
             clarify_q = self._clarify_questions.get(intent, "") if need_clarify else ""
             result = AICourierResult(
-                text=llm_text,
+                text=self._normalize_reply(llm_text),
                 route="llm_reason",
                 confidence=0.62,
                 intent=intent,
@@ -219,7 +482,7 @@ class AICourierService:
                 clarify_question=clarify_q,
                 escalate=high_risk and not need_clarify,
                 evidence=evidence or ["llm_reason"],
-                debug=debug,
+                debug=self._debug_with_route_decision(debug, "llm_reason"),
             )
             log.info("ai_explainability", user_id=user_id, **asdict(result))
             return result
@@ -238,7 +501,7 @@ class AICourierService:
             clarify_question=clarify_q,
             escalate=high_risk and not bool(clarify_q),
             evidence=evidence or ["fallback"],
-            debug=debug,
+            debug=self._debug_with_route_decision(debug, "fallback"),
         )
         log.info("ai_explainability", user_id=user_id, **asdict(result))
         return result

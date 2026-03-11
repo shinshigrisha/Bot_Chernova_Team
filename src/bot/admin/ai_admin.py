@@ -1,29 +1,25 @@
 """Admin commands for AI subsystem."""
 from __future__ import annotations
 
-import os
-from uuid import uuid4
-
+import redis.asyncio as redis
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from sqlalchemy import text
 
 from src.bot.states import AIAddFAQStates
-from src.infra.db.repositories.faq_ai import FAQAIRepository
+from src.config import get_settings
+from src.core.services.ai.ai_courier_service import AICourierService
+from src.core.services.ai.provider_router import ProviderRouter
+from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
 router = Router(name="ai_admin")
 
 
 def _is_admin(user_id: int) -> bool:
-    raw = os.getenv("ADMIN_USER_ID", "").strip()
-    if not raw:
-        return False
-    try:
-        return int(raw) == int(user_id)
-    except ValueError:
-        return False
+    return int(user_id) in get_settings().admin_ids
 
 
 async def _require_admin(message: Message) -> bool:
@@ -35,8 +31,16 @@ async def _require_admin(message: Message) -> bool:
 
 
 @router.message(Command("ai_status"))
-async def ai_status(message: Message) -> None:
+async def ai_status(
+    message: Message,
+    provider_router: ProviderRouter | None = None,
+) -> None:
     if not await _require_admin(message):
+        return
+
+    settings = get_settings()
+    if not settings.ai_enabled:
+        await message.answer("AI STATUS\nAI: disabled")
         return
 
     faq_count = None
@@ -44,35 +48,85 @@ async def ai_status(message: Message) -> None:
     err = ""
     try:
         async with async_session_factory() as session:
-            repo = FAQAIRepository()
-            faq_count = await repo.count(session)
+            repo = FAQRepository()
+            faq_count = await repo.count(session=session)
         db_ok = True
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
 
-    ai_router = message.bot.get("ai_router")
     providers: list[str] = []
-    if ai_router and getattr(ai_router, "providers", None):
-        providers = sorted(ai_router.providers.keys())
+    if provider_router and getattr(provider_router, "providers", None):
+        providers = sorted(provider_router.providers.keys())
 
-    lines = [
-        "AI STATUS",
-        f"DB: {'OK' if db_ok else 'FAIL'}",
-        f"FAQ count: {faq_count if faq_count is not None else '-'}",
-        f"Providers: {', '.join(providers) if providers else '(no providers enabled)'}",
-    ]
+    providers_text = ", ".join(providers) if providers else "no providers enabled"
+    lines = ["AI STATUS", "AI: enabled", f"Providers: {providers_text}"]
+    if db_ok:
+        lines.append(f"FAQ count: {faq_count if faq_count is not None else '-'}")
+    else:
+        lines.append("FAQ DB: FAIL")
     if err:
         lines.append(f"DB error: {err}")
 
     await message.answer("\n".join(lines))
 
 
-@router.message(Command("ai_policy_reload"))
-async def ai_policy_reload(message: Message) -> None:
+@router.message(Command("status"))
+async def status(message: Message, provider_router: ProviderRouter | None = None) -> None:
     if not await _require_admin(message):
         return
 
-    ai_service = message.bot.get("ai_service")
+    settings = get_settings()
+
+    db_ok = False
+    alembic_revision = "-"
+    try:
+        async with async_session_factory() as session:
+            await session.execute(text("SELECT 1"))
+            db_ok = True
+            try:
+                rev_result = await session.execute(
+                    text("SELECT version_num FROM alembic_version LIMIT 1")
+                )
+                alembic_revision = rev_result.scalar_one_or_none() or "-"
+            except Exception as exc:
+                alembic_revision = f"FAIL ({type(exc).__name__})"
+    except Exception:
+        db_ok = False
+        alembic_revision = "FAIL"
+
+    redis_ok = False
+    redis_client = redis.from_url(settings.redis_url)
+    try:
+        redis_ok = bool(await redis_client.ping())
+    except Exception:
+        redis_ok = False
+    finally:
+        await redis_client.aclose()
+
+    providers_count = 0
+    if provider_router and getattr(provider_router, "providers", None):
+        providers_count = len(provider_router.providers)
+
+    lines = [
+        "STATUS",
+        f"DB: {'OK' if db_ok else 'FAIL'}",
+        f"Redis: {'OK' if redis_ok else 'FAIL'}",
+        f"Alembic current: {alembic_revision}",
+        f"AI_ENABLED: {str(settings.ai_enabled).lower()}",
+        f"AI providers count: {providers_count}",
+        "bot mode: polling",
+    ]
+    await message.answer("\n".join(lines))
+
+
+@router.message(Command("ai_policy_reload"))
+async def ai_policy_reload(
+    message: Message,
+    ai_service: AICourierService | None = None,
+) -> None:
+    if not await _require_admin(message):
+        return
+
     if ai_service is None:
         await message.answer("AI сервис не инициализирован.")
         return
@@ -138,20 +192,15 @@ async def ai_add_faq_keywords(message: Message, state: FSMContext) -> None:
         return
 
     async with async_session_factory() as session:
-        repo = FAQAIRepository()
-        merged_tags: list[str] = []
-        if category:
-            merged_tags.append(f"category:{category}")
-        if tag:
-            merged_tags.append(f"tag:{tag}")
-        merged_tags.extend(keywords)
-        faq_id = f"manual_{uuid4().hex[:10]}"
-        await repo.upsert(
+        repo = FAQRepository()
+        faq_id = await repo.add_faq(
             session=session,
-            faq_id=faq_id,
-            q=question,
-            a=answer,
-            tags=merged_tags,
+            question=question,
+            answer=answer,
+            category=category,
+            tag=tag,
+            keywords=keywords,
+            is_active=True,
         )
         await session.commit()
 
@@ -170,15 +219,26 @@ async def ai_search_faq(message: Message) -> None:
         return
 
     async with async_session_factory() as session:
-        repo = FAQAIRepository()
-        found = await repo.search(session=session, text=query, top_k=5)
+        repo = FAQRepository()
+        found = await repo.search_hybrid(session=session, query=query, limit=5)
 
     if not found:
         await message.answer("Ничего не найдено.")
         return
 
     out = []
-    for f in found:
-        short_a = (f["a"][:160] + "...") if len(f["a"]) > 160 else f["a"]
-        out.append(f"- {f['q']}\n  A: {short_a}")
+    for faq in found:
+        short_answer = (
+            faq["answer"][:160] + "..."
+            if len(faq["answer"]) > 160
+            else faq["answer"]
+        )
+        meta_parts = [f"id={faq['id']}", f"score={faq['score']:.2f}"]
+        if faq.get("tag"):
+            meta_parts.append(f"tag={faq['tag']}")
+        if faq.get("category"):
+            meta_parts.append(f"category={faq['category']}")
+        out.append(
+            f"- {faq['question']}\n  {' | '.join(meta_parts)}\n  A: {short_answer}"
+        )
     await message.answer("\n".join(out))

@@ -2,40 +2,93 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
+import sys
 from pathlib import Path
+from typing import Any
 
-from src.infra.db.repositories.faq_ai import FAQAIRepository
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.config import get_settings
+from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
 SEED_PATH = Path("data/ai/faq_seed.jsonl")
 
 
+def _normalize_optional(value: Any) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    return normalized or None
+
+
+def _normalize_keywords(raw_keywords: Any) -> list[str]:
+    if not raw_keywords:
+        return []
+    if isinstance(raw_keywords, str):
+        raw_keywords = [raw_keywords]
+    return [str(keyword).strip() for keyword in raw_keywords if str(keyword).strip()]
+
+
+def _normalize_seed_item(item: dict[str, Any]) -> dict[str, Any]:
+    question = str(item.get("question") or item.get("q") or "").strip()
+    answer = str(item.get("answer") or item.get("a") or "").strip()
+    category = _normalize_optional(item.get("category"))
+    tag = _normalize_optional(item.get("tag"))
+    keywords = _normalize_keywords(item.get("keywords"))
+
+    legacy_tags = _normalize_keywords(item.get("tags"))
+    if not tag and legacy_tags:
+        tag = legacy_tags[0]
+    if not keywords and legacy_tags:
+        keywords = legacy_tags
+
+    return {
+        "question": question,
+        "answer": answer,
+        "category": category,
+        "tag": tag,
+        "keywords": keywords,
+        "is_active": bool(item.get("is_active", True)),
+    }
+
+
 async def main() -> None:
-    if not os.getenv("DATABASE_URL"):
+    settings = get_settings()
+    if not settings.database_url:
         raise RuntimeError("DATABASE_URL is not set")
 
     if not SEED_PATH.exists():
         raise RuntimeError(f"Seed file not found: {SEED_PATH}")
 
-    inserted = 0
+    repo = FAQRepository()
+    created = 0
+    updated = 0
     async with async_session_factory() as session:
-        repo = FAQAIRepository()
         for line in SEED_PATH.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            item = json.loads(line)
-            await repo.upsert(
+            item = _normalize_seed_item(json.loads(line))
+            if not item["question"] or not item["answer"]:
+                continue
+            _, was_created = await repo.upsert_faq(
                 session=session,
-                faq_id=item["id"],
-                q=item["q"],
-                a=item["a"],
-                tags=item.get("tags", []),
+                question=item["question"],
+                answer=item["answer"],
+                category=item["category"],
+                tag=item["tag"],
+                keywords=item["keywords"],
+                is_active=item["is_active"],
             )
-            inserted += 1
+            if was_created:
+                created += 1
+            else:
+                updated += 1
         await session.commit()
 
-    print(f"Seeded {inserted} items")
+    print(f"Seeded FAQ items: created={created}, updated={updated}, total={created + updated}")
 
 
 if __name__ == "__main__":

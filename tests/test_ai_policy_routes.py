@@ -88,7 +88,7 @@ class _Case:
 
 def _business_route(result: AICourierResult) -> str:
     text = (result.text or "").lower()
-    if result.route in {"faq", "rule"} and not result.escalate:
+    if result.route in {"faq", "rule", "must_match"}:
         return "auto_answer"
     if "поддержк" in text:
         return "route_to_support"
@@ -170,12 +170,25 @@ def ai_service(monkeypatch):
     service._rule_reply_fn = None
     kb = _faq_knowledge()
 
-    async def _fake_search(session, text, tags=None, top_k=3):
-        lowered = (text or "").lower()
-        hits = [item for item in kb if item["q"].lower() in lowered or lowered in item["q"].lower()]
-        return hits[:top_k]
+    async def _fake_search(*, session, query, limit=3, tag=None, category=None):
+        lowered = (query or "").lower()
+        hits = []
+        for item in kb:
+            tag_match = not tag or tag in item.get("tags", [])
+            text_match = item["q"].lower() in lowered or lowered in item["q"].lower()
+            if tag_match and text_match:
+                hits.append(
+                    {
+                        "id": item["id"],
+                        "question": item["q"],
+                        "answer": item["a"],
+                        "score": item["score"],
+                        "tag": item["tags"][0] if item.get("tags") else None,
+                    }
+                )
+        return hits[:limit]
 
-    monkeypatch.setattr(service._faq_repo, "search", _fake_search)
+    monkeypatch.setattr(service._faq_repo, "search_hybrid", _fake_search)
     return service
 
 
@@ -183,15 +196,15 @@ def ai_service(monkeypatch):
 @pytest.mark.parametrize(
     "case",
     [
-        _Case("Яйца приехали разбитые", "auto_answer", "Неаккуратная доставка"),
-        _Case("оставил заказ у двери без разрешения", "auto_answer", "Оставил заказ"),
-        _Case("курьер нагрубил", "auto_answer", "Коммуникация"),
+        _Case("Яйца приехали разбитые", "auto_answer", "фото"),
+        _Case("оставил заказ у двери без разрешения", "auto_answer", "связаться"),
+        _Case("курьер нагрубил", "auto_answer", "собрать факты"),
         _Case("можно оштрафовать курьера?", "route_to_curator", "куратор"),
         _Case("полный возврат на терминале", "route_to_support", "поддержк"),
         _Case("Не успеваю в таймер, пробка", "auto_answer", "ETA"),
         _Case("АКБ дымит в шкафу", "auto_answer", "обесточь"),
         _Case("Не хватает пакета, недовоз", "auto_answer", "МП"),
-        _Case("Не дозвонился клиенту, домофон", "auto_answer", "инструкции"),
+        _Case("Не дозвонился клиенту, домофон", "auto_answer", "2–3"),
         _Case("Произвольный неизвестный вопрос", "auto_answer", "инструкции"),
     ],
 )
@@ -202,18 +215,60 @@ async def test_ai_policy_routes_golden_cases(ai_service: AICourierService, case:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("text", "expected_route", "must_contain"),
+    [
+        ("Яйца разбиты, пакет цел", "must_match", "фото"),
+        ("Не дозвонился клиенту, домофон", "must_match", "2–3"),
+        ("Не хватает пакета, недовоз", "must_match", "МП"),
+        ("Не успеваю в таймер, пробка", "must_match", "ETA"),
+        ("АКБ дымит в шкафу", "must_match", "безопас"),
+    ],
+)
+async def test_strict_cases_prefer_must_match_route(
+    ai_service: AICourierService, text: str, expected_route: str, must_contain: str
+):
+    result = await ai_service.get_answer(user_id=42, text=text)
+    assert result.route == expected_route
+    assert must_contain.lower() in result.text.lower()
+
+
+@pytest.mark.asyncio
 async def test_ai_fallback_when_provider_unavailable(monkeypatch):
     service = AICourierService(session_factory=_DummySession, router=_FailingProviderRouter())
     service._rule_reply_fn = None
 
-    async def _empty_search(session, text, tags=None, top_k=3):
+    async def _empty_search(*, session, query, limit=3, tag=None, category=None):
         return []
 
-    monkeypatch.setattr(service._faq_repo, "search", _empty_search)
+    monkeypatch.setattr(service._faq_repo, "search_hybrid", _empty_search)
     result = await service.get_answer(user_id=100, text="Что делать?")
 
     assert result.route == "fallback"
     assert result.text
+
+
+@pytest.mark.asyncio
+async def test_faq_answer_does_not_depend_on_llm_rewrite(monkeypatch):
+    service = AICourierService(session_factory=_DummySession, router=_FailingProviderRouter())
+    service._rule_reply_fn = None
+
+    async def _faq_hit(*, session, query, limit=3, tag=None, category=None):
+        return [
+            {
+                "id": "faq_timeout",
+                "question": "Не успеваю в таймер, пробка",
+                "answer": "1) Сообщи ETA. 2) Сообщи причину задержки.",
+                "score": 0.68,
+                "tag": "late_delivery",
+            }
+        ]
+
+    monkeypatch.setattr(service._faq_repo, "search_hybrid", _faq_hit)
+    result = await service.get_answer(user_id=100, text="Не успеваю в таймер, пробка")
+
+    assert result.route in {"faq", "must_match"}
+    assert "eta" in result.text.lower()
 
 
 class _NamedProvider(BaseProvider):

@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-bot = "src.bot.main:main"
+bot = "src.bot.main:run"
 
 [tool.setuptools.packages.find]
 where = ["."]

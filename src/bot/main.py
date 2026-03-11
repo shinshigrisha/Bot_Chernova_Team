@@ -19,7 +19,7 @@ from src.core.services.ai.providers.deepseek_provider import DeepSeekProvider
 from src.core.services.ai.providers.groq_provider import GroqProvider
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
 from src.core.services.users import UserService
-from src.infra.db.repositories.faq_ai import FAQAIRepository
+from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
 logger = logging.getLogger(__name__)
@@ -34,23 +34,22 @@ logging.basicConfig(
 def _init_ai(dp: Dispatcher) -> None:
     """Initialize AI services and store them on the dispatcher (Bot has no .get/[])."""
     settings = get_settings()
+    dp["ai_router"] = None
+    dp["provider_router"] = None
+    dp["ai_service"] = None
+    dp["faq_repo"] = FAQRepository()
+
     if not settings.ai_enabled:
         logger.info("AI disabled (AI_ENABLED=false)")
         return
 
-    providers = []
-    if settings.groq_api_key:
-        providers.append(GroqProvider())
-    if settings.deepseek_api_key:
-        providers.append(DeepSeekProvider())
-    if settings.openai_api_key:
-        providers.append(OpenAIProvider())
-
-    if not providers:
-        logger.warning("AI_ENABLED=true but no API keys configured")
-        return
-
-    ai_router = ProviderRouter(providers)
+    ai_router = ProviderRouter(
+        [
+            GroqProvider(),
+            DeepSeekProvider(),
+            OpenAIProvider(),
+        ]
+    )
     ai_service = AICourierService(
         session_factory=async_session_factory,
         router=ai_router,
@@ -59,8 +58,13 @@ def _init_ai(dp: Dispatcher) -> None:
     dp["ai_router"] = ai_router
     dp["provider_router"] = ai_router
     dp["ai_service"] = ai_service
-    dp["faq_repo"] = FAQAIRepository()
-    logger.info("AI initialized: providers=%s", list(ai_router.providers.keys()))
+    enabled_providers = sorted(ai_router.providers.keys())
+    if enabled_providers:
+        logger.info("AI initialized: providers=%s", enabled_providers)
+    else:
+        logger.warning(
+            "AI initialized with zero enabled providers; LLM calls will use fallback"
+        )
 
 
 async def _shutdown_ai(bot: Bot, dp: Dispatcher) -> None:

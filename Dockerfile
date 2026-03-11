@@ -14,7 +14,10 @@ COPY pyproject.toml ./
 RUN pip install --no-cache-dir -e .
 
 COPY src ./src
+COPY scripts ./scripts
+COPY data ./data
 COPY migrations ./migrations
 COPY alembic.ini ./
+
 
 CMD ["python", "-m", "src.bot.main"]
