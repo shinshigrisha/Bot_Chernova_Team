@@ -8,59 +8,21 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.core.services.ai.embeddings_service import EmbeddingsService
-from src.infra.db.repositories.faq_repo import FAQRepository
+from src.core.services.ai.faq_embeddings_rebuild import rebuild_faq_embeddings_async
 from src.infra.db.session import async_session_factory
 
 
 async def main() -> None:
-    repo = FAQRepository()
-    embeddings_service = EmbeddingsService()
-    try:
-        if not embeddings_service.enabled:
-            print("Embeddings disabled: OPENAI_API_KEY is not configured.")
-            return
-
-        async with async_session_factory() as session:
-            faq_rows = await repo.list_embedding_sources(session=session)
-            if not faq_rows:
-                print("No FAQ rows found.")
-                return
-
-            payloads = [
-                EmbeddingsService.build_faq_text(
-                    question=str(row.get("question") or ""),
-                    answer=str(row.get("answer") or ""),
-                )
-                for row in faq_rows
-            ]
-            embeddings = await embeddings_service.embed_texts(payloads)
-
-            updated = 0
-            skipped = 0
-            for row, embedding in zip(faq_rows, embeddings, strict=False):
-                if embedding is None:
-                    skipped += 1
-                    continue
-                literal = EmbeddingsService.serialize_embedding(embedding)
-                await repo.set_embedding(
-                    faq_id=int(row["id"]),
-                    embedding=literal,
-                    session=session,
-                )
-                await repo.set_embedding_vector(
-                    faq_id=int(row["id"]),
-                    embedding_literal=literal,
-                    session=session,
-                )
-                updated += 1
-
-            await session.commit()
-            print(f"FAQ_TOTAL={len(faq_rows)}")
-            print(f"FAQ_EMBEDDINGS_UPDATED={updated}")
-            print(f"FAQ_EMBEDDINGS_SKIPPED={skipped}")
-    finally:
-        await embeddings_service.close()
+    result = await rebuild_faq_embeddings_async(
+        session_factory=async_session_factory,
+        embeddings_service=None,
+    )
+    if result.get("error"):
+        print(f"Error: {result['error']}")
+        return
+    print(f"FAQ_TOTAL={result.get('total', 0)}")
+    print(f"FAQ_EMBEDDINGS_UPDATED={result.get('updated', 0)}")
+    print(f"FAQ_EMBEDDINGS_SKIPPED={result.get('skipped', 0)}")
 
 
 if __name__ == "__main__":

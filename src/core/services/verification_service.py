@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Iterable
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.infra.db.enums import UserRole, UserStatus, coerce_user_role
+from src.infra.db.models import User, VerificationApplication
 from src.infra.db.repositories.users import UserRepository
 from src.infra.db.repositories.verification_applications import (
     VerificationApplicationRepository,
@@ -63,4 +65,56 @@ class VerificationService:
 
             user.status = UserStatus.PENDING
             await session.commit()
+
+    async def list_pending_with_applications(
+        self,
+    ) -> list[tuple[User, VerificationApplication]]:
+        """Список пользователей в статусе PENDING и их последняя заявка."""
+        async with self._session_factory() as session:
+            user_repo = UserRepository(session)
+            app_repo = VerificationApplicationRepository(session)
+            pending_users = await user_repo.list_by_status(UserStatus.PENDING)
+            if not pending_users:
+                return []
+            tg_ids = [u.tg_user_id for u in pending_users]
+            applications = await app_repo.list_by_tg_user_ids(tg_ids)
+            # Последняя заявка по каждому tg_user_id (уже order by created_at desc)
+            by_tg: dict[int, VerificationApplication] = {}
+            for app in applications:
+                if app.tg_user_id not in by_tg:
+                    by_tg[app.tg_user_id] = app
+            result: list[tuple[User, VerificationApplication]] = []
+            for u in pending_users:
+                app = by_tg.get(u.tg_user_id)
+                if app:
+                    result.append((u, app))
+            return result
+
+    async def apply_admin_decision(
+        self,
+        *,
+        tg_user_id: int,
+        decision: str,
+    ) -> UserStatus:
+        """Apply admin decision to user status.
+
+        decision: "approve" | "reject" | "block"
+        Returns new UserStatus.
+        """
+        decision = decision.lower().strip()
+        async with self._session_factory() as session:
+            user_repo = UserRepository(session)
+            user = await user_repo.get_or_create(tg_user_id=tg_user_id)
+
+            if decision == "approve":
+                user.status = UserStatus.APPROVED
+            elif decision == "reject":
+                user.status = UserStatus.REJECTED
+            elif decision == "block":
+                user.status = UserStatus.BLOCKED
+            else:
+                raise ValueError(f"Unknown decision: {decision}")
+
+            await session.commit()
+            return user.status
 

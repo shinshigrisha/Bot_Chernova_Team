@@ -36,12 +36,23 @@ async def show_entrypoint_menu(message: Message, principal: Principal | None) ->
         return
 
     status = principal.status
-    role = principal.role or UserRole.COURIER
+    role = principal.role
 
     if status == UserStatus.PENDING:
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔄 Обновить статус",
+                        callback_data="pending:refresh",
+                    )
+                ]
+            ]
+        )
         await message.answer(
             "Ваша заявка на регистрацию уже на рассмотрении.\n"
             "Ожидайте подтверждения от администратора.",
+            reply_markup=keyboard,
         )
         return
 

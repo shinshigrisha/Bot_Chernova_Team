@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     TypeDecorator,
@@ -451,4 +452,252 @@ class VerificationApplication(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
+
+
+# --- Minimal production core (migration 016) ---
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    actor_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    actor_tg_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    entity_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    payload: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    ip: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+
+    __table_args__ = (
+        Index("ix_audit_logs_created_at", "created_at"),
+        Index("ix_audit_logs_actor_id", "actor_id"),
+        Index("ix_audit_logs_entity", "entity_type", "entity_id"),
+    )
+
+
+class AIRequestLog(Base):
+    __tablename__ = "ai_requests_log"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    tg_user_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    user_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    request_preview: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    response_preview: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    provider: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    model: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    tokens_input: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    tokens_output: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+
+    __table_args__ = (
+        Index("ix_ai_requests_log_created_at", "created_at"),
+        Index("ix_ai_requests_log_user_id", "user_id"),
+        Index("ix_ai_requests_log_tg_user_id", "tg_user_id"),
+    )
+
+
+class UploadedFile(Base):
+    __tablename__ = "uploaded_files"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    filename: Mapped[str] = mapped_column(String(512), nullable=False)
+    content_type: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    batch_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("ingest_batches.id", ondelete="SET NULL"), nullable=True
+    )
+    uploaded_by: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_uploaded_files_batch_id", "batch_id"),
+        Index("ix_uploaded_files_uploaded_by", "uploaded_by"),
+    )
+
+
+class AnalysisJob(Base):
+    __tablename__ = "analysis_jobs"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    job_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    input_file_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("uploaded_files.id", ondelete="SET NULL"), nullable=True
+    )
+    input_batch_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("ingest_batches.id", ondelete="SET NULL"), nullable=True
+    )
+    result: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_analysis_jobs_created_at", "created_at"),
+        Index("ix_analysis_jobs_status", "status"),
+        Index("ix_analysis_jobs_created_by", "created_by"),
+    )
+
+
+class Group(Base):
+    __tablename__ = "groups"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tg_chat_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True)
+    title: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    __table_args__ = (UniqueConstraint("tg_chat_id", name="uq_groups_tg_chat_id"),)
+    members: Mapped[list["GroupMember"]] = relationship(
+        back_populates="group", cascade="all, delete-orphan"
+    )
+    polls: Mapped[list["Poll"]] = relationship(back_populates="group")
+
+
+class GroupMember(Base):
+    __tablename__ = "group_members"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    group_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
+    tg_user_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    role: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix_group_members_group_id", "group_id"),
+        Index("ix_group_members_user_id", "user_id"),
+        Index("ix_group_members_tg_user_id", "tg_user_id"),
+    )
+    group: Mapped["Group"] = relationship(back_populates="members")
+
+
+class Poll(Base):
+    __tablename__ = "polls"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    group_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("groups.id", ondelete="SET NULL"), nullable=True
+    )
+    title: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    question_text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_polls_group_id", "group_id"),
+        Index("ix_polls_created_at", "created_at"),
+        Index("ix_polls_created_by", "created_by"),
+    )
+    group: Mapped[Optional["Group"]] = relationship(back_populates="polls")
+    answers: Mapped[list["PollAnswer"]] = relationship(
+        back_populates="poll", cascade="all, delete-orphan"
+    )
+    schedules: Mapped[list["PollSchedule"]] = relationship(
+        back_populates="poll", cascade="all, delete-orphan"
+    )
+    slots: Mapped[list["PollSlot"]] = relationship(
+        back_populates="poll", cascade="all, delete-orphan"
+    )
+
+
+class PollAnswer(Base):
+    __tablename__ = "poll_answers"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    poll_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("polls.id", ondelete="CASCADE"), nullable=False
+    )
+    tg_user_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    user_id: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    option_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    option_text: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix_poll_answers_poll_id", "poll_id"),
+        Index("ix_poll_answers_tg_user_id", "tg_user_id"),
+        Index("ix_poll_answers_user_id", "user_id"),
+    )
+    poll: Mapped["Poll"] = relationship(back_populates="answers")
+
+
+class PollSchedule(Base):
+    __tablename__ = "poll_schedules"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    poll_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("polls.id", ondelete="CASCADE"), nullable=False
+    )
+    scheduled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    recurrence: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+
+    __table_args__ = (
+        Index("ix_poll_schedules_poll_id", "poll_id"),
+        Index("ix_poll_schedules_scheduled_at", "scheduled_at"),
+    )
+    poll: Mapped["Poll"] = relationship(back_populates="schedules")
+
+
+class PollSlot(Base):
+    __tablename__ = "poll_slots"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    poll_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("polls.id", ondelete="CASCADE"), nullable=False
+    )
+    slot_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    option_text: Mapped[str] = mapped_column(String(1024), nullable=False)
+    is_correct: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("poll_id", "slot_index", name="uq_poll_slots_poll_slot"),
+        Index("ix_poll_slots_poll_id", "poll_id"),
+    )
+    poll: Mapped["Poll"] = relationship(back_populates="slots")
 

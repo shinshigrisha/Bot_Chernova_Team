@@ -53,3 +53,34 @@ async def test_create_application_sets_pending_status(session_factory) -> None:
     assert user.status == UserStatus.PENDING
 
 
+@pytest.mark.asyncio
+async def test_apply_admin_decision_updates_status(session_factory) -> None:
+    service = VerificationService(session_factory)
+
+    # Сначала создаём пользователя со статусом PENDING.
+    payload = VerificationApplicationPayload(
+        tg_user_id=99_000_002,
+        role=UserRole.COURIER,
+        first_name="Test",
+        last_name="User",
+        tt_number="123",
+        ds_code="DS-TEST",
+        phone="+70000000000",
+    )
+    await service.create_application_and_mark_pending(payload)
+
+    # Применяем решение "approve".
+    new_status = await service.apply_admin_decision(
+        tg_user_id=payload.tg_user_id,
+        decision="approve",
+    )
+
+    async with session_factory() as session:
+        repo = UserRepository(session)
+        user = await repo.get_by_tg_id(payload.tg_user_id)
+
+    assert new_status == UserStatus.APPROVED
+    assert user is not None
+    assert user.status == UserStatus.APPROVED
+
+

@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import logging
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 from src.bot.menu_renderer import show_entrypoint_menu
 from src.config import get_settings
@@ -73,3 +73,19 @@ async def cmd_start(
         },
     )
     await show_entrypoint_menu(message, principal)
+
+
+@router.callback_query(F.data == "pending:refresh")
+async def pending_refresh(
+    callback: CallbackQuery,
+    access_service: AccessService,
+) -> None:
+    """Обновить экран по статусу (для пользователя в PENDING — показать тот же или новый экран)."""
+    tg_user_id = callback.from_user.id if callback.from_user else 0
+    try:
+        principal = await access_service.get_principal(tg_user_id)
+    except Exception:
+        await callback.answer("Сервис временно недоступен.")
+        return
+    await show_entrypoint_menu(callback.message, principal)
+    await callback.answer()

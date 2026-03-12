@@ -10,10 +10,9 @@ from sqlalchemy import text
 
 from src.bot.states import AIAddFAQStates
 from src.config import get_settings
+from src.core.events import AutomationEvent
 from src.core.services.access_service import AccessService
-from src.core.services.ai.ai_courier_service import AICourierService
 from src.core.services.ai.ai_facade import AIFacade
-from src.core.services.ai.provider_router import ProviderRouter
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
@@ -32,7 +31,7 @@ async def _require_admin(message: Message, access_service: AccessService) -> boo
 async def ai_status(
     message: Message,
     access_service: AccessService,
-    provider_router: ProviderRouter | None = None,
+    ai_facade: AIFacade | None = None,
 ) -> None:
     if not await _require_admin(message, access_service):
         return
@@ -53,9 +52,7 @@ async def ai_status(
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
 
-    providers: list[str] = []
-    if provider_router and getattr(provider_router, "providers", None):
-        providers = sorted(provider_router.providers.keys())
+    providers: list[str] = ai_facade.get_provider_names() if ai_facade else []
 
     providers_text = ", ".join(providers) if providers else "no providers enabled"
     lines = ["AI STATUS", "AI: enabled", f"Providers: {providers_text}"]
@@ -70,7 +67,10 @@ async def ai_status(
 
 
 @router.message(Command("status"))
-async def status(message: Message, provider_router: ProviderRouter | None = None) -> None:
+async def status(
+    message: Message,
+    ai_facade: AIFacade | None = None,
+) -> None:
     access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
     if not await _require_admin(message, access_service):
         return
@@ -103,9 +103,7 @@ async def status(message: Message, provider_router: ProviderRouter | None = None
     finally:
         await redis_client.aclose()
 
-    providers_count = 0
-    if provider_router and getattr(provider_router, "providers", None):
-        providers_count = len(provider_router.providers)
+    providers_count = len(ai_facade.get_provider_names()) if ai_facade else 0
 
     lines = [
         "STATUS",
@@ -123,19 +121,17 @@ async def status(message: Message, provider_router: ProviderRouter | None = None
 async def ai_policy_reload(
     message: Message,
     access_service: AccessService,
-    ai_service: AICourierService | None = None,
     ai_facade: AIFacade | None = None,
 ) -> None:
     if not await _require_admin(message, access_service):
         return
 
-    target = ai_facade or ai_service
-    if target is None:
+    if ai_facade is None:
         await message.answer("AI сервис не инициализирован.")
         return
 
     try:
-        target.reload_policy()
+        ai_facade.reload_policy()
         await message.answer("Policy перезагружена.")
     except Exception as exc:
         await message.answer(f"Не удалось перезагрузить policy: {exc}")
@@ -207,6 +203,13 @@ async def ai_add_faq_keywords(message: Message, state: FSMContext) -> None:
             is_active=True,
         )
         await session.commit()
+
+    event_bus = message.conf.get("event_bus")  # type: ignore[attr-defined]
+    if event_bus:
+        await event_bus.emit(
+            AutomationEvent.FAQ_ADDED,
+            {"faq_id": faq_id, "question": question, "answer": answer, "category": category, "tag": tag},
+        )
 
     await state.clear()
     await message.answer(f"FAQ добавлен. id={faq_id}")

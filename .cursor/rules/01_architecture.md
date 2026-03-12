@@ -3,6 +3,21 @@
 ## Цель
 Сохранять единый каркас проекта без параллельных реализаций, дублирующих модулей и разъезжающихся путей импорта.
 
+**Каноническое дерево слоёв:** см. [docs/CANONICAL_LAYERS.md](../docs/CANONICAL_LAYERS.md).
+
+## Один вход в AI (AIFacade), три режима
+
+Единственная точка входа в AI-слой — **AIFacade**. Три раздельных режима (см. docs/AI_MODES.md), не один «умный ответчик»:
+- **Courier assistant:** `answer_user(user_id, text)`, `proactive_hint(risk_input)` — кейсы доставки.
+- **Admin copilot:** `answer_admin(admin_id, text)` — помощь админу (FAQ, рассылки, анализ).
+- **Analytics assistant:** `analyze_csv(tt_metrics, ...)` — анализ CSV/xlsx/pdf/таблиц.
+
+Запрещено из handlers, admin, API и скриптов верхнего уровня:
+- вызывать ProviderRouter, AICourierService, RAGService, IntentEngine, AnalyticsAssistant напрямую;
+- дергать LLM/провайдеров в обход фасада.
+
+Тесты и внутренняя реализация фасада могут использовать AICourierService/ProviderRouter напрямую.
+
 ## Обязательные правила
 
 1. Не создавать новые параллельные каталоги для бота.

@@ -1,8 +1,9 @@
-"""Bot entry point: aiogram polling."""
+"""Bot entry point: aiogram polling + optional automation HTTP server."""
 import asyncio
 import logging
 import sys
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -14,6 +15,7 @@ from src.bot.handlers.verification import router as verification_router
 from src.bot.navigation import router as navigation_router
 from src.bot.middlewares.ai_inject import InjectAIMiddleware
 from src.bot.middlewares.log_updates import LogUpdatesMiddleware
+from src.bot.middlewares.admin_middleware import AdminOnlyMiddleware
 from src.config import get_settings
 from src.core.services.ai.ai_courier_service import AICourierService
 from src.core.services.ai.ai_facade import AIFacade
@@ -23,6 +25,9 @@ from src.core.services.ai.providers.groq_provider import GroqProvider
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
 from src.core.services.access_service import AccessService
 from src.core.services.users import UserService
+from src.api.automation import create_automation_app
+from src.core.events import EventBus
+from src.core.proactive_layer import register_proactive_handlers
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
@@ -59,7 +64,7 @@ def _init_ai(dp: Dispatcher) -> None:
         session_factory=async_session_factory,
         router=ai_router,
     )
-    ai_facade = AIFacade(ai_service)
+    ai_facade = AIFacade(_courier=ai_service, _router=ai_router, _data_root="data/ai")
 
     dp["ai_router"] = ai_router
     dp["provider_router"] = ai_router
@@ -117,6 +122,8 @@ async def main() -> None:
         logger.warning("delete_webhook: %s", e)
 
     dp = Dispatcher()
+    dp["event_bus"] = EventBus()
+    register_proactive_handlers(dp["event_bus"], async_session_factory, bot=bot)
     dp["user_service"] = UserService(session_factory=async_session_factory)
     dp["access_service"] = AccessService(
         session_factory=async_session_factory,
@@ -124,6 +131,7 @@ async def main() -> None:
     )
     dp.update.outer_middleware(LogUpdatesMiddleware())
     dp.update.outer_middleware(InjectAIMiddleware(dp))
+    dp.update.outer_middleware(AdminOnlyMiddleware())
     _init_ai(dp)
 
     dp.include_router(start_router)
@@ -137,6 +145,22 @@ async def main() -> None:
         await _shutdown_ai(bot, dp)
 
     dp.shutdown.register(_on_shutdown)
+
+    # Optional: HTTP server for POST /automation/event (n8n automation)
+    automation_port = getattr(settings, "automation_http_port", 0) or 0
+    if automation_port > 0:
+        automation_app = create_automation_app(dp)
+        runner = web.AppRunner(automation_app)
+        await runner.setup()
+        site = web.TCPSite(runner, "0.0.0.0", automation_port)
+        await site.start()
+        logger.info("automation_http_listen", port=automation_port)
+
+        async def _cleanup_automation(_bot: Bot) -> None:
+            await runner.cleanup()
+
+        dp.shutdown.register(_cleanup_automation)
+
     await dp.start_polling(bot)
 
 

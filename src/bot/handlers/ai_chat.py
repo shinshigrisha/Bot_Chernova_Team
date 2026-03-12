@@ -18,9 +18,12 @@ from src.bot.keyboards.ai_curator import (
 )
 from src.bot.navigation import ROOT_AI_CURATOR
 from src.bot.states import AIChatStates
-from src.core.services.ai.ai_courier_service import AICourierService
+from src.config import get_settings
+from src.core.events import AutomationEvent
+from src.core.services.access_service import AccessService
 from src.core.services.ai.ai_facade import AIFacade
 from src.core.services.risk import RiskInput
+from src.infra.db.enums import UserRole
 
 router = Router(name="ai_chat")
 logger = logging.getLogger(__name__)
@@ -54,15 +57,13 @@ _DEMO_RISK_INPUT = RiskInput.from_dict({
 async def risk_recommendation(
     message: Message,
     ai_facade: AIFacade | None = None,
-    ai_service: AICourierService | None = None,
 ) -> None:
     """Проактивная рекомендация по риску доставки (risk_engine + recommendation_engine)."""
-    engine = ai_facade or ai_service
-    if engine is None:
+    if ai_facade is None:
         await message.answer("AI сервис не инициализирован. Проверь запуск.")
         return
     try:
-        res = engine.get_risk_recommendation(_DEMO_RISK_INPUT)
+        res = ai_facade.proactive_hint(_DEMO_RISK_INPUT)
         text = getattr(res, "text", str(res))
         await message.answer(text)
         logger.info("risk_recommendation sent user_id=%s route=%s", message.from_user.id if message.from_user else 0, getattr(res, "route", ""))
@@ -95,16 +96,31 @@ async def ai_curator_other(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
+def _ai_role_for_user(principal) -> str:
+    """Роль для пайплайна AI: admin/lead → 'admin', иначе 'courier'."""
+    if principal and getattr(principal, "role", None) in (UserRole.ADMIN, UserRole.LEAD):
+        return "admin"
+    return "courier"
+
+
+async def _ai_answer(ai_facade: AIFacade, user_id: int, text: str, role: str):
+    """Единая точка вызова AI: answer_admin для админа при ENABLE_AI_CHAT_V2, иначе answer_user."""
+    settings = get_settings()
+    if getattr(settings, "enable_ai_chat_v2", False) and role == "admin":
+        return await ai_facade.answer_admin(admin_id=user_id, text=text)
+    return await ai_facade.answer_user(user_id=user_id, text=text)
+
+
 @router.callback_query(F.data.startswith(AI_CURATOR_CB_PREFIX))
 async def ai_curator_quick_case(
     callback: CallbackQuery,
     state: FSMContext,
     ai_facade: AIFacade | None = None,
-    ai_service: AICourierService | None = None,
+    access_service: AccessService | None = None,
+    event_bus=None,
 ) -> None:
     """Обработка быстрого кейса: запрос в AI, ответ + кнопка «Назад в меню»."""
-    engine = ai_facade or ai_service
-    if engine is None:
+    if ai_facade is None:
         await callback.message.answer("AI сервис не инициализирован. Проверь запуск.")
         await callback.answer()
         return
@@ -117,6 +133,13 @@ async def ai_curator_quick_case(
         return
 
     user_id = callback.from_user.id if callback.from_user else 0
+    role = "courier"
+    if access_service:
+        try:
+            principal = await access_service.get_principal(user_id)
+            role = _ai_role_for_user(principal)
+        except Exception:
+            pass
     lock = _USER_LOCKS.setdefault(user_id, asyncio.Lock())
     if lock.locked():
         await callback.message.answer("Запрос уже обрабатывается. Дождитесь ответа.")
@@ -126,16 +149,28 @@ async def ai_curator_quick_case(
     async with lock:
         try:
             res = await asyncio.wait_for(
-                engine.get_answer(user_id=user_id, text=text),
+                _ai_answer(ai_facade, user_id, text, role),
                 timeout=_REQUEST_TIMEOUT_S,
             )
             answer_text = getattr(res, "text", str(res))
+            route = getattr(res, "route", "")
             logger.info(
                 "ai_curator_quick_case user_id=%s key=%s route=%s",
                 user_id,
                 key,
-                getattr(res, "route", ""),
+                route,
             )
+            if route == "semantic_case" and event_bus:
+                evidence = getattr(res, "evidence", []) or []
+                await event_bus.emit(
+                    AutomationEvent.SIMILAR_CASE_SHOWN,
+                    {
+                        "user_id": user_id,
+                        "evidence": evidence,
+                        "text_preview": (answer_text or "")[:300],
+                        "intent": getattr(res, "intent", ""),
+                    },
+                )
             await callback.message.answer(
                 answer_text,
                 reply_markup=build_ai_curator_back_keyboard(),
@@ -171,14 +206,14 @@ async def ai_chat_handler(
     message: Message,
     state: FSMContext,
     ai_facade: AIFacade | None = None,
-    ai_service: AICourierService | None = None,
+    access_service: AccessService | None = None,
+    event_bus=None,
 ) -> None:
     text = (message.text or "").strip()
     if not text:
         return
 
-    engine = ai_facade or ai_service
-    if engine is None:
+    if ai_facade is None:
         await message.answer("AI сервис не инициализирован. Проверь запуск.")
         return
 
@@ -189,6 +224,13 @@ async def ai_chat_handler(
         nav_kw["reply_markup"] = build_ai_curator_back_keyboard()
 
     user_id = message.from_user.id if message.from_user else 0
+    role = "courier"
+    if access_service:
+        try:
+            principal = await access_service.get_principal(user_id)
+            role = _ai_role_for_user(principal)
+        except Exception:
+            pass
     lock = _USER_LOCKS.setdefault(user_id, asyncio.Lock())
 
     if lock.locked():
@@ -198,7 +240,7 @@ async def ai_chat_handler(
     async with lock:
         try:
             res = await asyncio.wait_for(
-                engine.get_answer(user_id=user_id, text=text),
+                _ai_answer(ai_facade, user_id, text, role),
                 timeout=_REQUEST_TIMEOUT_S,
             )
             answer_text = getattr(res, "text", str(res))
@@ -212,6 +254,18 @@ async def ai_chat_handler(
                 provider,
                 text,
             )
+            # Проактивный слой: при ответе по похожему кейсу — эмит для памятки/аналитики
+            if route == "semantic_case" and event_bus:
+                evidence = getattr(res, "evidence", []) or []
+                await event_bus.emit(
+                    AutomationEvent.SIMILAR_CASE_SHOWN,
+                    {
+                        "user_id": user_id,
+                        "evidence": evidence,
+                        "text_preview": answer_text[:300] if answer_text else "",
+                        "intent": getattr(res, "intent", ""),
+                    },
+                )
             await message.answer(answer_text, **nav_kw)
         except asyncio.TimeoutError:
             logger.warning("ai_chat_timeout user_id=%s question=%r", user_id, text)

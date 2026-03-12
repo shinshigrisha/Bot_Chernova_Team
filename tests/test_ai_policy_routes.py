@@ -368,6 +368,21 @@ async def test_urgent_format_for_dangerous_situations(ai_service: AICourierServi
     assert "действия" in text_lower or "1)" in result.text
 
 
+@pytest.mark.asyncio
+async def test_ai_result_canonical_contract_metadata(ai_service: AICourierService):
+    """Every AI answer must include structured metadata: route, intent, confidence, source, needs_escalation, needs_clarification."""
+    result = await ai_service.get_answer(user_id=42, text="Яйца разбиты, пакет цел")
+    assert result.route == "must_match"
+    assert result.intent
+    assert 0 <= result.confidence <= 1.0
+    assert result.source == "must_match"
+    assert hasattr(result, "needs_escalation")
+    assert result.needs_escalation is result.escalate
+    assert hasattr(result, "needs_clarification")
+    assert result.needs_clarification is result.need_clarify
+    assert result.debug is not None
+
+
 def test_get_risk_recommendation_returns_rag_format():
     """Proactive risk: AI service calls risk_engine + recommendation_engine, returns RAG-style result."""
     from src.core.services.risk import RiskInput
@@ -388,6 +403,7 @@ def test_get_risk_recommendation_returns_rag_format():
     })
     result = service.get_risk_recommendation(risk_input)
     assert result.route == "delivery_risk"
+    assert result.source == "delivery_risk"
     assert result.debug.get("risk_type") == "late_delivery_risk"
     assert "Ситуация" in result.text or "что делать" in result.text.lower()
     assert "куратор" in result.text.lower()

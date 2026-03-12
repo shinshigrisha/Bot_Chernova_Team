@@ -29,16 +29,28 @@ NAV_HELP = f"{NAV_CB_PREFIX}help"
 
 
 @router.callback_query(F.data == ROOT_MAIN)
-async def root_main(callback: CallbackQuery) -> None:
-    """Показать главное меню.
-
-    На этом этапе задачи мы не делаем сложной логики выбора меню по ролям/статусам,
-    а просто отображаем базовый каркас менюшки.
-    """
-    # Ленивый импорт, чтобы избежать циклической зависимости:
-    # root_menu → navigation (константы ROOT_*) и navigation → root_menu (клавиатура).
+async def root_main(
+    callback: CallbackQuery,
+    access_service: AccessService | None = None,
+) -> None:
+    """Показать главное меню. При ENABLE_MENU_V2 — роль/статус-based меню."""
+    from src.config import get_settings
+    settings = get_settings()
+    if getattr(settings, "enable_menu_v2", False) and access_service:
+        from src.bot.menu_renderer import show_entrypoint_menu
+        tg_user_id = callback.from_user.id if callback.from_user else 0
+        try:
+            principal = await access_service.get_principal(tg_user_id)
+            await show_entrypoint_menu(callback.message, principal)
+        except Exception:
+            from src.bot.keyboards.root_menu import build_root_menu_keyboard
+            await callback.message.answer(
+                "Главное меню:",
+                reply_markup=build_root_menu_keyboard(role=None),
+            )
+        await callback.answer()
+        return
     from src.bot.keyboards.root_menu import build_root_menu_keyboard
-
     await callback.message.answer(
         "Главное меню:",
         reply_markup=build_root_menu_keyboard(role=None),
@@ -57,14 +69,26 @@ async def root_verification(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == ROOT_ADMIN)
-async def root_admin(callback: CallbackQuery) -> None:
-    """Заглушка для входа в админ-панель из меню.
+async def root_admin(
+    callback: CallbackQuery,
+    access_service: AccessService | None = None,
+) -> None:
+    """Вход в админ-панель из главного меню."""
+    from src.bot.keyboards.admin_main import build_admin_main_keyboard
 
-    Полная миграция админки реализуется в отдельной задаче.
-    """
+    if access_service is None:
+        await callback.message.answer("Админ-панель временно недоступна. Нажмите /start.")
+        await callback.answer()
+        return
+
+    tg_user_id = callback.from_user.id if callback.from_user else 0
+    if not await access_service.can_access_admin(tg_user_id):
+        await callback.answer("Доступ к админ-панели запрещён.", show_alert=True)
+        return
+
     await callback.message.answer(
-        "Админ-панель скоро будет доступна из главного меню.\n"
-        "Пока используйте команду /admin.",
+        "Админ-панель:",
+        reply_markup=build_admin_main_keyboard(),
     )
     await callback.answer()
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -39,8 +39,26 @@ class AnswerContext:
     high_risk: bool
 
 
+# Canonical source labels for explainability (aligned with routing order)
+SOURCE_SAFETY_BLOCKER = "safety_blocker"
+SOURCE_MUST_MATCH = "must_match"
+SOURCE_STRUCTURED_FAQ = "structured_faq"
+SOURCE_SEMANTIC_RETRIEVAL = "semantic_retrieval"
+SOURCE_ML_INTENT_CASE = "ml_intent_case"
+SOURCE_LLM_SYNTHESIS = "llm_synthesis"
+SOURCE_FALLBACK = "fallback"
+SOURCE_DELIVERY_RISK = "delivery_risk"
+
+
 @dataclass
 class AICourierResult:
+    """Canonical decision contract: every AI answer carries structured metadata.
+
+    Cascade: access_check [caller] → must_match → rules → intent → FAQ/RAG
+    → ML classifier → LLM reasoning → escalation/fallback. Answer never goes
+    to LLM before steps 2–6 are tried.
+    """
+
     text: str
     route: str
     confidence: float
@@ -50,6 +68,17 @@ class AICourierResult:
     escalate: bool
     evidence: list[str] = field(default_factory=list)
     debug: dict[str, Any] = field(default_factory=dict)
+    source: str = field(default="")
+
+    @property
+    def needs_escalation(self) -> bool:
+        """Structured metadata: whether to escalate to curator."""
+        return self.escalate
+
+    @property
+    def needs_clarification(self) -> bool:
+        """Structured metadata: whether to ask user for clarification."""
+        return self.need_clarify
 
 
 class AICourierService:
@@ -197,6 +226,40 @@ class AICourierService:
         topic_match = any(topic in lowered for topic in self._high_risk_topics)
         return topic_match or intent in {"battery_fire", "rude_communication"}
 
+    def _safety_block_step(self, question: str) -> AICourierResult | None:
+        """Step 0: safety/blocker rules. Returns a result to short-circuit or None to continue.
+
+        Extensible: add blocklist, PII checks, etc. Without changing behavior, returns None.
+        """
+        return None
+
+    def _log_explainability(
+        self,
+        user_id: int,
+        result: AICourierResult,
+        role: str,
+    ) -> None:
+        """Единый формат логирования explainability для каждого AI-ответа.
+
+        Формат: route, intent, confidence, evidence, source_ids, user_id, role (см. docs/AI_CURATOR.md).
+        """
+        source_ids: list[str] = list(result.evidence) if result.evidence else []
+        debug = result.debug or {}
+        for key in ("faq_top_id", "case_id"):
+            if debug.get(key) is not None:
+                source_ids.append(f"{key}:{debug[key]}")
+        log.info(
+            "ai_explainability",
+            route=result.route,
+            intent=result.intent,
+            confidence=result.confidence,
+            evidence=result.evidence,
+            source_ids=source_ids,
+            source=result.source or "",
+            user_id=user_id,
+            role=role,
+        )
+
     def get_risk_recommendation(self, risk_input: RiskInput) -> AICourierResult:
         """Проактивная оценка риска доставки: вызов risk_engine + recommendation_engine, ответ в RAG-формате."""
         risk = self._risk_engine.evaluate(risk_input)
@@ -216,6 +279,7 @@ class AICourierService:
                 escalate=False,
                 evidence=[],
                 debug={"risk_evaluated": True, "risk_detected": False},
+                source=SOURCE_DELIVERY_RISK,
             )
         rec = self._recommendation_engine.recommend(risk)
         if rec is None:
@@ -253,6 +317,7 @@ class AICourierService:
                 "severity": risk.severity,
                 "risk_reasons": risk.risk_reasons,
             },
+            source=SOURCE_DELIVERY_RISK,
         )
 
     @staticmethod
@@ -513,7 +578,21 @@ class AICourierService:
             log.warning("llm_call_failed", mode=mode, error=str(exc))
             return None
 
-    async def get_answer(self, user_id: int, text: str) -> AICourierResult:
+    async def get_answer(
+        self,
+        user_id: int,
+        text: str,
+        *,
+        role: str = "courier",
+    ) -> AICourierResult:
+        """Ответ по каскаду решений. В LLM не идём сразу.
+
+        Каскад: (1) access check [на стороне вызывающего]; (2) must_match;
+        (3) rules (case_engine); (4) intent detection; (5) semantic FAQ/RAG;
+        (6) ML classifier; (7) LLM reasoning; (8) escalation/fallback.
+
+        role: роль вызывающего для explainability (courier / admin).
+        """
         question = (text or "").strip()
         intent = "unknown"
         high_risk = False
@@ -522,6 +601,13 @@ class AICourierService:
         intent_result = IntentDetectionResult(intent="unknown", confidence=0.0, matched_keywords=[])
         faq_hits: list[dict[str, Any]] = []
 
+        # Safety / blocker rules (extensible; no-op by default)
+        safety_result = self._safety_block_step(question)
+        if safety_result is not None:
+            self._log_explainability(user_id, safety_result, role)
+            return safety_result
+
+        # (4) Intent detection — результат используется в must_match, rules, FAQ, ML
         try:
             async with self._session_factory() as session:
                 intent_result = await self._intent_engine.detect(
@@ -555,7 +641,7 @@ class AICourierService:
                 "intent_engine_error": str(exc),
             }
 
-        # 1) Must-match layer for strict operational cases
+        # (2) Must-match cases — жёсткие кейсы из core_policy; ответ без LLM
         must_case = self._match_must_case(question, intent)
         if must_case is not None:
             response = self._build_rag_answer(
@@ -577,11 +663,12 @@ class AICourierService:
                     debug | {"must_match_trigger": must_case.get("trigger", "")},
                     f"must_match:{must_case.get('id') or intent}",
                 ),
+                source=SOURCE_MUST_MATCH,
             )
-            log.info("ai_explainability", user_id=user_id, **asdict(result))
+            self._log_explainability(user_id, result, role)
             return result
 
-        # 2) Case engine for typical courier situations
+        # (3) Rules — case_engine по интенту; ответ по регламенту без LLM
         case_result = self._case_engine.resolve(
             intent=intent,
             confidence=float(intent_result.confidence),
@@ -604,11 +691,12 @@ class AICourierService:
                 escalate=case_result.escalate,
                 evidence=evidence or [f"case:{intent}"],
                 debug=self._debug_with_route_decision(debug, f"case_engine:{intent}"),
+                source=SOURCE_STRUCTURED_FAQ,
             )
-            log.info("ai_explainability", user_id=user_id, **asdict(result))
+            self._log_explainability(user_id, result, role)
             return result
 
-        # 3) FAQ: must_match → keyword → semantic → LLM (hybrid retrieval)
+        # (5) Semantic FAQ / RAG — keyword → semantic → hybrid; при сильном совпадении ответ без LLM
         faq_hits = []
         retrieval_stage = "none"
         semantic_hit = False
@@ -719,8 +807,8 @@ class AICourierService:
                 retrieval_stage=retrieval_stage,
             )
 
-        # 3.5) Case memory (ml_cases): подключаем ПОСЛЕ FAQ retrieval.
-        # Guardrail: case memory не может переопределить must_match, и не подменяет сильный FAQ;
+        # (6) ML classifier (case memory): подключаем после FAQ.
+        # Guardrail: case memory не переопределяет must_match и не подменяет сильный FAQ;
         # используется либо как evidence/explainability, либо как отдельный route semantic_case (см. ниже).
         matched_case: SimilarCaseResult | None = self._case_classifier.find_similar_case(question)
         if matched_case is not None:
@@ -764,19 +852,12 @@ class AICourierService:
                     debug | {"retrieval_stage": retrieval_stage, "semantic_score": semantic_score, "semantic_hit": semantic_hit},
                     "faq_search",
                 ),
+                source=SOURCE_SEMANTIC_RETRIEVAL if retrieval_stage == "semantic_faq" else SOURCE_STRUCTURED_FAQ,
             )
-            log.info(
-                "ai_explainability",
-                user_id=user_id,
-                route=route_label,
-                semantic_score=round(semantic_score, 4),
-                semantic_hit=semantic_hit,
-                retrieval_stage=retrieval_stage,
-                **asdict(result),
-            )
+            self._log_explainability(user_id, result, role)
             return result
 
-        # 4) ML case semantic: strong similarity over ml_cases (additive to case_engine/FAQ)
+        # (6 continued) ML classifier — semantic_case при сильном совпадении
         if self._case_classifier.has_semantic:
             embed_for_case = query_embedding_list
             if embed_for_case is None and self._embeddings_service.enabled:
@@ -814,11 +895,12 @@ class AICourierService:
                                 },
                                 f"semantic_case:{sem_case.case_id}",
                             ),
+                            source=SOURCE_ML_INTENT_CASE,
                         )
-                        log.info("ai_explainability", user_id=user_id, **asdict(result))
+                        self._log_explainability(user_id, result, role)
                         return result
 
-        # 5) LLM: only format from evidence; do not invent operational rules
+        # (7) LLM reasoning — только оформление контекста; не придумывать регламентов
         has_evidence = bool(evidence or faq_hits or matched_case)
         answer_ctx = AnswerContext(
             intent=intent,
@@ -906,11 +988,12 @@ class AICourierService:
                 debug=self._debug_with_route_decision(
                     debug | {"answer_context_intent": answer_ctx.intent}, "llm_reason"
                 ),
+                source=SOURCE_LLM_SYNTHESIS,
             )
-            log.info("ai_explainability", user_id=user_id, **asdict(result))
+            self._log_explainability(user_id, result, role)
             return result
 
-        # 6) Fallback only for true unknown: no strong evidence, LLM unavailable or no answer
+        # (8) Escalation / fallback — нет сильного совпадения или LLM недоступен
         fallback = self._fallbacks.get("no_llm") or self._fallbacks.get("generic") or (
             "Понял. Я помогу. Опиши ситуацию коротко, и я дам шаги."
         )
@@ -926,6 +1009,7 @@ class AICourierService:
             escalate=high_risk and not bool(clarify_q),
             evidence=evidence or ["fallback"],
             debug=self._debug_with_route_decision(debug, "fallback"),
+            source=SOURCE_FALLBACK,
         )
-        log.info("ai_explainability", user_id=user_id, **asdict(result))
+        self._log_explainability(user_id, result, role)
         return result

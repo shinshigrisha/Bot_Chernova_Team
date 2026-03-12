@@ -71,7 +71,7 @@ flowchart LR
 ## AI (куратор)
 
 ### Regulation-first RAG
-Ответы строятся по принципу «сначала регламент»: правила, FAQ и кейсы доминируют над свободной генерацией. LLM используется только для оформления и пояснения уже найденных фактов; придумывать операционные правила запрещено.
+Ответы строятся по принципу «сначала регламент»: правила, FAQ и кейсы доминируют над свободной генерацией. **Ответ не идёт сразу в LLM**: выполняется каскад решений (access check → must_match → rules → intent → FAQ/RAG → ML classifier → LLM → fallback). Подробно: [AI_CURATOR.md](AI_CURATOR.md#2-каскад-решений-обязательный-порядок).
 
 **Порядок маршрутизации:**
 1. **must_match** — жёсткие операционные кейсы из core_policy (повреждение, недозвон, недовоз, опоздание, АКБ).
@@ -94,7 +94,8 @@ flowchart LR
 - **Репозиторий FAQ (v2):** единственный источник — `src/infra/db/repositories/faq_repo.py`; таблица `faq_ai`.
 - **Политика и промпты:** `data/ai/` (core_policy.json, intent_tags.json, prompts/).
 - **ML case memory:** `data/ai/ml_cases.jsonl` (id, input, label, decision, explanation); опционально `ml_cases_embeddings.json` для семантического поиска (скрипт `scripts/rebuild_case_embeddings.py`).
-- Точки входа: бот (middleware внедряет ai_service), handlers (ai_chat), admin (ai_admin), скрипты `scripts/smoke_ai.py`, `scripts/rebuild_faq_embeddings.py`, `scripts/rebuild_case_embeddings.py`.
+- **Единственная точка входа в AI:** `AIFacade` (`src/core/services/ai/ai_facade.py`). Три режима (не один «умный ответчик»): **Courier assistant** (`answer_user`, `proactive_hint`), **Admin copilot** (`answer_admin`), **Analytics assistant** (`analyze_csv`). Подробно: [AI_MODES.md](AI_MODES.md). Handlers, admin и API не вызывают ProviderRouter, AICourierService, RAGService, AnalyticsAssistant напрямую.
+- Точки использования фасада: бот (middleware внедряет `ai_facade`), handlers (ai_chat), admin (ai_admin), API (automation), скрипты при необходимости через `build_ai_facade()`; служебные скрипты `scripts/rebuild_faq_embeddings.py`, `scripts/rebuild_case_embeddings.py` не дергают LLM.
 
 **Гибридный retrieval FAQ (keyword → semantic → hybrid):** см. [AI_FAQ_SEARCH.md](AI_FAQ_SEARCH.md). Эмбеддинги: `embedding_vector` (vector(1536), pgvector); пересборка — `scripts/rebuild_faq_embeddings.py`.
 

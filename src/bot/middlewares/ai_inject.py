@@ -15,4 +15,7 @@ class InjectAIMiddleware(BaseMiddleware):
         data["faq_repo"] = self._dp.get("faq_repo")
         data["ai_router"] = ai_router
         data["provider_router"] = self._dp.get("provider_router") or ai_router
+        data["event_bus"] = self._dp.get("event_bus")
+        data["access_service"] = self._dp.get("access_service")
+        data["user_service"] = self._dp.get("user_service")
         return await handler(event, data)

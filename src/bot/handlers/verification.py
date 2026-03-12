@@ -1,21 +1,23 @@
 from __future__ import annotations
 
+import asyncio
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from src.bot.keyboards.verification import (
+    CONFIRM_NO_CB,
+    CONFIRM_YES_CB,
+    ROLE_COURIER_CB,
+    ROLE_CURATOR_CB,
     VERIFICATION_CB_PREFIX,
     build_confirmation_keyboard,
     build_registration_entry_keyboard,
     build_role_choice_keyboard,
-    ROLE_COURIER_CB,
-    ROLE_CURATOR_CB,
-    CONFIRM_YES_CB,
-    CONFIRM_NO_CB,
 )
 from src.bot.states_verification import VerificationStates
-from src.config import get_settings
+from src.core.events import AutomationEvent
 from src.core.services.darkstores import resolve_ds_code_for_tt
 from src.core.services.verification_service import (
     VerificationApplicationPayload,
@@ -23,6 +25,7 @@ from src.core.services.verification_service import (
 )
 from src.infra.db.enums import UserRole
 from src.infra.db.session import async_session_factory
+from src.infra.n8n.verification_mirror import notify_verification_pending
 
 
 router = Router(name="verification")
@@ -127,7 +130,11 @@ async def verification_edit(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == CONFIRM_YES_CB)
-async def verification_confirm(callback: CallbackQuery, state: FSMContext) -> None:
+async def verification_confirm(
+    callback: CallbackQuery,
+    state: FSMContext,
+    event_bus=None,
+) -> None:
     tg_user_id = callback.from_user.id if callback.from_user else 0
     data = await state.get_data()
     role_value = data.get("role", UserRole.COURIER.value)
@@ -145,6 +152,24 @@ async def verification_confirm(callback: CallbackQuery, state: FSMContext) -> No
 
     service = VerificationService(async_session_factory)
     await service.create_application_and_mark_pending(payload)
+
+    # Optional n8n mirror (fire-and-forget; behind N8N_VERIFICATION_MIRROR_ENABLED)
+    asyncio.create_task(notify_verification_pending(payload))
+
+    # Проактивный слой: эмит для подписчиков (логи, n8n mirror и т.д.)
+    if event_bus:
+        await event_bus.emit(
+            AutomationEvent.VERIFICATION_PENDING,
+            {
+                "tg_user_id": payload.tg_user_id,
+                "role": payload.role.value,
+                "first_name": payload.first_name,
+                "last_name": payload.last_name,
+                "tt_number": payload.tt_number,
+                "ds_code": payload.ds_code,
+                "phone": payload.phone,
+            },
+        )
 
     await state.clear()
     await callback.message.answer(

@@ -26,6 +26,18 @@ class VerificationApplicationRepository:
         )
         return list(result.scalars().all())
 
+    async def list_by_tg_user_ids(
+        self, tg_user_ids: list[int]
+    ) -> list[VerificationApplication]:
+        if not tg_user_ids:
+            return []
+        result = await self._session.execute(
+            select(VerificationApplication)
+            .where(VerificationApplication.tg_user_id.in_(tg_user_ids))
+            .order_by(VerificationApplication.created_at.desc())
+        )
+        return list(result.scalars().unique().all())
+
     async def create(
         self,
         tg_user_id: int,

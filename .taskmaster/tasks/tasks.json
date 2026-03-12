@@ -2,166 +2,149 @@
   "master": {
     "tasks": [
       {
-        "id": "68",
-        "title": "Выяснить реальный источник данных",
-        "description": "Узнать тип БД, host, port, db_name, schema, login, password, ssl / vpn / whitelist",
-        "details": "Отправить разработчикам запрос на доступ к данным",
-        "testStrategy": "Сравнить полученные данные с документацией",
-        "priority": "low",
-        "dependencies": [],
-        "status": "in-progress",
-        "subtasks": [],
-        "complexity": 4,
-        "recommendedSubtasks": 1,
-        "expansionPrompt": "Определить тип БД и параметры подключения",
-        "updatedAt": "2026-03-12T17:24:13.645Z"
-      },
-      {
-        "id": "69",
-        "title": "Получить технические параметры доступа",
-        "description": "Получить параметры подключения к БД",
-        "details": "Получить тип БД, host, port, db_name, schema, login, password, ssl / vpn / whitelist",
-        "testStrategy": "Подключиться к БД с полученными параметрами",
-        "priority": "low",
-        "dependencies": [
-          "68"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 3,
-        "recommendedSubtasks": 0,
-        "expansionPrompt": ""
-      },
-      {
-        "id": "70",
-        "title": "Получить список таблиц или views",
-        "description": "Получить список таблиц и views по доставке",
-        "details": "Получить список таблиц и views по заказам, курьерам, ДС / ВС / ТТ, ЗиЗ",
-        "testStrategy": "Сравнить полученный список с документацией",
-        "priority": "medium",
-        "dependencies": [
-          "69"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 4,
-        "recommendedSubtasks": 1,
-        "expansionPrompt": "Определить список необходимых таблиц и views"
-      },
-      {
-        "id": "71",
-        "title": "Создать отдельную схему",
-        "description": "Создать схему ai_delivery",
-        "details": "Создать схему ai_delivery для хранения данных",
-        "testStrategy": "Проверить создание схемы",
+        "id": "1",
+        "title": "Legacy UX audit and migration map",
+        "description": "Провести аудит текущего UX/диалогов бота и составить карту миграции к новой архитектуре.",
+        "details": "Инвентаризация legacy-меню, сценариев, состояний и AI-взаимодействий; фиксация болей и технического долга; схема миграции на новый UX.",
+        "testStrategy": "Сверить карту с фактическими сценариями в коде и подтвердить её с продактом/тимлидом.",
         "priority": "high",
         "dependencies": [],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Опиши шаги аудита текущего UX и формат карты миграции."
+      },
+      {
+        "id": "2",
+        "title": "Admin menu V2 implementation",
+        "description": "Реализовать новую версию админского меню на основе карты миграции.",
+        "details": "Спроектировать и внедрить Admin menu V2: структуры разделов, доступы по ролям, точки входа в AI- и risk-функции.",
+        "testStrategy": "Проверить все ветки меню вручную и автотестами, убедиться в отсутствии «битых» состояний и команд.",
+        "priority": "high",
+        "dependencies": ["1"],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Разбей реализацию Admin menu V2 на конкретные роутеры и сценарии."
+      },
+      {
+        "id": "3",
+        "title": "Verification admin alert flow",
+        "description": "Сделать полный поток алертов для админов по верификации пользователей.",
+        "details": "Связать заявки на верификацию, уведомления админам, обработку решений и обратную связь пользователю.",
+        "testStrategy": "Прогнать end-to-end сценарии: отправка заявки, получение алерта, принятие решения, изменение статуса пользователя.",
+        "priority": "medium",
+        "dependencies": ["2"],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Опиши состояния заявки и события, при которых должны уходить алерты."
+      },
+      {
+        "id": "4",
+        "title": "Canonical status-based start flow",
+        "description": "Реализовать канонический стартовый поток для пользователя на основе его статуса и роли.",
+        "details": "Сделать единый вход в бота, который по статусу (guest, pending_verification, verified, admin и т.п.) и роли выбирает правильный сценарий.",
+        "testStrategy": "Покрыть тестами матрицу: статус × роль × команда /start, свериться с ожидаемыми экранами.",
+        "priority": "high",
+        "dependencies": ["1", "2", "3"],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Опиши таблицу переходов для /start по статусу и роли пользователя."
+      },
+      {
+        "id": "5",
+        "title": "Role-based menu rendering",
+        "description": "Сделать рендеринг меню и действий строго на основе ролей и прав доступа.",
+        "details": "Вынести правила доступа в единый слой и использовать их при отрисовке меню и проверке хендлеров.",
+        "testStrategy": "Протестировать, что пользователь не видит и не может вызвать команды, не соответствующие его роли.",
+        "priority": "high",
+        "dependencies": ["4"],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Опиши модель ролей и маппинг ролей на пункты меню/действия."
+      },
+      {
+        "id": "6",
+        "title": "User-facing AI curator entrypoint",
+        "description": "Сделать понятную точку входа для пользователя в AI-куратора внутри бота.",
+        "details": "Продумать и реализовать UX, по которому пользователь понимает, куда писать вопросы и как работает AI-куратор.",
+        "testStrategy": "Пройти сценарии от лица разных ролей и убедиться, что вход в AI-куратора очевиден и не ломает существующие сценарии.",
+        "priority": "high",
+        "dependencies": ["4", "5"],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Опиши варианты входа в AI-куратора и критерии хорошего UX для него."
+      },
+      {
+        "id": "7",
+        "title": "AI decision pipeline hardening",
+        "description": "Ужесточить и стабилизировать пайплайн принятия решений AI-курьером.",
+        "details": "Пересмотреть валидации, fallback-ветки, логику confidence/эскалации и обработку ошибок в AI decision pipeline.",
+        "testStrategy": "Запустить smoke/регрессионные тесты на типовых и сложных кейсах, проверить логи и explainability.",
+        "priority": "high",
+        "dependencies": ["6"],
         "status": "pending",
         "subtasks": [],
         "complexity": 6,
-        "recommendedSubtasks": 1,
-        "expansionPrompt": "Определить структуру схемы и создать ее"
-      },
-      {
-        "id": "72",
-        "title": "Создать факт-таблицы",
-        "description": "Создать факт-таблицы fact_delivery_orders, fact_delivery_complaints",
-        "details": "Создать факт-таблицы для хранения данных",
-        "testStrategy": "Проверить создание таблиц",
-        "priority": "high",
-        "dependencies": [
-          "71"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 7,
-        "recommendedSubtasks": 2,
-        "expansionPrompt": "Определить структуру факт-таблиц и создать их"
-      },
-      {
-        "id": "73",
-        "title": "Создать агрегаты",
-        "description": "Создать агрегаты agg_ds_daily, agg_ds_hourly, agg_ziz_daily, agg_courier_daily",
-        "details": "Создать агрегаты для ускорения ответов AI-бота",
-        "testStrategy": "Проверить создание агрегатов",
-        "priority": "high",
-        "dependencies": [
-          "72"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 8,
-        "recommendedSubtasks": 2,
-        "expansionPrompt": "Определить структуру агрегатов и создать их"
-      },
-      {
-        "id": "74",
-        "title": "Загрузить и нормализовать данные",
-        "description": "Загрузить данные из источника и нормализовать поля",
-        "details": "Загрузить данные и нормализовать даты, статусы, сервисы, ТТ, ЗиЗ, курьеров",
-        "testStrategy": "Проверить загрузку и нормализацию данных",
-        "priority": "high",
-        "dependencies": [
-          "73"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 8,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Определить структуру данных и загрузить их"
+        "expansionPrompt": "Опиши целевой пайплайн принятия решения AI с этапами проверки и fallback."
       },
       {
-        "id": "75",
-        "title": "Рассчитать бизнес-метрики",
-        "description": "Рассчитать метрики мили и качества",
-        "details": "Рассчитать метрики мили и качества по доставке",
-        "testStrategy": "Проверить расчеты метрик",
+        "id": "8",
+        "title": "Semantic FAQ + RAG integration",
+        "description": "Интегрировать семантический FAQ и RAG в основной AI-поток.",
+        "details": "Подключить существующий FAQ, эмбеддинги и RAG-слой так, чтобы ответы AI использовали знания и правила проекта.",
+        "testStrategy": "Покрыть тестами типовые вопросы по FAQ, проверить качество извлечения и объяснимость ответов.",
         "priority": "high",
-        "dependencies": [
-          "74"
-        ],
+        "dependencies": ["7"],
         "status": "pending",
         "subtasks": [],
-        "complexity": 7,
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Опиши стратегию приоритизации: когда FAQ, когда RAG, когда прямая генерация."
+      },
+      {
+        "id": "9",
+        "title": "n8n integration blueprint",
+        "description": "Спроектировать blueprint интеграции с n8n для автоматизаций вокруг бота и AI.",
+        "details": "Определить события и вебхуки, структуру payload, требования к авторизации и мониторингу.",
+        "testStrategy": "Согласовать blueprint с командой и проверить его на 1–2 ручных прототипах в n8n.",
+        "priority": "medium",
+        "dependencies": ["1", "2"],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 3,
         "recommendedSubtasks": 2,
-        "expansionPrompt": "Определить формулы расчета метрик и реализовать их"
+        "expansionPrompt": "Опиши ключевые сценарии, которые должны быть покрыты n8n-интеграцией."
       },
       {
-        "id": "76",
-        "title": "Создать Backend API",
-        "description": "Создать Backend API для Telegram-бота",
-        "details": "Создать Backend API для Telegram-бота",
-        "testStrategy": "Проверить API",
-        "priority": "high",
-        "dependencies": [
-          "75"
-        ],
+        "id": "10",
+        "title": "n8n pilot workflows implementation",
+        "description": "Реализовать пилотные n8n-воркфлоу по утверждённому blueprint.",
+        "details": "Собрать и запустить несколько ключевых автоматизаций (уведомления, алерты, служебные действия) поверх бота и AI-решений.",
+        "testStrategy": "Протестировать стабильность и идемпотентность воркфлоу, убедиться в корректной обработке ошибок и логировании.",
+        "priority": "medium",
+        "dependencies": ["9"],
         "status": "pending",
         "subtasks": [],
-        "complexity": 9,
-        "recommendedSubtasks": 4,
-        "expansionPrompt": "Определить структуру API и реализовать его"
-      },
-      {
-        "id": "77",
-        "title": "Реализовать AI-логику и маршрутизацию",
-        "description": "Реализовать AI-логику и маршрутизацию для Telegram-бота",
-        "details": "Реализовать AI-логику и маршрутизацию для Telegram-бота",
-        "testStrategy": "Проверить AI-логику и маршрутизацию",
-        "priority": "high",
-        "dependencies": [
-          "76"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 10,
-        "recommendedSubtasks": 5,
-        "expansionPrompt": "Определить структуру AI-логики и реализовать ее"
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Перечисли конкретные воркфлоу для пилота и критерии их успешности."
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-12T17:24:13.646Z",
+      "lastModified": "2026-03-12T19:43:06.904Z",
       "taskCount": 10,
       "completedCount": 0,
       "tags": [

@@ -98,6 +98,33 @@ class Settings(BaseSettings):
         alias="ENABLE_NEW_AUTH_FLOW",
     )
 
+    # Feature flags (expand → migrate → switch → cleanup)
+    enable_menu_v2: bool = Field(default=False, alias="ENABLE_MENU_V2")
+    enable_verification_notifications: bool = Field(
+        default=False,
+        alias="ENABLE_VERIFICATION_NOTIFICATIONS",
+    )
+    enable_admin_menu_v2: bool = Field(default=False, alias="ENABLE_ADMIN_MENU_V2")
+    enable_ai_chat_v2: bool = Field(default=False, alias="ENABLE_AI_CHAT_V2")
+    enable_faq_semantic_search: bool = Field(
+        default=False,
+        alias="ENABLE_FAQ_SEMANTIC_SEARCH",
+    )
+    enable_rag_assistant: bool = Field(default=False, alias="ENABLE_RAG_ASSISTANT")
+
+    # n8n integration (optional pilot)
+    n8n_verification_mirror_enabled: bool = Field(
+        default=False,
+        alias="N8N_VERIFICATION_MIRROR_ENABLED",
+    )
+    n8n_verification_webhook_url: str = Field(
+        default="",
+        alias="N8N_VERIFICATION_WEBHOOK_URL",
+    )
+
+    # Automation webhook (n8n / external): HTTP server for POST /automation/event (0 = disabled)
+    automation_http_port: int = Field(default=0, alias="AUTOMATION_HTTP_PORT")
+
     @field_validator("admin_ids", mode="before")
     @classmethod
     def parse_admin_ids(cls, v: Union[str, list, int]) -> List[int]:

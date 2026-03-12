@@ -18,6 +18,12 @@ class UserRepository:
         )
         return result.scalars().one_or_none()
 
+    async def list_by_status(self, status: UserStatus) -> list[User]:
+        result = await self._session.execute(
+            select(User).where(User.status == status)
+        )
+        return list(result.scalars().unique().all())
+
     async def get_or_create(
         self,
         tg_user_id: int,
