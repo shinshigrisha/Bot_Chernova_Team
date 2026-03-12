@@ -31,6 +31,7 @@ from src.infra.db.enums import (
     NotificationType,
     Severity,
     UserRole,
+    UserStatus,
     coerce_user_role,
 )
 
@@ -129,6 +130,11 @@ class User(Base):
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tg_user_id: Mapped[int] = mapped_column(nullable=False, unique=True)
     role: Mapped[UserRole] = mapped_column(UserRoleType(), nullable=False)
+    status: Mapped[UserStatus] = mapped_column(
+        _pg_enum(UserStatus, "user_status"),
+        nullable=False,
+        server_default=UserStatus.GUEST.value,
+    )
     display_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

@@ -2,7 +2,8 @@
   "dependencies": {
     "20": "^3.1.9",
     "npx": "^10.2.2",
-    "nvm": "^0.0.4"
+    "nvm": "^0.0.4",
+    "openai": "^6.27.0"
   },
   "devDependencies": {
     "@upstash/context7-mcp": "^2.1.4"

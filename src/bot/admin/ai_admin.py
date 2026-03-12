@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from src.bot.states import AIAddFAQStates
 from src.config import get_settings
+from src.core.services.access_service import AccessService
 from src.core.services.ai.ai_courier_service import AICourierService
 from src.core.services.ai.ai_facade import AIFacade
 from src.core.services.ai.provider_router import ProviderRouter
@@ -19,13 +20,9 @@ from src.infra.db.session import async_session_factory
 router = Router(name="ai_admin")
 
 
-def _is_admin(user_id: int) -> bool:
-    return int(user_id) in get_settings().admin_ids
-
-
-async def _require_admin(message: Message) -> bool:
+async def _require_admin(message: Message, access_service: AccessService) -> bool:
     uid = message.from_user.id if message.from_user else 0
-    if not _is_admin(uid):
+    if not await access_service.can_access_admin(uid):
         await message.answer("Нет доступа.")
         return False
     return True
@@ -34,9 +31,10 @@ async def _require_admin(message: Message) -> bool:
 @router.message(Command("ai_status"))
 async def ai_status(
     message: Message,
+    access_service: AccessService,
     provider_router: ProviderRouter | None = None,
 ) -> None:
-    if not await _require_admin(message):
+    if not await _require_admin(message, access_service):
         return
 
     settings = get_settings()
@@ -73,7 +71,8 @@ async def ai_status(
 
 @router.message(Command("status"))
 async def status(message: Message, provider_router: ProviderRouter | None = None) -> None:
-    if not await _require_admin(message):
+    access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
+    if not await _require_admin(message, access_service):
         return
 
     settings = get_settings()
@@ -123,10 +122,11 @@ async def status(message: Message, provider_router: ProviderRouter | None = None
 @router.message(Command("ai_policy_reload"))
 async def ai_policy_reload(
     message: Message,
+    access_service: AccessService,
     ai_service: AICourierService | None = None,
     ai_facade: AIFacade | None = None,
 ) -> None:
-    if not await _require_admin(message):
+    if not await _require_admin(message, access_service):
         return
 
     target = ai_facade or ai_service
@@ -143,7 +143,8 @@ async def ai_policy_reload(
 
 @router.message(Command("ai_add_faq"))
 async def ai_add_faq_start(message: Message, state: FSMContext) -> None:
-    if not await _require_admin(message):
+    access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
+    if not await _require_admin(message, access_service):
         return
     await state.set_state(AIAddFAQStates.question)
     await message.answer("Шаг 1/5. Введите question:")
@@ -213,7 +214,8 @@ async def ai_add_faq_keywords(message: Message, state: FSMContext) -> None:
 
 @router.message(Command("ai_search_faq"))
 async def ai_search_faq(message: Message) -> None:
-    if not await _require_admin(message):
+    access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
+    if not await _require_admin(message, access_service):
         return
 
     query = (message.text or "").replace("/ai_search_faq", "", 1).strip()

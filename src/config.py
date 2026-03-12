@@ -92,6 +92,12 @@ class Settings(BaseSettings):
         alias="AI_PROVIDER_ORDER_REASON",
     )
 
+    # Access / auth
+    enable_new_auth_flow: bool = Field(
+        default=False,
+        alias="ENABLE_NEW_AUTH_FLOW",
+    )
+
     @field_validator("admin_ids", mode="before")
     @classmethod
     def parse_admin_ids(cls, v: Union[str, list, int]) -> List[int]:

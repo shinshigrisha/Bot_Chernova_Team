@@ -3,10 +3,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from src.config import get_settings
-from src.infra.db.enums import UserRole
-from src.infra.db.repositories.users import UserRepository
-from src.infra.db.session import async_session_factory
+from src.core.services.access_service import AccessService
 
 router = Router(name="admin_menu")
 
@@ -23,23 +20,14 @@ def _admin_keyboard() -> InlineKeyboardMarkup:
     ])
 
 
-async def _can_admin(tg_user_id: int) -> bool:
-    settings = get_settings()
-    if tg_user_id in settings.admin_ids:
-        return True
-    async with async_session_factory() as session:
-        repo = UserRepository(session)
-        user = await repo.get_by_tg_id(tg_user_id)
-        await session.commit()
-        if user and user.role in (UserRole.ADMIN, UserRole.LEAD, UserRole.CURATOR):
-            return True
-    return False
+async def _can_admin(tg_user_id: int, access_service: AccessService) -> bool:
+    return await access_service.can_access_admin(tg_user_id)
 
 
 @router.message(Command("admin"))
-async def cmd_admin(message: Message) -> None:
+async def cmd_admin(message: Message, access_service: AccessService) -> None:
     tg_user_id = message.from_user.id if message.from_user else 0
-    if not await _can_admin(tg_user_id):
+    if not await _can_admin(tg_user_id, access_service):
         await message.answer("Доступ запрещён.")
         return
     await message.answer("Админ-панель:", reply_markup=_admin_keyboard())

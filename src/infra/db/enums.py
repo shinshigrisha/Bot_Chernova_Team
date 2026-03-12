@@ -13,6 +13,14 @@ class UserRole(str, enum.Enum):
     COURIER = "courier"
 
 
+class UserStatus(str, enum.Enum):
+    GUEST = "guest"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    BLOCKED = "blocked"
+
+
 # Маппинг всех допустимых строковых представлений → UserRole.
 # Покрывает: "admin", "ADMIN", "UserRole.ADMIN", "userrole.admin" и т.п.
 _ROLE_LOOKUP: dict[str, UserRole] = {}

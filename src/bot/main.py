@@ -19,6 +19,7 @@ from src.core.services.ai.provider_router import ProviderRouter
 from src.core.services.ai.providers.deepseek_provider import DeepSeekProvider
 from src.core.services.ai.providers.groq_provider import GroqProvider
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
+from src.core.services.access_service import AccessService
 from src.core.services.users import UserService
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
@@ -115,6 +116,10 @@ async def main() -> None:
 
     dp = Dispatcher()
     dp["user_service"] = UserService(session_factory=async_session_factory)
+    dp["access_service"] = AccessService(
+        session_factory=async_session_factory,
+        settings=settings,
+    )
     dp.update.outer_middleware(LogUpdatesMiddleware())
     dp.update.outer_middleware(InjectAIMiddleware(dp))
     _init_ai(dp)
