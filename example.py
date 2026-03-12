@@ -1,5 +1,5 @@
 # from openai import OpenAI  # Commented out because the 'openai' module is not installed or missing.
-client = OpenAI()
+client = OpenAI()  # pyright: ignore[reportUndefinedVariable]
 
 response = client.responses.create(
     model="gpt-5.4",

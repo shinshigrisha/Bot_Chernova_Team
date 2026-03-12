@@ -7,7 +7,7 @@
 import pytest
 import pytest_asyncio
 
-from src.infra.db.enums import UserRole, coerce_user_role
+from src.infra.db.enums import UserRole, UserStatus, coerce_user_role
 from src.infra.db.repositories.users import UserRepository
 
 # Используем async_session из conftest (единый lifecycle, изоляция через rollback транзакции).
@@ -61,7 +61,7 @@ def test_coerce_invalid_custom_default() -> None:
 
 @pytest.mark.asyncio
 async def test_get_or_create_admin(async_session) -> None:
-    """INSERT users с ролью ADMIN не падает с 'invalid input value'."""
+    """INSERT users с ролью ADMIN не падает с 'invalid input value'. Default status=GUEST."""
     repo = UserRepository(async_session)
     user = await repo.get_or_create(
         tg_user_id=88_000_001,
@@ -71,6 +71,7 @@ async def test_get_or_create_admin(async_session) -> None:
     assert user.tg_user_id == 88_000_001
     assert user.role == UserRole.ADMIN
     assert user.display_name == "SmokeAdmin"
+    assert user.status == UserStatus.GUEST
 
 
 @pytest.mark.asyncio
@@ -105,3 +106,18 @@ async def test_get_or_create_invalid_role_fallback(async_session) -> None:
         display_name="FallbackUser",
     )
     assert user.role == UserRole.VIEWER
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_with_status_approved(async_session) -> None:
+    """При создании с status=APPROVED пользователь получает этот статус (bootstrap admin)."""
+    repo = UserRepository(async_session)
+    user = await repo.get_or_create(
+        tg_user_id=88_000_005,
+        role=UserRole.ADMIN,
+        display_name="BootstrapAdmin",
+        status=UserStatus.APPROVED,
+    )
+    assert user.tg_user_id == 88_000_005
+    assert user.role == UserRole.ADMIN
+    assert user.status == UserStatus.APPROVED

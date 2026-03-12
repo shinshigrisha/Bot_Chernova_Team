@@ -1,0 +1,74 @@
+{
+  "name": "mile_analysis",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "analysis_type": { "type": "string", "const": "mile_analytics" },
+      "summary": { "type": "string" },
+      "ds_blocks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "ds_name": { "type": "string" },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "total_orders": { "type": "number" },
+                "successful_orders": { "type": "number" },
+                "delay_rate": { "type": "number" },
+                "avg_delivery_wait": { "type": "number" }
+              },
+              "required": ["total_orders", "successful_orders", "delay_rate"]
+            },
+            "tt_blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "tt_name": { "type": "string" },
+                  "delay_rate": { "type": "number" },
+                  "top_couriers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "courier_name": { "type": "string" },
+                        "orders": { "type": "number" },
+                        "delayed_orders": { "type": "number" },
+                        "delay_rate": { "type": "number" }
+                      },
+                      "required": ["courier_name", "orders", "delayed_orders", "delay_rate"]
+                    }
+                  },
+                  "problematic_ziz": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "peak_hours": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "root_cause": { "type": "string" }
+                },
+                "required": ["tt_name", "delay_rate"]
+              }
+            }
+          },
+          "required": ["ds_name", "metrics", "tt_blocks"]
+        }
+      },
+      "recommendations": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "data_limitations": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "required": ["analysis_type", "summary", "ds_blocks", "recommendations", "data_limitations"],
+    "additionalProperties": false
+  }
+}
+

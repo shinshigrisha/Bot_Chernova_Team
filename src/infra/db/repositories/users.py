@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.infra.db.enums import UserRole, coerce_user_role
+from src.infra.db.enums import UserRole, UserStatus, coerce_user_role
 from src.infra.db.models import User
 
 
@@ -23,6 +23,7 @@ class UserRepository:
         tg_user_id: int,
         role: UserRole = UserRole.COURIER,
         display_name: str | None = None,
+        status: UserStatus | None = None,
     ) -> User:
         # Нормализуем роль: "ADMIN" / "admin" / UserRole.ADMIN → UserRole.ADMIN.
         # Защита от invalid input value при INSERT в Postgres enum.
@@ -36,6 +37,7 @@ class UserRepository:
             tg_user_id=tg_user_id,
             role=role,
             display_name=display_name,
+            status=status if status is not None else UserStatus.GUEST,
         )
         self._session.add(user)
         await self._session.flush()

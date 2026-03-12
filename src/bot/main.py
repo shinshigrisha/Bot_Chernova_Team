@@ -10,6 +10,8 @@ from aiogram.enums import ParseMode
 from src.bot.admin import router as admin_router
 from src.bot.handlers.ai_chat import router as ai_chat_router
 from src.bot.handlers.start import router as start_router
+from src.bot.handlers.verification import router as verification_router
+from src.bot.navigation import router as navigation_router
 from src.bot.middlewares.ai_inject import InjectAIMiddleware
 from src.bot.middlewares.log_updates import LogUpdatesMiddleware
 from src.config import get_settings
@@ -125,7 +127,9 @@ async def main() -> None:
     _init_ai(dp)
 
     dp.include_router(start_router)
+    dp.include_router(navigation_router)
     dp.include_router(admin_router)
+    dp.include_router(verification_router)
     dp.include_router(ai_chat_router)  # last: catches free text after commands
     _register_error_handler(dp)
 

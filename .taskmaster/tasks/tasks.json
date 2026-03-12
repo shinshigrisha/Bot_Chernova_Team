@@ -2,143 +2,171 @@
   "master": {
     "tasks": [
       {
-        "id": 43,
-        "title": "Menu and navigation foundation setup",
-        "description": "Setup the basic menu and navigation structure",
-        "details": "Create a basic menu component with navigation links. Use a modern front-end framework such as React or Angular.",
-        "testStrategy": "Unit testing and manual verification of menu rendering",
+        "id": "68",
+        "title": "Выяснить реальный источник данных",
+        "description": "Узнать тип БД, host, port, db_name, schema, login, password, ssl / vpn / whitelist",
+        "details": "Отправить разработчикам запрос на доступ к данным",
+        "testStrategy": "Сравнить полученные данные с документацией",
+        "priority": "low",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 1,
+        "expansionPrompt": "Определить тип БД и параметры подключения",
+        "updatedAt": "2026-03-12T17:24:13.645Z"
+      },
+      {
+        "id": "69",
+        "title": "Получить технические параметры доступа",
+        "description": "Получить параметры подключения к БД",
+        "details": "Получить тип БД, host, port, db_name, schema, login, password, ssl / vpn / whitelist",
+        "testStrategy": "Подключиться к БД с полученными параметрами",
+        "priority": "low",
+        "dependencies": [
+          "68"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 3,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": ""
+      },
+      {
+        "id": "70",
+        "title": "Получить список таблиц или views",
+        "description": "Получить список таблиц и views по доставке",
+        "details": "Получить список таблиц и views по заказам, курьерам, ДС / ВС / ТТ, ЗиЗ",
+        "testStrategy": "Сравнить полученный список с документацией",
+        "priority": "medium",
+        "dependencies": [
+          "69"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 1,
+        "expansionPrompt": "Определить список необходимых таблиц и views"
+      },
+      {
+        "id": "71",
+        "title": "Создать отдельную схему",
+        "description": "Создать схему ai_delivery",
+        "details": "Создать схему ai_delivery для хранения данных",
+        "testStrategy": "Проверить создание схемы",
         "priority": "high",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [],
+        "complexity": 6,
+        "recommendedSubtasks": 1,
+        "expansionPrompt": "Определить структуру схемы и создать ее"
       },
       {
-        "id": 44,
-        "title": "Verification form implementation",
-        "description": "Implement a verification form for user status flow",
-        "details": "Create a verification form with fields for user input. Use a library like Formik or React Hook Form for form management.",
-        "testStrategy": "Unit testing and integration testing of form submission and validation",
+        "id": "72",
+        "title": "Создать факт-таблицы",
+        "description": "Создать факт-таблицы fact_delivery_orders, fact_delivery_complaints",
+        "details": "Создать факт-таблицы для хранения данных",
+        "testStrategy": "Проверить создание таблиц",
         "priority": "high",
         "dependencies": [
-          43
+          "71"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [],
+        "complexity": 7,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Определить структуру факт-таблиц и создать их"
       },
       {
-        "id": 45,
-        "title": "Role-based menu rendering implementation",
-        "description": "Implement role-based menu rendering",
-        "details": "Create a system to render menus based on user roles. Use a library like React Context or a state management library.",
-        "testStrategy": "Unit testing and integration testing of menu rendering for different roles",
-        "priority": "medium",
-        "dependencies": [
-          43
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 46,
-        "title": "Admin menu v2 migration",
-        "description": "Migrate admin menu from legacy panel to new menu system",
-        "details": "Update the admin menu to use the new menu system. Use a migration script or manual update.",
-        "testStrategy": "Manual verification of admin menu functionality",
-        "priority": "medium",
-        "dependencies": [
-          43,
-          45
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 47,
-        "title": "Courier and curator menu implementation",
-        "description": "Implement menus for courier and curator roles",
-        "details": "Create menus for courier and curator roles. Use the role-based menu rendering system.",
-        "testStrategy": "Unit testing and integration testing of menu rendering for courier and curator roles",
-        "priority": "medium",
-        "dependencies": [
-          43,
-          45
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 48,
-        "title": "AI curator integration into menu",
-        "description": "Integrate AI curator into the menu system",
-        "details": "Update the menu system to include AI curator features. Use APIs or SDKs provided by the AI curator service.",
-        "testStrategy": "Integration testing of AI curator features in the menu system",
-        "priority": "medium",
-        "dependencies": [
-          47
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 49,
-        "title": "Semantic FAQ implementation",
-        "description": "Implement semantic FAQ or RAG",
-        "details": "Create a semantic FAQ or RAG system. Use a library like Natural Language Processing (NLP) or a knowledge graph database.",
-        "testStrategy": "Unit testing and manual verification of FAQ or RAG functionality",
-        "priority": "low",
-        "dependencies": [],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 50,
-        "title": "Proactive AI alerts implementation",
-        "description": "Implement proactive AI alerts",
-        "details": "Create a system to send proactive AI alerts. Use a notification service or a messaging platform.",
-        "testStrategy": "Integration testing of alert sending and receiving",
-        "priority": "low",
-        "dependencies": [],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 51,
-        "title": "Menu and navigation testing and validation",
-        "description": "Test and validate the menu and navigation system",
-        "details": "Perform thorough testing and validation of the menu and navigation system. Use automated testing and manual verification.",
-        "testStrategy": "Comprehensive testing and validation of menu and navigation functionality",
+        "id": "73",
+        "title": "Создать агрегаты",
+        "description": "Создать агрегаты agg_ds_daily, agg_ds_hourly, agg_ziz_daily, agg_courier_daily",
+        "details": "Создать агрегаты для ускорения ответов AI-бота",
+        "testStrategy": "Проверить создание агрегатов",
         "priority": "high",
         "dependencies": [
-          43,
-          44,
-          45,
-          46,
-          47,
-          48,
-          49,
-          50
+          "72"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [],
+        "complexity": 8,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Определить структуру агрегатов и создать их"
       },
       {
-        "id": 52,
-        "title": "Documentation and maintenance planning",
-        "description": "Plan documentation and maintenance for the menu and navigation system",
-        "details": "Create documentation and plan maintenance for the menu and navigation system. Use documentation tools like Markdown or Confluence.",
-        "testStrategy": "Manual verification of documentation and maintenance plan",
-        "priority": "low",
+        "id": "74",
+        "title": "Загрузить и нормализовать данные",
+        "description": "Загрузить данные из источника и нормализовать поля",
+        "details": "Загрузить данные и нормализовать даты, статусы, сервисы, ТТ, ЗиЗ, курьеров",
+        "testStrategy": "Проверить загрузку и нормализацию данных",
+        "priority": "high",
         "dependencies": [
-          51
+          "73"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [],
+        "complexity": 8,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Определить структуру данных и загрузить их"
+      },
+      {
+        "id": "75",
+        "title": "Рассчитать бизнес-метрики",
+        "description": "Рассчитать метрики мили и качества",
+        "details": "Рассчитать метрики мили и качества по доставке",
+        "testStrategy": "Проверить расчеты метрик",
+        "priority": "high",
+        "dependencies": [
+          "74"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 7,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Определить формулы расчета метрик и реализовать их"
+      },
+      {
+        "id": "76",
+        "title": "Создать Backend API",
+        "description": "Создать Backend API для Telegram-бота",
+        "details": "Создать Backend API для Telegram-бота",
+        "testStrategy": "Проверить API",
+        "priority": "high",
+        "dependencies": [
+          "75"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 9,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Определить структуру API и реализовать его"
+      },
+      {
+        "id": "77",
+        "title": "Реализовать AI-логику и маршрутизацию",
+        "description": "Реализовать AI-логику и маршрутизацию для Telegram-бота",
+        "details": "Реализовать AI-логику и маршрутизацию для Telegram-бота",
+        "testStrategy": "Проверить AI-логику и маршрутизацию",
+        "priority": "high",
+        "dependencies": [
+          "76"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 10,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Определить структуру AI-логики и реализовать ее"
       }
     ],
     "metadata": {
-      "created": "2026-03-11T11:02:50.441Z",
-      "updated": "2026-03-12T11:48:30.612Z",
-      "description": "Tasks for master context"
+      "version": "1.0.0",
+      "lastModified": "2026-03-12T17:24:13.646Z",
+      "taskCount": 10,
+      "completedCount": 0,
+      "tags": [
+        "master"
+      ]
     }
   }
 }

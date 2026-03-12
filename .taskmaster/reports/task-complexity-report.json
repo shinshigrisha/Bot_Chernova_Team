@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-03-12T17:21:15.496Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 68,
+			"taskTitle": "Выяснить реальный источник данных",
+			"complexityScore": 4,
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Определить тип БД и параметры подключения",
+			"reasoning": "Задача требует запроса к разработчикам и анализа ответа, что является относительно простой задачей"
+		},
+		{
+			"taskId": 69,
+			"taskTitle": "Получить технические параметры доступа",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Задача зависит от предыдущей и требует простых действий для получения параметров"
+		},
+		{
+			"taskId": 70,
+			"taskTitle": "Получить список таблиц или views",
+			"complexityScore": 4,
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Определить список необходимых таблиц и views",
+			"reasoning": "Задача требует запроса к БД и анализа ответа, что является относительно простой задачей"
+		},
+		{
+			"taskId": 71,
+			"taskTitle": "Создать отдельную схему",
+			"complexityScore": 6,
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Определить структуру схемы и создать ее",
+			"reasoning": "Задача требует создания схемы в БД, что является более сложной задачей"
+		},
+		{
+			"taskId": 72,
+			"taskTitle": "Создать факт-таблицы",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Определить структуру факт-таблиц и создать их",
+			"reasoning": "Задача требует создания факт-таблиц в БД, что является сложной задачей"
+		},
+		{
+			"taskId": 73,
+			"taskTitle": "Создать агрегаты",
+			"complexityScore": 8,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Определить структуру агрегатов и создать их",
+			"reasoning": "Задача требует создания агрегатов в БД, что является сложной задачей"
+		},
+		{
+			"taskId": 74,
+			"taskTitle": "Загрузить и нормализовать данные",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Определить структуру данных и загрузить их",
+			"reasoning": "Задача требует загрузки и нормализации данных, что является сложной задачей"
+		},
+		{
+			"taskId": 75,
+			"taskTitle": "Рассчитать бизнес-метрики",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Определить формулы расчета метрик и реализовать их",
+			"reasoning": "Задача требует расчета метрик, что является сложной задачей"
+		},
+		{
+			"taskId": 76,
+			"taskTitle": "Создать Backend API",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Определить структуру API и реализовать его",
+			"reasoning": "Задача требует создания Backend API, что является очень сложной задачей"
+		},
+		{
+			"taskId": 77,
+			"taskTitle": "Реализовать AI-логику и маршрутизацию",
+			"complexityScore": 10,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Определить структуру AI-логики и реализовать ее",
+			"reasoning": "Задача требует реализации AI-логики и маршрутизации, что является очень сложной задачей"
+		}
+	]
+}

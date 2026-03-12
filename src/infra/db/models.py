@@ -13,6 +13,7 @@ from sqlalchemy import (
     TypeDecorator,
     UniqueConstraint,
 )
+from sqlalchemy import BigInteger
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import ENUM, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -128,7 +129,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tg_user_id: Mapped[int] = mapped_column(nullable=False, unique=True)
+    tg_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True)
     role: Mapped[UserRole] = mapped_column(UserRoleType(), nullable=False)
     status: Mapped[UserStatus] = mapped_column(
         _pg_enum(UserStatus, "user_status"),
@@ -434,3 +435,20 @@ class FAQItem(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+
+class VerificationApplication(Base):
+    __tablename__ = "verification_applications"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tg_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(32), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    tt_number: Mapped[str] = mapped_column(String(64), nullable=False)
+    ds_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    phone: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+

@@ -18,6 +18,7 @@ from src.core.services.ai.case_engine import CaseEngine
 from src.core.services.ai.embeddings_service import EmbeddingsService
 from src.core.services.ai.intent_engine import IntentDetectionResult, IntentEngine
 from src.core.services.ai.provider_router import ProviderRouter
+from src.core.services.ai.rag_service import RAGKnowledgeContext, RAGService
 from src.core.services.risk import RecommendationEngine, RiskEngine, RiskInput
 from src.infra.db.repositories.faq_repo import FAQRepository
 
@@ -110,6 +111,13 @@ class AICourierService:
         self._rule_reply_fn = self._resolve_rule_reply_fn()
         self._risk_engine = RiskEngine()
         self._recommendation_engine = RecommendationEngine()
+        self._rag_service = RAGService(
+            session_factory=self._session_factory,
+            data_root=self._data_root,
+            core_policy=self._policy,
+            intent_tags=self._intent_tags,
+            intents_catalog=intents_catalog,
+        )
 
     def reload_policy(self) -> None:
         self._policy = self._load_json("core_policy.json", default={})
@@ -822,6 +830,12 @@ class AICourierService:
             escalation_signal=high_risk,
             high_risk=high_risk,
         )
+        rag_ctx: RAGKnowledgeContext | None = None
+        try:
+            rag_ctx = await self._rag_service.build_context(question)
+        except Exception as exc:  # pragma: no cover - защитный слой
+            log.warning("rag_context_failed", error=str(exc))
+
         llm_context_parts: list[str] = [
             "Входы для ответа: intent=%s, эскалация=%s, high_risk=%s"
             % (intent, high_risk, high_risk),
@@ -838,7 +852,17 @@ class AICourierService:
                 )
         if matched_case:
             llm_context_parts.append(
-                "Case memory: %s -> %s" % (matched_case.label or "", (matched_case.decision or "")[:200])
+                "Case memory: %s -> %s"
+                % (matched_case.label or "", (matched_case.decision or "")[:200])
+            )
+        if rag_ctx is not None and rag_ctx.context_text:
+            llm_context_parts.append(
+                "RAG-контекст знаний (intent=%s, retrieval_stage=%s):\n%s"
+                % (
+                    rag_ctx.intent.intent,
+                    rag_ctx.retrieval_stage,
+                    rag_ctx.context_text[:2000],
+                )
             )
         llm_context_parts.append(
             "Строго: используй ТОЛЬКО факты выше. Не придумывай регламентов. "

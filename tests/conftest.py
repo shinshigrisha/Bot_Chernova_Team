@@ -2,6 +2,7 @@
 import os
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
+import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -33,8 +34,26 @@ TEST_DATABASE_URL = _normalize_db_url_sslmode(_TEST_DB_URL_RAW)
 _TEST_CONNECT_ARGS = {"ssl": False}
 
 
+@pytest.fixture(scope="session")
+def _ensure_migrations():
+    """Перед тестами применяем миграции к тестовой БД (в т.ч. users.status и др.)."""
+    from alembic import command
+    from alembic.config import Config
+
+    prev = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+    try:
+        cfg = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+        command.upgrade(cfg, "head")
+    finally:
+        if prev is not None:
+            os.environ["DATABASE_URL"] = prev
+        else:
+            os.environ.pop("DATABASE_URL", None)
+
+
 @pytest_asyncio.fixture
-async def async_engine():
+async def async_engine(_ensure_migrations):
     """Engine создаётся и уничтожается на каждый тест (тот же event loop, что и у теста)."""
     engine = create_async_engine(
         TEST_DATABASE_URL,

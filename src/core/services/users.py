@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from src.infra.db.enums import UserRole, coerce_user_role
+from src.infra.db.enums import UserRole, UserStatus, coerce_user_role
 from src.infra.db.repositories.users import UserRepository
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ class UserService:
         tg_user_id: int,
         role: UserRole,
         display_name: str | None = None,
+        status: UserStatus | None = None,
     ) -> UserProfile:
         """Return existing user or create a new one.
 
@@ -45,7 +46,10 @@ class UserService:
         async with self._session_factory() as session:
             repo = UserRepository(session)
             user = await repo.get_or_create(
-                tg_user_id, role=role, display_name=display_name
+                tg_user_id,
+                role=role,
+                display_name=display_name,
+                status=status,
             )
             await session.commit()
             return UserProfile(
