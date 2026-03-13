@@ -19,7 +19,7 @@ flowchart TD
 | **Telegram** | Канал доставки сообщений | — |
 | **Bot Layer** | Dispatcher, роутеры, middlewares; приём/отправка, инъекция зависимостей | `src/bot/main.py`, `src/bot/handlers/`, `src/bot/admin/`, `src/bot/middlewares/` |
 | **Access / Role / Status** | Проверки прав и статуса пользователя; что показать на /start; какое меню; доступ к AI и админке; кому слать verification alerts | `src/core/services/access_service.py`, `src/bot/access_guards.py`, `src/bot/menu_renderer.py`, AdminOnlyMiddleware. См. [ACCESS_ROLE_STATUS_LAYER.md](ACCESS_ROLE_STATUS_LAYER.md). |
-| **Scenario Router** | Ветвление по типу флоу (Admin, Verification, Courier UI, Curator UI, AI Curator, AI Analyst) | `src/bot/scenario_router.py`, `src/bot/navigation.py`, `src/bot/menu_renderer.py`, `src/bot/states*.py` |
+| **Scenario Router** | «Дирижёр»: ветвление по A) Admin B) Courier C) Curator D) AI Analyst флоу | `src/bot/scenario_router.py`, `src/bot/navigation.py`, `src/bot/menu_renderer.py`, `src/bot/states*.py`. См. [SCENARIO_ROUTER_LAYER.md](SCENARIO_ROUTER_LAYER.md). |
 | **Application Services** | Доменная логика; не знают о Telegram | `src/core/services/` (UserService, AccessService, VerificationService, IngestService, NotificationService, risk/proactive, AI-сервисы за фасадом) |
 | **AI Layer** | Единственная точка входа — AIFacade; внутри: decision → knowledge → retrieval → policy → generation → validation → explainability | `src/core/services/ai/ai_facade.py`, `ai_courier_service.py`, RAG, провайдеры |
 | **Infra** | БД, очереди, хранилище, уведомления, n8n | `src/infra/`, `src/api/automation.py` |

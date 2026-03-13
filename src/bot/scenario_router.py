@@ -1,16 +1,17 @@
-"""Scenario Router: явный слой ветвления по типу флоу.
+"""Scenario Router: «дирижёр» продукта, явный слой ветвления по типу флоу.
 
 Определяет канонические сценарии бота и маппинг callback_data / роутеров на флоу.
-Отрисовка меню и переходы состояний остаются в navigation.py и menu_renderer.py;
+Отрисовка меню и переходы состояний — в navigation.py и menu_renderer.py;
 здесь — единый источник истины для типов флоу и привязки к роутерам/FSM.
 
-Флоу (см. план canonical-ai-bot-architecture):
-- Admin flows       — управление, отчёты, риск, ingest, верификация заявок.
-- Verification flows — регистрация, KYC, статусы заявки.
-- Courier UI flows  — смены, TT, справка, пункт входа в AI-куратор.
-- Curator UI flows  — аналитика, FAQ, пункт входа в AI-куратор.
-- AI Curator flow   — диалоги с AI по кейсам доставки (answer_user/answer_admin).
-- AI Analyst flow   — запросы на аналитику и отчёты (admin: CSV и т.п.).
+Группы флоу (см. docs/SCENARIO_ROUTER_LAYER.md):
+
+  A. Admin flows      — меню администратора, верификация, мониторинг, AI diagnostics,
+                        FAQ / база знаний, анализ файлов, рассылки, ТМЦ, журнал смены.
+  B. Courier flows    — быстрые кейсы, AI-куратор, статусные экраны, помощь, смены/FAQ.
+  C. Curator flows    — аналитика, FAQ, AI-куратор; наблюдение за нарушениями, тревоги,
+                        эскалация, operational кейсы (частично в админке).
+  D. AI Analyst flows — загрузка CSV/XLSX/PDF, запуск анализа, получение отчёта.
 """
 
 from __future__ import annotations
@@ -84,6 +85,12 @@ STATES_TO_FLOW: dict[str, BotFlow] = {
     "AIChatStates": BotFlow.AI_CURATOR,
     "AIAddFAQStates": BotFlow.ADMIN,
 }
+
+# Группы флоу A/B/C/D для документации и тестов (см. docs/SCENARIO_ROUTER_LAYER.md)
+FLOW_GROUP_A_ADMIN = (BotFlow.ADMIN,)
+FLOW_GROUP_B_COURIER = (BotFlow.COURIER_UI, BotFlow.AI_CURATOR)
+FLOW_GROUP_C_CURATOR = (BotFlow.CURATOR_UI, BotFlow.AI_CURATOR)
+FLOW_GROUP_D_AI_ANALYST = (BotFlow.AI_ANALYST,)
 
 
 def resolve_flow(callback_data: str | None) -> BotFlow | None:

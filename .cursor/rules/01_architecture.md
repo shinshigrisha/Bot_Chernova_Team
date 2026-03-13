@@ -10,7 +10,7 @@
 1. **Telegram** — канал доставки сообщений.
 2. **Bot Layer (aiogram)** — `Dispatcher`, роутеры (`src/bot/*`), middlewares. Только приём/отправка, инъекция зависимостей, логирование.
 3. **Access / Role / Status Layer** — проверки прав и статуса пользователя (`AccessService`, middlewares/guards). Решает: что показать на /start, какое меню, может ли пользователь использовать AI, кто видит админ-панель, кому слать verification alerts. См. [docs/ACCESS_ROLE_STATUS_LAYER.md](../docs/ACCESS_ROLE_STATUS_LAYER.md).
-4. **Scenario Router** — ветвление по типу флоу: Admin, Verification, Courier UI, Curator UI, AI Curator, AI Analyst. Навигация и переходы состояний (`navigation`, `menu_renderer`, `states`).
+4. **Scenario Router** — «дирижёр»: ветвление по группам A) Admin B) Courier C) Curator D) AI Analyst. Навигация и переходы состояний (`navigation`, `menu_renderer`, `states`). См. [docs/SCENARIO_ROUTER_LAYER.md](../docs/SCENARIO_ROUTER_LAYER.md).
 5. **Application Services** — доменная логика: `UserService`, `AccessService`, `VerificationService`, `NotificationService`, `IngestService`, risk/proactive, вызов AI только через `AIFacade`. Без прямого знания о Telegram.
 6. **AI Layer** — единственная точка входа `AIFacade`; внутри: decision → knowledge → retrieval → policy → generation → validation → explainability. Код в `src/core/services/ai/*`. Пайплайн и метки explainability: [docs/ARCHITECTURE_AI_LAYER.md](../docs/ARCHITECTURE_AI_LAYER.md).
 7. **Infra** — Postgres, Redis, Celery, Storage, Notifications, n8n. Чистая инфраструктура, без доменной логики.
