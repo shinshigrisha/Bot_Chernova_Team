@@ -62,3 +62,28 @@ async def test_show_entrypoint_menu_approved_roles(role: UserRole, expected_pref
     text, _ = msg.sent[0]
     assert text.startswith(expected_prefix)
 
+
+def test_admin_main_keyboard_has_required_sections() -> None:
+    """Админ-меню содержит все ожидаемые разделы (callback_data), навигация не сломана."""
+    from src.bot.keyboards.admin_main import (
+        build_admin_main_keyboard,
+        VERIFICATION_CB,
+        AI_CURATOR_CB,
+        FAQ_KB_CB,
+        CSV_ANALYSIS_CB,
+        MONITORING_CB,
+        ASSETS_CB,
+        BROADCASTS_CB,
+        LEGACY_CB,
+    )
+    kb = build_admin_main_keyboard()
+    flat = [btn.callback_data for row in kb.inline_keyboard for btn in row]
+    assert VERIFICATION_CB in flat
+    assert AI_CURATOR_CB in flat
+    assert FAQ_KB_CB in flat
+    assert CSV_ANALYSIS_CB in flat
+    assert MONITORING_CB in flat
+    assert ASSETS_CB in flat
+    assert BROADCASTS_CB in flat
+    assert LEGACY_CB in flat
+

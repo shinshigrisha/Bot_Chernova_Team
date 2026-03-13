@@ -18,6 +18,9 @@ from src.core.services.ai.intent_engine import IntentDetectionResult
 from src.core.services.ai.rag_service import RAGService, RAGKnowledgeContext
 
 
+pytestmark = pytest.mark.smoke
+
+
 def test_canonical_embedding_service_returns_embeddings_service() -> None:
     """Единая точка входа: get_embedding_service() возвращает EmbeddingsService."""
     service = get_embedding_service()

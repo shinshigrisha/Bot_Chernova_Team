@@ -12,6 +12,9 @@ from src.infra.db.repositories.users import UserRepository
 
 # Используем async_session из conftest (единый lifecycle, изоляция через rollback транзакции).
 
+pytestmark = pytest.mark.smoke
+
+
 # ---------------------------------------------------------------------------
 # Юнит-тесты coerce_user_role (без БД)
 # ---------------------------------------------------------------------------

@@ -18,11 +18,11 @@ from src.bot.admin.admin_menu import (
     build_legacy_keyboard,
     with_section_nav,
 )
+from src.bot.access_guards import require_admin_for_callback, require_admin_for_message
 from src.bot.keyboards.admin_main import ADMIN_CB_PREFIX
 from src.bot.menu_renderer import get_admin_root_message
 from src.core.services.access_service import AccessService
 from src.core.services.verification_service import VerificationService
-from src.infra.db.session import async_session_factory
 
 router = Router(name="admin_main_menu")
 
@@ -31,42 +31,19 @@ VERIFICATION_REJECT_PREFIX = f"{ADMIN_CB_PREFIX}verification:reject:"
 VERIFICATION_BLOCK_PREFIX = f"{ADMIN_CB_PREFIX}verification:block:"
 
 
-async def _ensure_admin_message(
-    message: Message,
-    access_service: AccessService,
-) -> bool:
-    tg_user_id = message.from_user.id if message.from_user else 0
-    if not await access_service.can_access_admin(tg_user_id):
-        await message.answer("Доступ запрещён.")
-        return False
-    return True
-
-
-async def _ensure_admin_callback(
-    callback: CallbackQuery,
-    access_service: AccessService,
-) -> bool:
-    tg_user_id = callback.from_user.id if callback.from_user else 0
-    if not await access_service.can_access_admin(tg_user_id):
-        await callback.answer("Доступ запрещён.", show_alert=True)
-        return False
-    return True
-
-
 @router.message(Command("admin"))
 async def cmd_admin(
     message: Message,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_message(message, access_service):
+    if not await require_admin_for_message(message, access_service):
         return
     await message.answer(get_admin_root_message(), reply_markup=build_admin_main_menu())
 
 
-async def _verification_screen_content():
+async def _verification_screen_content(verification_service: VerificationService):
     """Текст и клавиатура для экрана верификации (список pending)."""
-    service = VerificationService(async_session_factory)
-    pending = await service.list_pending_with_applications()
+    pending = await verification_service.list_pending_with_applications()
     if not pending:
         return "Раздел верификации.\n\nЗаявок на рассмотрении нет.", with_section_nav()
     lines = ["**Заявки на регистрацию (pending):**\n"]
@@ -97,10 +74,14 @@ async def _verification_screen_content():
 async def cb_verification_menu(
     callback: CallbackQuery,
     access_service: AccessService,
+    verification_service: VerificationService | None = None,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
-    text, markup = await _verification_screen_content()
+    if not verification_service:
+        await callback.answer("Сервис верификации недоступен.", show_alert=True)
+        return
+    text, markup = await _verification_screen_content(verification_service)
     await callback.message.edit_text(text, reply_markup=markup)
     await callback.answer()
 
@@ -128,13 +109,16 @@ def _verification_notify_user_text(decision: str) -> str:
 async def cb_verification_approve(
     callback: CallbackQuery,
     access_service: AccessService,
+    verification_service: VerificationService | None = None,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
+        return
+    if not verification_service:
+        await callback.answer("Сервис верификации недоступен.", show_alert=True)
         return
     tg_user_id = int(callback.data.replace(VERIFICATION_APPROVE_PREFIX, ""))
-    service = VerificationService(async_session_factory)
     try:
-        await service.apply_admin_decision(tg_user_id=tg_user_id, decision="approve")
+        await verification_service.apply_admin_decision(tg_user_id=tg_user_id, decision="approve")
     except Exception:
         await callback.answer("Ошибка при одобрении.", show_alert=True)
         return
@@ -146,7 +130,7 @@ async def cb_verification_approve(
     except Exception:
         pass
     await callback.answer("Пользователь одобрен.", show_alert=True)
-    text, markup = await _verification_screen_content()
+    text, markup = await _verification_screen_content(verification_service)
     is_alert_msg = callback.message.text and "Новая заявка" in callback.message.text
     if is_alert_msg:
         await callback.message.edit_text("✅ Пользователь одобрен.", reply_markup=None)
@@ -158,13 +142,16 @@ async def cb_verification_approve(
 async def cb_verification_reject(
     callback: CallbackQuery,
     access_service: AccessService,
+    verification_service: VerificationService | None = None,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
+        return
+    if not verification_service:
+        await callback.answer("Сервис верификации недоступен.", show_alert=True)
         return
     tg_user_id = int(callback.data.replace(VERIFICATION_REJECT_PREFIX, ""))
-    service = VerificationService(async_session_factory)
     try:
-        await service.apply_admin_decision(tg_user_id=tg_user_id, decision="reject")
+        await verification_service.apply_admin_decision(tg_user_id=tg_user_id, decision="reject")
     except Exception:
         await callback.answer("Ошибка при отклонении.", show_alert=True)
         return
@@ -176,7 +163,7 @@ async def cb_verification_reject(
     except Exception:
         pass
     await callback.answer("Заявка отклонена.", show_alert=True)
-    text, markup = await _verification_screen_content()
+    text, markup = await _verification_screen_content(verification_service)
     is_alert_msg = callback.message.text and "Новая заявка" in callback.message.text
     if is_alert_msg:
         await callback.message.edit_text("❌ Заявка отклонена.", reply_markup=None)
@@ -188,13 +175,16 @@ async def cb_verification_reject(
 async def cb_verification_block(
     callback: CallbackQuery,
     access_service: AccessService,
+    verification_service: VerificationService | None = None,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
+        return
+    if not verification_service:
+        await callback.answer("Сервис верификации недоступен.", show_alert=True)
         return
     tg_user_id = int(callback.data.replace(VERIFICATION_BLOCK_PREFIX, ""))
-    service = VerificationService(async_session_factory)
     try:
-        await service.apply_admin_decision(tg_user_id=tg_user_id, decision="block")
+        await verification_service.apply_admin_decision(tg_user_id=tg_user_id, decision="block")
     except Exception:
         await callback.answer("Ошибка при блокировке.", show_alert=True)
         return
@@ -206,7 +196,7 @@ async def cb_verification_block(
     except Exception:
         pass
     await callback.answer("Пользователь заблокирован.", show_alert=True)
-    text, markup = await _verification_screen_content()
+    text, markup = await _verification_screen_content(verification_service)
     is_alert_msg = callback.message.text and "Новая заявка" in callback.message.text
     if is_alert_msg:
         await callback.message.edit_text("⛔ Пользователь заблокирован.", reply_markup=None)
@@ -219,7 +209,7 @@ async def cb_faq_menu(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     await callback.message.edit_text(
         "Раздел **FAQ / база знаний**:\n"
@@ -237,7 +227,7 @@ async def cb_ai_menu(
     access_service: AccessService,
 ) -> None:
     """Вход в AI-куратор из админки: тот же user-facing экран (интро + быстрые кейсы)."""
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     from src.bot.keyboards.ai_curator import build_ai_curator_intro_keyboard
     from src.bot.states import AIChatStates
@@ -258,7 +248,7 @@ async def cb_csv_menu(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     rows = [
         [
@@ -281,7 +271,7 @@ async def cb_monitoring_menu(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     from src.config import get_settings
     settings = get_settings()
@@ -300,7 +290,7 @@ async def cb_assets_menu(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     rows = [
         [
@@ -323,7 +313,7 @@ async def cb_broadcast_menu(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     await callback.message.edit_text(
         "Раздел рассылок:\n"
@@ -338,7 +328,7 @@ async def cb_legacy_root(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     legacy_rows = build_legacy_keyboard().inline_keyboard
     await callback.message.edit_text(
@@ -354,7 +344,7 @@ async def cb_legacy_monitor(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     from src.config import get_settings
     settings = get_settings()
@@ -373,7 +363,7 @@ async def cb_legacy_settings(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     await callback.message.edit_text(
         "Настройки бота:\n"
@@ -389,7 +379,7 @@ async def cb_back_to_admin_root(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     await callback.message.edit_text(
         get_admin_root_message(),
@@ -403,7 +393,7 @@ async def cb_admin_cancel(
     callback: CallbackQuery,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     await callback.message.edit_text("Админ-действие отменено.", reply_markup=None)
     await callback.answer()

@@ -18,4 +18,6 @@ class InjectAIMiddleware(BaseMiddleware):
         data["event_bus"] = self._dp.get("event_bus")
         data["access_service"] = self._dp.get("access_service")
         data["user_service"] = self._dp.get("user_service")
+        data["verification_service"] = self._dp.get("verification_service")
+        data["ingest_service"] = self._dp.get("ingest_service")
         return await handler(event, data)

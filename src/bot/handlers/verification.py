@@ -25,7 +25,6 @@ from src.core.services.verification_service import (
     VerificationService,
 )
 from src.infra.db.enums import UserRole
-from src.infra.db.session import async_session_factory
 from src.infra.n8n.verification_mirror import notify_verification_pending
 
 
@@ -149,6 +148,7 @@ async def verification_confirm(
     callback: CallbackQuery,
     state: FSMContext,
     event_bus=None,
+    verification_service: VerificationService | None = None,
 ) -> None:
     tg_user_id = callback.from_user.id if callback.from_user else 0
     data = await state.get_data()
@@ -165,8 +165,11 @@ async def verification_confirm(
         phone=data.get("phone", ""),
     )
 
-    service = VerificationService(async_session_factory)
-    await service.create_application_and_mark_pending(payload)
+    if not verification_service:
+        await callback.message.answer("Сервис регистрации временно недоступен. Попробуйте позже.")
+        await callback.answer()
+        return
+    await verification_service.create_application_and_mark_pending(payload)
 
     # Optional n8n mirror (fire-and-forget; behind N8N_VERIFICATION_MIRROR_ENABLED)
     asyncio.create_task(notify_verification_pending(payload))

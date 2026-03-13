@@ -13,16 +13,10 @@ from src.infra.db.repositories.darkstores import DarkstoreRepository
 from src.infra.db.repositories.users import UserRepository
 from src.infra.db.session import async_session_factory
 
+from src.bot.access_guards import require_admin_for_callback
+
 router = Router(name="admin_incident")
 ADMIN_CB_PREFIX = "admin:"
-
-
-async def _ensure_admin_callback(callback: CallbackQuery, access_service: AccessService) -> bool:
-    tg_user_id = callback.from_user.id if callback.from_user else 0
-    if not await access_service.can_access_admin(tg_user_id):
-        await callback.answer("Доступ запрещён.", show_alert=True)
-        return False
-    return True
 
 
 @router.callback_query(F.data == f"{ADMIN_CB_PREFIX}journal")
@@ -31,7 +25,7 @@ async def start_incident(
     state: FSMContext,
     access_service: AccessService,
 ) -> None:
-    if not await _ensure_admin_callback(callback, access_service):
+    if not await require_admin_for_callback(callback, access_service):
         return
     await state.clear()
     await state.set_state(IncidentStates.darkstore_code)

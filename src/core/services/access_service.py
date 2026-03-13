@@ -17,12 +17,16 @@ class Principal:
 
 
 class AccessService:
-    """Centralized access-control decisions based on role, status and feature flags.
+    """Access / Role / Status Layer: единая точка решений по статусу и роли.
 
-    For now intentionally conservative and backwards-compatible:
-    - When ENABLE_NEW_AUTH_FLOW is false, behavior matches legacy checks.
-    - When ENABLE_NEW_AUTH_FLOW is true, blocked/rejected users are denied,
-      other roles behave as before (future tasks can tighten policy).
+    Отвечает за:
+    - что показать на /start (guest/pending/approved/rejected/blocked);
+    - какое меню открыть (по роли при approved);
+    - может ли пользователь использовать AI (can_use_ai);
+    - кто может видеть admin panel (can_access_admin);
+    - кому слать verification alerts (get_verification_alert_recipient_ids).
+
+    См. docs/ACCESS_ROLE_STATUS_LAYER.md.
     """
 
     def __init__(
@@ -80,4 +84,23 @@ class AccessService:
             UserRole.LEAD,
             UserRole.CURATOR,
         )
+
+    async def can_use_ai(self, tg_user_id: int) -> bool:
+        """Разрешён ли пользователю доступ к AI-куратору (answer_user / AI-меню).
+
+        Только approved; guest, pending, rejected, blocked — нет.
+        """
+        principal = await self.get_principal(tg_user_id)
+        if principal.status is None or principal.status != UserStatus.APPROVED:
+            return False
+        if principal.status == UserStatus.BLOCKED:
+            return False
+        return True
+
+    def get_verification_alert_recipient_ids(self) -> list[int]:
+        """Список tg_user_id, которым слать уведомления о новой заявке на верификацию.
+
+        По умолчанию — ADMIN_IDS из конфига.
+        """
+        return list(self._settings.admin_ids)
 

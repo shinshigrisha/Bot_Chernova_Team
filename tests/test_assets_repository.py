@@ -8,7 +8,7 @@ from src.infra.db.enums import AssetCondition, AssetStatus, AssetType
 from src.infra.db.models import Courier, Darkstore, Team, Territory
 from src.infra.db.repositories.assets import AssetsRepository
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 
 def _unique_suffix() -> str:

@@ -52,3 +52,8 @@ target-version = "py311"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "smoke: быстрые проверки «система жива» (меню, эмбеддинги, риск, юзер).",
+    "integration: тесты с БД/очередью без внешних API.",
+    "external: тесты, требующие реальные API (LLM, n8n, Telegram).",
+]

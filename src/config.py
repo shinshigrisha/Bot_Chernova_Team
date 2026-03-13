@@ -182,6 +182,7 @@ class Settings(BaseSettings):
         default=True,
         alias="ENABLE_VERIFICATION_NOTIFICATIONS",
     )
+    demo_mode: bool = Field(default=False, alias="DEMO_MODE")
     enable_admin_menu_v2: bool = Field(default=False, alias="ENABLE_ADMIN_MENU_V2")
     enable_ai_chat_v2: bool = Field(default=False, alias="ENABLE_AI_CHAT_V2")
     enable_faq_semantic_search: bool = Field(

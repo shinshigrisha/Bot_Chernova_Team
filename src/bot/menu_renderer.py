@@ -2,6 +2,9 @@
 
 Strict gating: guest -> registration; pending -> waiting; rejected -> reapply;
 blocked -> blocked screen; approved -> menu by role (admin/courier/curator).
+
+Типы флоу (Admin, Verification, Courier UI, Curator UI, AI Curator, AI Analyst)
+и маппинг callback_data -> флоу заданы в scenario_router.py.
 """
 
 from __future__ import annotations

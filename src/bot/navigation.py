@@ -1,4 +1,8 @@
-"""Canonical navigation and root menu callbacks and handlers."""
+"""Canonical navigation and root menu callbacks and handlers.
+
+Ветвление по типу флоу (Admin, Verification, Courier UI, …) описано в
+scenario_router.py; здесь — обработка корневых и навигационных callback'ов.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +10,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from src.bot.access_guards import require_admin_for_callback
 from src.bot.keyboards.verification import build_registration_entry_keyboard
 from src.core.services.access_service import AccessService
 
@@ -83,9 +88,7 @@ async def root_admin(
         await callback.answer()
         return
 
-    tg_user_id = callback.from_user.id if callback.from_user else 0
-    if not await access_service.can_access_admin(tg_user_id):
-        await callback.answer("Доступ к админ-панели запрещён.", show_alert=True)
+    if not await require_admin_for_callback(callback, access_service):
         return
 
     await callback.message.answer(

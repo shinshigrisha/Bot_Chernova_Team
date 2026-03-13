@@ -278,22 +278,31 @@ class _NamedProvider(BaseProvider):
         self.name = name
         self.enabled = True
 
-    async def complete(self, messages, *, temperature=0.3, max_tokens=1024):
+    async def complete(self, messages, *, temperature=0.3, max_tokens=1024, model=None):
         return ProviderResponse(
             text=f"provider={self.name}",
             provider=self.name,
-            model=f"{self.name}-model",
+            model=model or f"{self.name}-model",
             usage_tokens=0,
         )
 
 
 @pytest.mark.asyncio
-async def test_provider_fallback_without_groq(monkeypatch):
-    monkeypatch.delenv("GROQ_API_KEY", raising=False)
-    monkeypatch.setenv("AI_PROVIDER_ORDER_CHAT", "groq,deepseek,openai")
-    router = ProviderRouter([_NamedProvider("deepseek"), _NamedProvider("openai")])
+async def test_provider_router_uses_configured_provider(monkeypatch):
+    """Роутер использует провайдера, указанного в конфиге; без зависимости от реальных API-ключей."""
+    from src.core.services.ai.model_config import ModelConfig
+
+    def _fake_config(_mode):
+        return ModelConfig(provider="openai", model="test-model")
+
+    monkeypatch.setattr(
+        "src.core.services.ai.provider_router.get_model_config",
+        _fake_config,
+    )
+    router = ProviderRouter([_NamedProvider("openai")])
     resp = await router.complete([{"role": "user", "content": "test"}], mode="chat")
-    assert resp.provider in {"deepseek", "openai"}
+    assert resp.provider == "openai"
+    assert resp.model == "test-model"  # из _fake_config
 
 
 # ---- Regulation-first RAG: answer structure and regression scenarios ----

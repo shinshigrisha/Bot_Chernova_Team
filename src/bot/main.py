@@ -27,7 +27,9 @@ from src.core.services.ai.providers.openai_compatible_provider import (
 )
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
 from src.core.services.access_service import AccessService
+from src.core.services.ingest import IngestService
 from src.core.services.users import UserService
+from src.core.services.verification_service import VerificationService
 from src.api.automation import create_automation_app
 from src.core.events import EventBus
 from src.core.proactive_layer import register_proactive_handlers
@@ -127,15 +129,22 @@ async def main() -> None:
 
     dp = Dispatcher()
     dp["event_bus"] = EventBus()
-    register_proactive_handlers(dp["event_bus"], async_session_factory, bot=bot)
+    register_proactive_handlers(
+        dp["event_bus"],
+        async_session_factory,
+        bot=bot,
+        access_service=dp["access_service"],
+    )
     dp["user_service"] = UserService(session_factory=async_session_factory)
     dp["access_service"] = AccessService(
         session_factory=async_session_factory,
         settings=settings,
     )
+    dp["verification_service"] = VerificationService(session_factory=async_session_factory)
+    dp["ingest_service"] = IngestService()
     dp.update.outer_middleware(LogUpdatesMiddleware())
     dp.update.outer_middleware(InjectAIMiddleware(dp))
-    dp.update.outer_middleware(AdminOnlyMiddleware())
+    dp.update.outer_middleware(AdminOnlyMiddleware(dp))
     _init_ai(dp)
 
     dp.include_router(start_router)

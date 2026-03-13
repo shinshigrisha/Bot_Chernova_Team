@@ -16,6 +16,7 @@ from src.bot.keyboards.ai_curator import (
     build_ai_curator_back_keyboard,
     build_ai_curator_intro_keyboard,
 )
+from src.bot.access_guards import MSG_AI_ACCESS_DENIED
 from src.bot.navigation import ROOT_AI_CURATOR
 from src.bot.states import AIChatStates
 from src.config import get_settings
@@ -76,8 +77,14 @@ async def risk_recommendation(
 async def ai_curator_entry(
     callback: CallbackQuery,
     state: FSMContext,
+    access_service: AccessService | None = None,
 ) -> None:
-    """Вход в AI-куратор из меню: интро + быстрые кейсы."""
+    """Вход в AI-куратор из меню: интро + быстрые кейсы. Доступ только для approved (Access Layer)."""
+    user_id = callback.from_user.id if callback.from_user else 0
+    if access_service and not await access_service.can_use_ai(user_id):
+        await callback.message.answer(MSG_AI_ACCESS_DENIED)
+        await callback.answer()
+        return
     await state.set_state(AIChatStates.active)
     await state.update_data(entry_from_curator=True)
     await callback.message.answer(
@@ -123,6 +130,11 @@ async def ai_curator_quick_case(
     """Обработка быстрого кейса: запрос в AI, ответ + кнопка «Назад в меню»."""
     if ai_facade is None:
         await callback.message.answer("AI сервис не инициализирован. Проверь запуск.")
+        await callback.answer()
+        return
+    user_id = callback.from_user.id if callback.from_user else 0
+    if access_service and not await access_service.can_use_ai(user_id):
+        await callback.message.answer(MSG_AI_ACCESS_DENIED)
         await callback.answer()
         return
 
@@ -217,6 +229,10 @@ async def ai_chat_handler(
     if ai_facade is None:
         await message.answer("AI сервис не инициализирован. Проверь запуск.")
         return
+    user_id = message.from_user.id if message.from_user else 0
+    if access_service and not await access_service.can_use_ai(user_id):
+        await message.answer(MSG_AI_ACCESS_DENIED)
+        return
 
     data = await state.get_data()
     entry_from_curator = data.get("entry_from_curator", False)
@@ -224,7 +240,6 @@ async def ai_chat_handler(
     if entry_from_curator:
         nav_kw["reply_markup"] = build_ai_curator_back_keyboard()
 
-    user_id = message.from_user.id if message.from_user else 0
     role = "courier"
     if access_service:
         try:

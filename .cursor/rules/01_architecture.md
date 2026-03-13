@@ -3,7 +3,19 @@
 ## Цель
 Сохранять единый каркас проекта без параллельных реализаций, дублирующих модулей и разъезжающихся путей импорта.
 
-**Каноническое дерево слоёв:** см. [docs/CANONICAL_LAYERS.md](../docs/CANONICAL_LAYERS.md).
+## Каноническая схема слоёв (верхний уровень)
+
+Порядок слоёв сверху вниз (запрос пользователя идёт сверху вниз, ответ — снизу вверх):
+
+1. **Telegram** — канал доставки сообщений.
+2. **Bot Layer (aiogram)** — `Dispatcher`, роутеры (`src/bot/*`), middlewares. Только приём/отправка, инъекция зависимостей, логирование.
+3. **Access / Role / Status Layer** — проверки прав и статуса пользователя (`AccessService`, middlewares/guards). Решает: что показать на /start, какое меню, может ли пользователь использовать AI, кто видит админ-панель, кому слать verification alerts. См. [docs/ACCESS_ROLE_STATUS_LAYER.md](../docs/ACCESS_ROLE_STATUS_LAYER.md).
+4. **Scenario Router** — ветвление по типу флоу: Admin, Verification, Courier UI, Curator UI, AI Curator, AI Analyst. Навигация и переходы состояний (`navigation`, `menu_renderer`, `states`).
+5. **Application Services** — доменная логика: `UserService`, `AccessService`, `VerificationService`, `NotificationService`, `IngestService`, risk/proactive, вызов AI только через `AIFacade`. Без прямого знания о Telegram.
+6. **AI Layer** — единственная точка входа `AIFacade`; внутри: decision → knowledge → retrieval → policy → generation → validation → explainability. Код в `src/core/services/ai/*`. Пайплайн и метки explainability: [docs/ARCHITECTURE_AI_LAYER.md](../docs/ARCHITECTURE_AI_LAYER.md).
+7. **Infra** — Postgres, Redis, Celery, Storage, Notifications, n8n. Чистая инфраструктура, без доменной логики.
+
+Правило: хендлеры не содержат бизнес-логики и не вызывают БД/очереди/LLM напрямую — только Application Services и `AIFacade`.
 
 ## Один вход в AI (AIFacade), три режима
 
@@ -21,8 +33,9 @@
 ## Обязательные правила
 
 1. Не создавать новые параллельные каталоги для бота.
-   - Использовать существующую структуру `src/bot/*`.
+   - Использовать существующую структуру `src/bot/*` (handlers, admin, keyboards, middlewares, navigation, states).
    - Запрещено добавлять альтернативные деревья вида `app/bot/*`, `bot/*`, `telegram_bot/*`, если их нет в принятой архитектуре.
+   - Новые сценарии вводить через роутеры и состояния в рамках Scenario Router, а не размазывать логику по хендлерам.
 
 2. Новые AI-сервисы размещать в `src/core/services/ai/*`.
    - Логика orchestration, policy, роутинга, провайдеров и вспомогательных AI-утилит должна находиться только там.

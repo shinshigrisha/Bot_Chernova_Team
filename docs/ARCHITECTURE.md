@@ -1,110 +1,52 @@
-# Архитектура
+# Архитектура бота: канонические слои
 
-## Цели
-- Telegram — только канал уведомлений и UI
-- Бизнес-логика в сервисах, тестируемая отдельно
-- Идемпотентный ingest и надёжная доставка уведомлений
-
-## Схема модулей и поток данных
+Верхнеуровневая схема (запрос пользователя идёт сверху вниз, ответ — снизу вверх):
 
 ```mermaid
-flowchart LR
-  subgraph bot [Bot]
-    H[Handlers]
-  end
-  subgraph core [Core Services]
-    A[AssetsService]
-    S[ShiftLogService]
-    N[NotificationService]
-    I[IngestService]
-  end
-  subgraph infra [Infrastructure]
-    R[Repositories]
-    Q[Celery Queue]
-    T[TelegramChannel]
-    M[MinIO]
-  end
-  H --> A
-  H --> S
-  H --> N
-  H --> I
-  A --> R
-  S --> R
-  N --> R
-  N --> Q
-  Q --> T
-  I --> R
-  I --> M
-  I --> Q
+flowchart TD
+  Telegram["Telegram"] --> BotLayer["Bot Layer (aiogram)"]
+  BotLayer --> AccessLayer["Access / Role / Status"]
+  AccessLayer --> ScenarioRouter["Scenario Router"]
+  ScenarioRouter --> AppServices["Application Services"]
+  AppServices --> AILayer["AI Layer (AIFacade)"]
+  AILayer --> Infra["Infra"]
 ```
 
-- **Handlers** (aiogram): только валидация ввода, вызов сервисов, ответ пользователю. Долгие операции и рассылки — только через очередь.
-- **Core Services**: бизнес-сценарии (выдача ТМЦ, инцидент, уведомление, ingest). Работают с репозиториями и ставят задачи в Celery.
-- **Repositories**: доступ к БД (PostgreSQL, async SQLAlchemy 2).
-- **Celery**: задачи `deliver_notification`, `parse_ingest_batch` и др. Доставка уведомлений через TelegramChannel с учётом 429 и retry.
-- **MinIO/S3**: хранение загруженных CSV и артефактов.
+## Слои
 
-## Компоненты верхнего уровня
-- **src/bot**: Telegram-адаптер (aiogram 3), handlers, admin menu, FSM (ТМЦ, журнал, импорт CSV).
-- **src/core/services**: AssetsService, ShiftLogService, NotificationService, IngestService.
-- **src/infra/db**: сессия, модели, репозитории (assets, shift_log, notifications, ingest, darkstores, users).
-- **src/infra/queue**: Celery app, задачи доставки и парсинга.
-- **src/infra/notifications**: каналы (TelegramChannel), интерфейс DeliveryResult (success, retry_after, error_code).
-- **src/infra/storage**: S3/MinIO клиент для ingest-файлов.
-- **src/infra/integrations**: зарезервировано (Superset API/DB, парсеры).
+| Слой | Назначение | Код / модули |
+|------|------------|---------------|
+| **Telegram** | Канал доставки сообщений | — |
+| **Bot Layer** | Dispatcher, роутеры, middlewares; приём/отправка, инъекция зависимостей | `src/bot/main.py`, `src/bot/handlers/`, `src/bot/admin/`, `src/bot/middlewares/` |
+| **Access / Role / Status** | Проверки прав и статуса пользователя; что показать на /start; какое меню; доступ к AI и админке; кому слать verification alerts | `src/core/services/access_service.py`, `src/bot/access_guards.py`, `src/bot/menu_renderer.py`, AdminOnlyMiddleware. См. [ACCESS_ROLE_STATUS_LAYER.md](ACCESS_ROLE_STATUS_LAYER.md). |
+| **Scenario Router** | Ветвление по типу флоу (Admin, Verification, Courier UI, Curator UI, AI Curator, AI Analyst) | `src/bot/scenario_router.py`, `src/bot/navigation.py`, `src/bot/menu_renderer.py`, `src/bot/states*.py` |
+| **Application Services** | Доменная логика; не знают о Telegram | `src/core/services/` (UserService, AccessService, VerificationService, IngestService, NotificationService, risk/proactive, AI-сервисы за фасадом) |
+| **AI Layer** | Единственная точка входа — AIFacade; внутри: decision → knowledge → retrieval → policy → generation → validation → explainability | `src/core/services/ai/ai_facade.py`, `ai_courier_service.py`, RAG, провайдеры |
+| **Infra** | БД, очереди, хранилище, уведомления, n8n | `src/infra/`, `src/api/automation.py` |
 
-## Поток данных: ingest → calc → snapshots → alerts
-1) Строки CSV/API/DB → `ingest_batches` (UNIQUE source + content_hash).
-2) Парсинг (очередь) → `delivery_orders_raw` (zone_code nullable).
-3) Расчёт → `delivery_orders_calc` (в следующих итерациях).
-4) Агрегация → `metrics_snapshot`.
-5) Алерты → `notifications` → `notification_targets` → worker → `notification_delivery_attempts` (Telegram и др.).
+Подробнее: пайплайн AI — [ARCHITECTURE_AI_LAYER.md](ARCHITECTURE_AI_LAYER.md); события и риск — [PROACTIVE_RISK_EVENTS.md](PROACTIVE_RISK_EVENTS.md).
 
-## Уведомления
-- `NotificationService.enqueue_notification()` создаёт записи в БД и ставит задачу в Celery. Из handlers рассылки не отправляются.
-- Worker выполняет `deliver_notification(notification_id)`: загрузка из БД, вызов TelegramChannel, при 429 — запись attempt и retry с countdown.
-- Дедуп по `dedupe_key` (UNIQUE в БД).
+---
 
-## Планировщик
-- Scheduler (опционально) запускает задачи в очереди; один экземпляр или распределённая блокировка.
+## Шпаргалка для разработчиков
 
-## AI (куратор)
+### Куда класть новую логику
 
-### Regulation-first RAG
-Ответы строятся по принципу «сначала регламент»: правила, FAQ и кейсы доминируют над свободной генерацией. **Ответ не идёт сразу в LLM**: выполняется каскад решений (access check → must_match → rules → intent → FAQ/RAG → ML classifier → LLM → fallback). Подробно: [AI_CURATOR.md](AI_CURATOR.md#2-каскад-решений-обязательный-порядок).
+- **Новый сценарий в боте** — новый роутер или состояния в `src/bot/`, переходы и флоу описать в `scenario_router.py` (BotFlow + маппинг callback_data).
+- **Проверка прав** — только через `AccessService` и guard'ы из `src/bot/access_guards.py`; не дублировать проверки в хендлерах.
+- **Доменная логика** — в Application Services (`src/core/services/`), не в хендлерах. Хендлер вызывает сервис и отправляет ответ.
+- **Новый AI-режим или пайплайн** — расширять за `AIFacade`; снаружи (handlers, API) вызывать только фасад.
+- **Новые события (проактивность, риск)** — тип в `AutomationEvent`, контракт payload в [PROACTIVE_RISK_EVENTS.md](PROACTIVE_RISK_EVENTS.md); подписчики в `proactive_layer` или через `event_bus.subscribe`.
 
-**Порядок маршрутизации:**
-1. **must_match** — жёсткие операционные кейсы из core_policy (повреждение, недозвон, недовоз, опоздание, АКБ).
-2. **case_engine** — типовые интенты (damaged_goods, contact_customer, missing_items, late_delivery, battery_fire, payment_terminal и др.) с фиксированными шагами.
-3. **FAQ** — keyword → semantic → hybrid; при сильном совпадении ответ из базы.
-4. **ML case memory (semantic_case)** — семантическое совпадение по ml_cases.jsonl (кэш эмбеддингов в ml_cases_embeddings.json).
-5. **llm_reason** — только форматирование/пояснение по переданному контексту; при отсутствии доказательств — один уточняющий вопрос.
-6. **fallback** — только если нет ни must_match, ни case_engine, ни сильного FAQ, ни сильного ML case и LLM недоступен или не дал ответа.
+### Как подключить новый сценарий
 
-### RAG-формат ответа
-Итоговый текст собирается единообразно:
-- **Ситуация:** краткое описание (или **Критично:** для опасных кейсов).
-- **Что делать сейчас:** нумерованные шаги (1) … 2) …).
-- **Когда писать куратору:** когда эскалировать.
+1. Добавить флоу в `BotFlow` и маппинг в `scenario_router.CALLBACK_TO_FLOW` при необходимости.
+2. Роутер зарегистрировать в `main.py` (order важен).
+3. Меню/кнопки — в `keyboards/`, навигация — через `navigation.py` / `menu_renderer.py`.
+4. Проверки доступа — через `require_admin_for_*` или AccessService.
 
-Для опасных кейсов (АКБ, пожар и т.п.) используется срочный формат: «Критично / Действия / Немедленно сообщи куратору».
+### Как подключить новый AI-режим
 
-### Канонический стек и данные
-- **Код:** `src/core/services/ai/` — AICourierService, ProviderRouter, providers (Groq, DeepSeek, OpenAI), CaseEngine, IntentEngine, EmbeddingsService, CaseClassifier.
-- **Репозиторий FAQ (v2):** единственный источник — `src/infra/db/repositories/faq_repo.py`; таблица `faq_ai`.
-- **Политика и промпты:** `data/ai/` (core_policy.json, intent_tags.json, prompts/).
-- **ML case memory:** `data/ai/ml_cases.jsonl` (id, input, label, decision, explanation); опционально `ml_cases_embeddings.json` для семантического поиска (скрипт `scripts/rebuild_case_embeddings.py`).
-- **Единственная точка входа в AI:** `AIFacade` (`src/core/services/ai/ai_facade.py`). Три режима (не один «умный ответчик»): **Courier assistant** (`answer_user`, `proactive_hint`), **Admin copilot** (`answer_admin`), **Analytics assistant** (`analyze_csv`). Подробно: [AI_MODES.md](AI_MODES.md). Handlers, admin и API не вызывают ProviderRouter, AICourierService, RAGService, AnalyticsAssistant напрямую.
-- Точки использования фасада: бот (middleware внедряет `ai_facade`), handlers (ai_chat), admin (ai_admin), API (automation), скрипты при необходимости через `build_ai_facade()`; служебные скрипты `scripts/rebuild_faq_embeddings.py`, `scripts/rebuild_case_embeddings.py` не дергают LLM.
-
-**Гибридный retrieval FAQ (keyword → semantic → hybrid):** см. [AI_FAQ_SEARCH.md](AI_FAQ_SEARCH.md). Эмбеддинги: `embedding_vector` (vector(1536), pgvector); пересборка — `scripts/rebuild_faq_embeddings.py`.
-
-**Canonical paths (reference):**
-- Код: `src/core/services/ai/ai_courier_service.py`, `provider_router.py`, `providers/*`, `case_engine.py`, `intent_engine.py`, `case_classifier.py`, `embeddings_service.py`, `embedding_service.py`
-- FAQ: `src/infra/db/repositories/faq_repo.py`
-- Данные: `data/ai/` (core_policy.json, intent_tags.json, prompts/, golden_cases.jsonl, ml_cases.jsonl)
-
-## RBAC
-- Роли: ADMIN, LEAD, CURATOR, VIEWER, COURIER.
-- Доступ к /admin: роль из (ADMIN, LEAD, CURATOR) или ID в ADMIN_IDS.
-- Область видимости: user_scopes (team_id, darkstore_id).
+1. Добавить метод на `AIFacade` (или расширить существующий режим в `AICourierService`).
+2. Handlers и API вызывают только `ai_facade.*`, не провайдеры и не RAG/Intent напрямую.
+3. Пайплайн и метки explainability — в [ARCHITECTURE_AI_LAYER.md](ARCHITECTURE_AI_LAYER.md).

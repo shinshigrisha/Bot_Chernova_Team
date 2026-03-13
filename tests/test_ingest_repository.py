@@ -6,7 +6,7 @@ import pytest
 from src.infra.db.enums import IngestSource, IngestStatus
 from src.infra.db.repositories.ingest import IngestRepository
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 
 async def test_ingest_batch_idempotent_by_content_hash(async_session) -> None:

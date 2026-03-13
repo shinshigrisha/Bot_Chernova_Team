@@ -1,7 +1,7 @@
 """Проактивный слой AI-куратора: подписки на события и авто-действия.
 
 - faq_added → пересборка индекса эмбеддингов FAQ (в фоне)
-- verification.pending → уведомление в Telegram всем из ADMIN_IDS (с inline-кнопками при ENABLE_VERIFICATION_NOTIFICATIONS)
+- verification.pending → уведомление в Telegram получателям из Access Layer (get_verification_alert_recipient_ids)
 - high_risk_detected / delivery_risk_eval — обрабатываются в API automation
 - similar_case_shown — эмитируется в ai_chat при ответе по semantic_case
 """
@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.config import get_settings
 from src.core.events import AutomationEvent
+from src.core.services.access_service import AccessService
 from src.core.services.ai.faq_embeddings_rebuild import rebuild_faq_embeddings_async
 
 logger = logging.getLogger(__name__)
@@ -31,11 +32,13 @@ def register_proactive_handlers(
     event_bus: Any,
     session_factory: async_sessionmaker,
     bot: Any = None,
+    access_service: AccessService | None = None,
 ) -> None:
     """Подписать проактивные обработчики на event_bus.
 
     Вызывать после создания event_bus и до старта polling.
-    bot: опционально, для отправки уведомлений админам о новой заявке (ADMIN_IDS).
+    bot: опционально, для отправки уведомлений о новой заявке.
+    access_service: при наличии — список получателей верификационных алертов из слоя Access (get_verification_alert_recipient_ids).
     """
 
     async def _on_faq_added(event: str, payload: dict[str, Any]) -> None:
@@ -64,8 +67,11 @@ def register_proactive_handlers(
     async def _on_verification_pending(event: str, payload: dict[str, Any]) -> None:
         if event != AutomationEvent.VERIFICATION_PENDING or not bot:
             return
-        settings = get_settings()
-        if not settings.admin_ids:
+        if access_service is not None:
+            recipient_ids = access_service.get_verification_alert_recipient_ids()
+        else:
+            recipient_ids = get_settings().admin_ids
+        if not recipient_ids:
             return
         tg_user_id = payload.get("tg_user_id")
         first = payload.get("first_name", "")
@@ -109,7 +115,7 @@ def register_proactive_handlers(
                     ],
                 ]
             )
-        for admin_id in settings.admin_ids:
+        for admin_id in recipient_ids:
             try:
                 await bot.send_message(
                     chat_id=admin_id,

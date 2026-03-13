@@ -14,6 +14,8 @@ from src.infra.db.repositories.verification_applications import (
     VerificationApplicationRepository,
 )
 
+pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def session_factory(async_engine) -> async_sessionmaker[AsyncSession]:

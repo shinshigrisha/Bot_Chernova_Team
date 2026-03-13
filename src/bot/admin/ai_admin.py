@@ -16,15 +16,9 @@ from src.core.services.ai.ai_facade import AIFacade
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
+from src.bot.access_guards import require_admin_for_message
+
 router = Router(name="ai_admin")
-
-
-async def _require_admin(message: Message, access_service: AccessService) -> bool:
-    uid = message.from_user.id if message.from_user else 0
-    if not await access_service.can_access_admin(uid):
-        await message.answer("Нет доступа.")
-        return False
-    return True
 
 
 @router.message(Command("ai_status"))
@@ -33,7 +27,7 @@ async def ai_status(
     access_service: AccessService,
     ai_facade: AIFacade | None = None,
 ) -> None:
-    if not await _require_admin(message, access_service):
+    if not await require_admin_for_message(message, access_service):
         return
 
     settings = get_settings()
@@ -72,7 +66,7 @@ async def status(
     ai_facade: AIFacade | None = None,
 ) -> None:
     access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
-    if not await _require_admin(message, access_service):
+    if not await require_admin_for_message(message, access_service):
         return
 
     settings = get_settings()
@@ -123,7 +117,7 @@ async def ai_policy_reload(
     access_service: AccessService,
     ai_facade: AIFacade | None = None,
 ) -> None:
-    if not await _require_admin(message, access_service):
+    if not await require_admin_for_message(message, access_service):
         return
 
     if ai_facade is None:
@@ -140,7 +134,7 @@ async def ai_policy_reload(
 @router.message(Command("ai_add_faq"))
 async def ai_add_faq_start(message: Message, state: FSMContext) -> None:
     access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
-    if not await _require_admin(message, access_service):
+    if not await require_admin_for_message(message, access_service):
         return
     await state.set_state(AIAddFAQStates.question)
     await message.answer("Шаг 1/5. Введите question:")
@@ -218,7 +212,7 @@ async def ai_add_faq_keywords(message: Message, state: FSMContext) -> None:
 @router.message(Command("ai_search_faq"))
 async def ai_search_faq(message: Message) -> None:
     access_service: AccessService = message.conf.get("access_service")  # type: ignore[attr-defined]
-    if not await _require_admin(message, access_service):
+    if not await require_admin_for_message(message, access_service):
         return
 
     query = (message.text or "").replace("/ai_search_faq", "", 1).strip()
