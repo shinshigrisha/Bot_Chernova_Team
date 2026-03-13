@@ -4,6 +4,7 @@ import logging
 from typing import Iterable
 
 from src.config import get_settings
+from src.core.services.ai.model_config import ModelConfig, get_model_config
 from src.core.services.ai.providers.base import BaseProvider, ProviderResponse
 
 logger = logging.getLogger(__name__)
@@ -19,13 +20,17 @@ class ProviderRouter:
         self.providers: dict[str, BaseProvider] = {p.name: p for p in enabled}
 
     @staticmethod
-    def _ordered_names(mode: str) -> list[str]:
-        settings = get_settings()
-        if mode == "reason":
-            raw = settings.ai_provider_order_reason
-        else:
-            raw = settings.ai_provider_order_chat
-        return [x.strip() for x in raw.split(",") if x.strip()]
+    def _select_provider(config: ModelConfig, providers: dict[str, BaseProvider]) -> BaseProvider:
+        provider = providers.get(config.provider)
+        if provider is None:
+            raise NoProviderAvailable(
+                f"No provider configured for name={config.provider!r}"
+            )
+        if not getattr(provider, "enabled", False):
+            raise NoProviderAvailable(
+                f"Provider {config.provider!r} is disabled"
+            )
+        return provider
 
     async def complete(
         self,
@@ -35,26 +40,36 @@ class ProviderRouter:
         temperature: float = 0.3,
         max_tokens: int = 1024,
     ) -> ProviderResponse:
-        order = self._ordered_names(mode=mode)
-        last_exc: Exception | None = None
+        """Route completion call to a provider based on canonical capability config.
 
-        for name in order:
-            provider = self.providers.get(name)
-            if provider is None:
-                continue
-            try:
-                return await provider.complete(
-                    messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-            except Exception as exc:
-                logger.warning("Provider %s failed in mode=%s: %s", name, mode, exc)
-                last_exc = exc
+        Mode is mapped to capability classes:
+        - "chat"/"fast_chat" → fast_chat
+        - "reason"/"reasoning" → reasoning
+        - "analysis"/"analytics" → analytics
+        - "fallback" → fallback
+        - anything else → default
+        """
+        settings = get_settings()
+        config = get_model_config(mode)
+        try:
+            provider = self._select_provider(config, self.providers)
+        except NoProviderAvailable as exc:
+            raise NoProviderAvailable(
+                f"No available provider for mode={mode} (config provider={config.provider!r})"
+            ) from exc
 
-        raise NoProviderAvailable(
-            f"No available provider for mode={mode} (all failed or none enabled)"
-        ) from last_exc
+        # Enforce global token limit (budget protection)
+        limit = max(0, settings.ai_max_output_tokens)
+        effective_max_tokens = max_tokens
+        if limit:
+            effective_max_tokens = min(max_tokens, limit)
+
+        return await provider.complete(
+            messages,
+            temperature=temperature,
+            max_tokens=effective_max_tokens,
+            model=config.model,
+        )
 
     async def close(self) -> None:
         for provider in self.providers.values():

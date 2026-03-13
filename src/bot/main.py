@@ -22,6 +22,9 @@ from src.core.services.ai.ai_facade import AIFacade
 from src.core.services.ai.provider_router import ProviderRouter
 from src.core.services.ai.providers.deepseek_provider import DeepSeekProvider
 from src.core.services.ai.providers.groq_provider import GroqProvider
+from src.core.services.ai.providers.openai_compatible_provider import (
+    OpenAICompatibleProvider,
+)
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
 from src.core.services.access_service import AccessService
 from src.core.services.users import UserService
@@ -58,6 +61,7 @@ def _init_ai(dp: Dispatcher) -> None:
             GroqProvider(),
             DeepSeekProvider(),
             OpenAIProvider(),
+            OpenAICompatibleProvider(),
         ]
     )
     ai_service = AICourierService(

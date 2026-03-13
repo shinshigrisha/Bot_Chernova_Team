@@ -6,19 +6,24 @@ from src.config import get_settings
 from src.core.services.ai.providers.base import BaseProvider, ProviderResponse
 
 
-class DeepSeekProvider(BaseProvider):
-    name = "deepseek"
+class OpenAICompatibleProvider(BaseProvider):
+    """OpenAI-compatible endpoint with canonical multi-model config.
+
+    Uses OPENAI_API_KEY / OPENAI_BASE_URL and accepts a model override per call.
+    """
+
+    name = "openai_compatible"
 
     def __init__(self) -> None:
         settings = get_settings()
-        api_key = settings.deepseek_api_key.strip()
+        api_key = settings.openai_api_key.strip()
+        base_url = settings.openai_base_url.strip() or None
+
         self.enabled = bool(api_key)
-        self._model = settings.deepseek_model
-        base_url = settings.deepseek_base_url.rstrip("/")
+        # Default model is the "default" capability; per-call overrides come from router.
+        self._default_model = settings.ai_default_model
         self._client = (
-            AsyncOpenAI(api_key=api_key, base_url=f"{base_url}/v1")
-            if self.enabled
-            else None
+            AsyncOpenAI(api_key=api_key, base_url=base_url) if self.enabled else None
         )
 
     async def complete(
@@ -30,9 +35,9 @@ class DeepSeekProvider(BaseProvider):
         model: str | None = None,
     ) -> ProviderResponse:
         if not self.enabled or self._client is None:
-            raise RuntimeError("DeepSeek provider is disabled")
+            raise RuntimeError("OpenAI-compatible provider is disabled")
 
-        model_name = model or self._model
+        model_name = model or self._default_model
         resp = await self._client.chat.completions.create(
             model=model_name,
             messages=messages,
@@ -51,3 +56,4 @@ class DeepSeekProvider(BaseProvider):
     async def close(self) -> None:
         if self._client is not None:
             await self._client.close()
+

@@ -22,12 +22,14 @@ class OpenAIProvider(BaseProvider):
         *,
         temperature: float = 0.3,
         max_tokens: int = 1024,
+        model: str | None = None,
     ) -> ProviderResponse:
         if not self.enabled or self._client is None:
             raise RuntimeError("OpenAI provider is disabled")
 
+        model_name = model or self._model
         resp = await self._client.chat.completions.create(
-            model=self._model,
+            model=model_name,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -37,7 +39,7 @@ class OpenAIProvider(BaseProvider):
         return ProviderResponse(
             text=text,
             provider=self.name,
-            model=self._model,
+            model=model_name,
             usage_tokens=usage_tokens,
         )
 

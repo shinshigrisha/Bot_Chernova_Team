@@ -35,6 +35,8 @@ htmlcov/
 .ruff_cache/
 
 # IDE
+.cursor/
+taskmaster/
 .idea/
 .vscode/
 *.swp

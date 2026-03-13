@@ -23,6 +23,7 @@ class BaseProvider(abc.ABC):
         *,
         temperature: float = 0.3,
         max_tokens: int = 1024,
+        model: str | None = None,
     ) -> ProviderResponse:
         raise NotImplementedError
 

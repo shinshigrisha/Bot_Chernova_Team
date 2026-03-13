@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # S3/MinIO
     s3: S3Settings = Field(default_factory=S3Settings)
 
-    # AI
+    # AI: core switches and legacy provider settings
     ai_enabled: bool = Field(default=False, alias="AI_ENABLED")
     groq_api_key: str = Field(default="", alias="GROQ_API_KEY")
     groq_model: str = Field(default="llama-3.3-70b-versatile", alias="GROQ_MODEL")
@@ -83,13 +83,91 @@ class Settings(BaseSettings):
     deepseek_model: str = Field(default="deepseek-chat", alias="DEEPSEEK_MODEL")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
-    ai_provider_order_chat: str = Field(
-        default="groq,deepseek,openai",
-        alias="AI_PROVIDER_ORDER_CHAT",
+    # OpenAI-compatible endpoint (canonical entry point)
+    openai_base_url: str = Field(default="", alias="OPENAI_BASE_URL")
+
+    # Canonical multi-model routing by capability (provider + model)
+    ai_default_provider: str = Field(
+        default="openai_compatible",
+        alias="AI_DEFAULT_PROVIDER",
     )
-    ai_provider_order_reason: str = Field(
-        default="openai,deepseek,groq",
-        alias="AI_PROVIDER_ORDER_REASON",
+    ai_default_model: str = Field(
+        default="gpt-5-mini",
+        alias="AI_DEFAULT_MODEL",
+    )
+
+    ai_fast_provider: str = Field(
+        default="openai_compatible",
+        alias="AI_FAST_PROVIDER",
+    )
+    ai_fast_model: str = Field(
+        default="gpt-5-mini",
+        alias="AI_FAST_MODEL",
+    )
+
+    ai_reasoning_provider: str = Field(
+        default="openai_compatible",
+        alias="AI_REASONING_PROVIDER",
+    )
+    ai_reasoning_model: str = Field(
+        default="gpt-5-chat-latest",
+        alias="AI_REASONING_MODEL",
+    )
+
+    ai_analytics_provider: str = Field(
+        default="openai_compatible",
+        alias="AI_ANALYTICS_PROVIDER",
+    )
+    ai_analytics_model: str = Field(
+        default="gpt-5-chat-latest",
+        alias="AI_ANALYTICS_MODEL",
+    )
+
+    ai_fallback_provider: str = Field(
+        default="openai_compatible",
+        alias="AI_FALLBACK_PROVIDER",
+    )
+    ai_fallback_model: str = Field(
+        default="gpt-5-nano",
+        alias="AI_FALLBACK_MODEL",
+    )
+
+    # Embeddings configuration (kept local by default)
+    embedding_provider: str = Field(
+        default="local",
+        alias="EMBEDDING_PROVIDER",
+    )
+    embedding_model: str = Field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        alias="EMBEDDING_MODEL",
+    )
+
+    # Budget / safety limits
+    ai_max_output_tokens: int = Field(
+        default=220,
+        alias="AI_MAX_OUTPUT_TOKENS",
+    )
+    ai_max_context_items: int = Field(
+        default=3,
+        alias="AI_MAX_CONTEXT_ITEMS",
+    )
+
+    # Feature flags for AI capabilities
+    ai_enable_heavy_analytics: bool = Field(
+        default=False,
+        alias="AI_ENABLE_HEAVY_ANALYTICS",
+    )
+    ai_enable_analytics_assistant: bool = Field(
+        default=True,
+        alias="AI_ENABLE_ANALYTICS_ASSISTANT",
+    )
+    ai_enable_rag: bool = Field(
+        default=True,
+        alias="AI_ENABLE_RAG",
+    )
+    ai_enable_semantic_search: bool = Field(
+        default=True,
+        alias="AI_ENABLE_SEMANTIC_SEARCH",
     )
 
     # Access / auth

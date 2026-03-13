@@ -14,7 +14,7 @@ from src.bot.keyboards.admin_main import build_admin_main_keyboard
 def get_admin_root_message() -> str:
     """Единый текст главного экрана админ-панели с описанием разделов (legacy-style)."""
     return (
-        "Админ-панель\n\n"
+        "Админ-меню:\n\n"
         "Разделы: Верификация заявок • AI-куратор • FAQ и база знаний • "
         "Анализ CSV • Мониторинг • Рассылки • ТМЦ. "
         "В каждом разделе — кнопки «Назад» и «Главное меню»."
