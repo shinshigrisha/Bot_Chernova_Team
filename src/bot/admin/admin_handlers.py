@@ -1,5 +1,6 @@
 from aiogram import F, Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 
 from src.bot.admin.admin_menu import (
@@ -10,12 +11,15 @@ from src.bot.admin.admin_menu import (
     BROADCASTS_CB,
     CSV_ANALYSIS_CB,
     FAQ_KB_CB,
+    LEGACY_CB,
     MONITORING_CB,
     VERIFICATION_CB,
     build_admin_main_menu,
+    build_legacy_keyboard,
     with_section_nav,
 )
 from src.bot.keyboards.admin_main import ADMIN_CB_PREFIX
+from src.bot.menu_renderer import get_admin_root_message
 from src.core.services.access_service import AccessService
 from src.core.services.verification_service import VerificationService
 from src.infra.db.session import async_session_factory
@@ -24,6 +28,7 @@ router = Router(name="admin_main_menu")
 
 VERIFICATION_APPROVE_PREFIX = f"{ADMIN_CB_PREFIX}verification:approve:"
 VERIFICATION_REJECT_PREFIX = f"{ADMIN_CB_PREFIX}verification:reject:"
+VERIFICATION_BLOCK_PREFIX = f"{ADMIN_CB_PREFIX}verification:block:"
 
 
 async def _ensure_admin_message(
@@ -55,7 +60,7 @@ async def cmd_admin(
 ) -> None:
     if not await _ensure_admin_message(message, access_service):
         return
-    await message.answer("Админ-панель:", reply_markup=build_admin_main_menu())
+    await message.answer(get_admin_root_message(), reply_markup=build_admin_main_menu())
 
 
 async def _verification_screen_content():
@@ -79,6 +84,10 @@ async def _verification_screen_content():
             InlineKeyboardButton(
                 text=f"❌ Отклонить {app.tg_user_id}",
                 callback_data=f"{VERIFICATION_REJECT_PREFIX}{app.tg_user_id}",
+            ),
+            InlineKeyboardButton(
+                text=f"⛔ Блок {app.tg_user_id}",
+                callback_data=f"{VERIFICATION_BLOCK_PREFIX}{app.tg_user_id}",
             ),
         ])
     return "\n".join(lines), with_section_nav(rows)
@@ -106,6 +115,11 @@ def _verification_notify_user_text(decision: str) -> str:
         return (
             "Ваша заявка на регистрацию отклонена. "
             "Вы можете подать новую заявку через /start."
+        )
+    if decision == "block":
+        return (
+            "Ваш аккаунт заблокирован администратором. "
+            "Обратитесь к администратору для выяснения причин."
         )
     return "Статус вашей заявки изменён. Нажмите /start."
 
@@ -170,6 +184,36 @@ async def cb_verification_reject(
         await callback.message.edit_text(text, reply_markup=markup)
 
 
+@router.callback_query(F.data.startswith(VERIFICATION_BLOCK_PREFIX))
+async def cb_verification_block(
+    callback: CallbackQuery,
+    access_service: AccessService,
+) -> None:
+    if not await _ensure_admin_callback(callback, access_service):
+        return
+    tg_user_id = int(callback.data.replace(VERIFICATION_BLOCK_PREFIX, ""))
+    service = VerificationService(async_session_factory)
+    try:
+        await service.apply_admin_decision(tg_user_id=tg_user_id, decision="block")
+    except Exception:
+        await callback.answer("Ошибка при блокировке.", show_alert=True)
+        return
+    try:
+        await callback.bot.send_message(
+            chat_id=tg_user_id,
+            text=_verification_notify_user_text("block"),
+        )
+    except Exception:
+        pass
+    await callback.answer("Пользователь заблокирован.", show_alert=True)
+    text, markup = await _verification_screen_content()
+    is_alert_msg = callback.message.text and "Новая заявка" in callback.message.text
+    if is_alert_msg:
+        await callback.message.edit_text("⛔ Пользователь заблокирован.", reply_markup=None)
+    else:
+        await callback.message.edit_text(text, reply_markup=markup)
+
+
 @router.callback_query(F.data == FAQ_KB_CB)
 async def cb_faq_menu(
     callback: CallbackQuery,
@@ -189,16 +233,22 @@ async def cb_faq_menu(
 @router.callback_query(F.data == AI_CURATOR_CB)
 async def cb_ai_menu(
     callback: CallbackQuery,
+    state: FSMContext,
     access_service: AccessService,
 ) -> None:
+    """Вход в AI-куратор из админки: тот же user-facing экран (интро + быстрые кейсы)."""
     if not await _ensure_admin_callback(callback, access_service):
         return
-    await callback.message.edit_text(
-        "Раздел AI-куратора:\n"
-        "- мониторинг статуса AI,\n"
-        "- управление FAQ и политиками.\n\n"
-        "Существующие команды /ai_status, /ai_add_faq и др. остаются доступны.",
-        reply_markup=with_section_nav(),
+    from src.bot.keyboards.ai_curator import build_ai_curator_intro_keyboard
+    from src.bot.states import AIChatStates
+
+    await state.set_state(AIChatStates.active)
+    await state.update_data(entry_from_curator=True)
+    await callback.message.answer(
+        "🤖 **AI-куратор**\n\n"
+        "Опишите проблему с доставкой — подскажу шаги по регламенту.\n\n"
+        "Выберите типовой кейс или напишите свой вопрос текстом.",
+        reply_markup=build_ai_curator_intro_keyboard(),
     )
     await callback.answer()
 
@@ -283,6 +333,57 @@ async def cb_broadcast_menu(
     await callback.answer()
 
 
+@router.callback_query(F.data == LEGACY_CB)
+async def cb_legacy_root(
+    callback: CallbackQuery,
+    access_service: AccessService,
+) -> None:
+    if not await _ensure_admin_callback(callback, access_service):
+        return
+    legacy_rows = build_legacy_keyboard().inline_keyboard
+    await callback.message.edit_text(
+        "Legacy / сервисные разделы:\n"
+        "ТМЦ, журнал смены, импорт CSV, настройки, мониторинг.",
+        reply_markup=with_section_nav(legacy_rows),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == f"{ADMIN_CB_PREFIX}monitor")
+async def cb_legacy_monitor(
+    callback: CallbackQuery,
+    access_service: AccessService,
+) -> None:
+    if not await _ensure_admin_callback(callback, access_service):
+        return
+    from src.config import get_settings
+    settings = get_settings()
+    ai_status = "вкл" if settings.ai_enabled else "выкл"
+    await callback.message.edit_text(
+        "Раздел мониторинга (legacy).\n\n"
+        f"• Бот: работает\n"
+        f"• AI куратор: {ai_status}",
+        reply_markup=with_section_nav(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == f"{ADMIN_CB_PREFIX}settings")
+async def cb_legacy_settings(
+    callback: CallbackQuery,
+    access_service: AccessService,
+) -> None:
+    if not await _ensure_admin_callback(callback, access_service):
+        return
+    await callback.message.edit_text(
+        "Настройки бота:\n"
+        "Конфигурация через переменные окружения и config. "
+        "Расширенный экран настроек — в разработке.",
+        reply_markup=with_section_nav(),
+    )
+    await callback.answer()
+
+
 @router.callback_query(F.data == ADMIN_BACK_CB)
 async def cb_back_to_admin_root(
     callback: CallbackQuery,
@@ -291,7 +392,7 @@ async def cb_back_to_admin_root(
     if not await _ensure_admin_callback(callback, access_service):
         return
     await callback.message.edit_text(
-        "Админ-панель:",
+        get_admin_root_message(),
         reply_markup=build_admin_main_menu(),
     )
     await callback.answer()

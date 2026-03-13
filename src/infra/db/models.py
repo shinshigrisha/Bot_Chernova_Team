@@ -452,6 +452,10 @@ class VerificationApplication(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
+    decision: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 # --- Minimal production core (migration 016) ---

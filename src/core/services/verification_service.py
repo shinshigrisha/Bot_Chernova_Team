@@ -100,11 +100,15 @@ class VerificationService:
 
         decision: "approve" | "reject" | "block"
         Returns new UserStatus.
+        Does not create users: only updates existing (avoids bypassing status model).
         """
         decision = decision.lower().strip()
         async with self._session_factory() as session:
             user_repo = UserRepository(session)
-            user = await user_repo.get_or_create(tg_user_id=tg_user_id)
+            app_repo = VerificationApplicationRepository(session)
+            user = await user_repo.get_by_tg_id(tg_user_id)
+            if user is None:
+                raise ValueError(f"User not found: tg_user_id={tg_user_id}")
 
             if decision == "approve":
                 user.status = UserStatus.APPROVED
@@ -115,6 +119,7 @@ class VerificationService:
             else:
                 raise ValueError(f"Unknown decision: {decision}")
 
+            await app_repo.set_resolution_for_latest(tg_user_id, decision)
             await session.commit()
             return user.status
 

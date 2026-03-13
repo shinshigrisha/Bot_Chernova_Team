@@ -89,9 +89,10 @@ async def ai_curator_entry(
 
 @router.callback_query(F.data == AI_CURATOR_OTHER)
 async def ai_curator_other(callback: CallbackQuery, state: FSMContext) -> None:
-    """Кейс «Другое»: пользователь введёт текст сам."""
+    """Кейс «Другое»: пользователь введёт текст сам; кнопка «Назад в меню» доступна."""
     await callback.message.answer(
-        "Опишите вашу проблему в следующем сообщении — дам рекомендации по регламенту."
+        "Опишите вашу проблему в следующем сообщении — дам рекомендации по регламенту.",
+        reply_markup=build_ai_curator_back_keyboard(),
     )
     await callback.answer()
 

@@ -39,8 +39,10 @@ class UserService:
     ) -> UserProfile:
         """Return existing user or create a new one.
 
-        Scalars are extracted inside the session context to prevent
-        ``DetachedInstanceError`` after the session closes.
+        Used for: (1) admin bootstrap in /start (ADMIN_IDS only, role=ADMIN, status=APPROVED);
+        (2) registration flow via VerificationService (role from payload, status set to PENDING).
+        Do not use to auto-create unknown users as courier with approved status (bypasses status model).
+        Scalars are extracted inside the session context to prevent DetachedInstanceError.
         """
         role = coerce_user_role(role, default=UserRole.COURIER)
         async with self._session_factory() as session:

@@ -1,10 +1,24 @@
-"""Helpers to render canonical, role/status-based menus from handlers."""
+"""Helpers to render canonical, role/status-based menus from handlers.
+
+Strict gating: guest -> registration; pending -> waiting; rejected -> reapply;
+blocked -> blocked screen; approved -> menu by role (admin/courier/curator).
+"""
 
 from __future__ import annotations
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.keyboards.admin_main import build_admin_main_keyboard
+
+
+def get_admin_root_message() -> str:
+    """Единый текст главного экрана админ-панели с описанием разделов (legacy-style)."""
+    return (
+        "Админ-панель\n\n"
+        "Разделы: Верификация заявок • AI-куратор • FAQ и база знаний • "
+        "Анализ CSV • Мониторинг • Рассылки • ТМЦ. "
+        "В каждом разделе — кнопки «Назад» и «Главное меню»."
+    )
 from src.bot.keyboards.courier_main import build_courier_main_keyboard
 from src.bot.keyboards.curator_main import build_curator_main_keyboard
 from src.bot.keyboards.root_menu import build_root_menu_keyboard
@@ -26,7 +40,8 @@ async def show_root_menu(message: Message, role: UserRole | str | None = None) -
 
 
 async def show_entrypoint_menu(message: Message, principal: Principal | None) -> None:
-    """Показать экран/меню в зависимости от статуса и роли пользователя."""
+    """Показать экран/меню по канонической таблице: статус -> экран, approved -> роль."""
+    # guest: нет записи в БД (None) или явный статус guest
     if principal is None or principal.status is None or principal.status == UserStatus.GUEST:
         await message.answer(
             "Для работы с ботом нужна регистрация. "
@@ -84,7 +99,7 @@ async def show_entrypoint_menu(message: Message, principal: Principal | None) ->
     if status == UserStatus.APPROVED:
         if role in (UserRole.ADMIN, UserRole.LEAD):
             await message.answer(
-                "Админ-меню:",
+                get_admin_root_message(),
                 reply_markup=build_admin_main_keyboard(),
             )
             return
@@ -100,7 +115,10 @@ async def show_entrypoint_menu(message: Message, principal: Principal | None) ->
                 reply_markup=build_curator_main_keyboard(),
             )
             return
+        # approved but unknown role -> root menu (no default to courier)
+        await show_root_menu(message, role=role)
+        return
 
-    # Fallback: показать базовое корневое меню.
+    # неизвестный статус -> базовое корневое меню
     await show_root_menu(message, role=role)
 

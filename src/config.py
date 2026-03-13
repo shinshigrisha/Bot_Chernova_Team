@@ -99,9 +99,9 @@ class Settings(BaseSettings):
     )
 
     # Feature flags (expand → migrate → switch → cleanup)
-    enable_menu_v2: bool = Field(default=False, alias="ENABLE_MENU_V2")
+    enable_menu_v2: bool = Field(default=True, alias="ENABLE_MENU_V2")
     enable_verification_notifications: bool = Field(
-        default=False,
+        default=True,
         alias="ENABLE_VERIFICATION_NOTIFICATIONS",
     )
     enable_admin_menu_v2: bool = Field(default=False, alias="ENABLE_ADMIN_MENU_V2")

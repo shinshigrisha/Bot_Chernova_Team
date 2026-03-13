@@ -46,7 +46,7 @@
 
 2. **Поднять сервисы:** `docker compose up -d --build`
 
-3. **Миграции:** `make migrate` или `python -m alembic upgrade head`
+3. **Миграции:** `make migrate` или `docker compose up -d --build`
 
 4. **Проверка AI:** в Telegram у админа выполнить `/ai_status`
 

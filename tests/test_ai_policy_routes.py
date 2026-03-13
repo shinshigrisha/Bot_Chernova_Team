@@ -370,12 +370,15 @@ async def test_urgent_format_for_dangerous_situations(ai_service: AICourierServi
 
 @pytest.mark.asyncio
 async def test_ai_result_canonical_contract_metadata(ai_service: AICourierService):
-    """Every AI answer must include structured metadata: route, intent, confidence, source, needs_escalation, needs_clarification."""
+    """Every AI answer must include structured metadata: route, intent, confidence, evidence, source_ids, source, needs_escalation, needs_clarification."""
     result = await ai_service.get_answer(user_id=42, text="Яйца разбиты, пакет цел")
     assert result.route == "must_match"
     assert result.intent
     assert 0 <= result.confidence <= 1.0
     assert result.source == "must_match"
+    assert isinstance(result.evidence, list)
+    assert isinstance(result.source_ids, list)
+    assert len(result.source_ids) >= 1, "canonical contract requires source_ids"
     assert hasattr(result, "needs_escalation")
     assert result.needs_escalation is result.escalate
     assert hasattr(result, "needs_clarification")

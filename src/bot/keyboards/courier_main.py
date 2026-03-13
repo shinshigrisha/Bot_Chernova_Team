@@ -1,10 +1,11 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.bot.navigation import ROOT_AI_CURATOR
+from src.bot.keyboards.navigation import help_button, main_menu_button
+from src.bot.navigation import NAV_HELP, NAV_MAIN, ROOT_AI_CURATOR
 
 
 def build_courier_main_keyboard() -> InlineKeyboardMarkup:
-    """Базовое меню курьера (каркас, без бизнес-логики)."""
+    """Базовое меню курьера: разделы + навигация (Главное меню, Помощь)."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -25,6 +26,7 @@ def build_courier_main_keyboard() -> InlineKeyboardMarkup:
                     callback_data="courier:faq",
                 )
             ],
+            [main_menu_button(NAV_MAIN), help_button(NAV_HELP)],
         ]
     )
 

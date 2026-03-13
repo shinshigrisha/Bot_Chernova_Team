@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 
 from aiogram import F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
@@ -35,10 +36,24 @@ async def verification_start(callback: CallbackQuery, state: FSMContext) -> None
     """Entry point: user pressed 'Регистрация'."""
     await state.set_state(VerificationStates.choose_role)
     await callback.message.answer(
-        "Выберите вашу роль:",
+        "Выберите вашу роль. В любой момент можно отменить: напишите «отмена» или «cancel».",
         reply_markup=build_role_choice_keyboard(),
     )
     await callback.answer()
+
+
+@router.message(
+    StateFilter(VerificationStates),
+    F.text,
+    F.text.lower().in_({"отмена", "cancel"}),
+)
+async def verification_cancel_by_text(message: Message, state: FSMContext) -> None:
+    """Отмена регистрации по тексту (legacy UX)."""
+    await state.clear()
+    await message.answer(
+        "Регистрация отменена.",
+        reply_markup=build_registration_entry_keyboard(),
+    )
 
 
 @router.callback_query(F.data.in_({ROLE_COURIER_CB, ROLE_CURATOR_CB}))

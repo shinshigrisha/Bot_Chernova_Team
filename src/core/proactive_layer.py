@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Callback data для алерта верификации (совпадают с admin_handlers)
 _ADMIN_VERIFICATION_APPROVE = "admin:verification:approve:"
 _ADMIN_VERIFICATION_REJECT = "admin:verification:reject:"
+_ADMIN_VERIFICATION_BLOCK = "admin:verification:block:"
 _ADMIN_VERIFICATION_MENU = "admin:verification_menu"
 
 
@@ -71,18 +72,18 @@ def register_proactive_handlers(
         last = payload.get("last_name", "")
         role = payload.get("role", "")
         tt = payload.get("tt_number", "")
-        ds = payload.get("ds_code", "")
         phone = payload.get("phone", "")
         text = (
-            "🆕 **Новая заявка на регистрацию**\n\n"
-            f"👤 {first} {last}\n"
+            "🆕 Новая заявка на регистрацию\n\n"
+            f"tg_user_id: {tg_user_id}\n"
             f"Роль: {role}\n"
-            f"ТТ: {tt} (ДС: {ds})\n"
-            f"Телефон: {phone}\n\n"
-            "Откройте админ-панель → Верификация для одобрения или отклонения."
+            f"Имя: {first}\n"
+            f"Фамилия: {last}\n"
+            f"ТТ: {tt}\n"
+            f"Телефон: {phone}"
         )
         reply_markup = None
-        if getattr(settings, "enable_verification_notifications", False) and tg_user_id is not None:
+        if tg_user_id is not None:
             from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
             reply_markup = InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -98,7 +99,11 @@ def register_proactive_handlers(
                     ],
                     [
                         InlineKeyboardButton(
-                            text="📋 Открыть карточку",
+                            text="⛔ Заблокировать",
+                            callback_data=f"{_ADMIN_VERIFICATION_BLOCK}{tg_user_id}",
+                        ),
+                        InlineKeyboardButton(
+                            text="📄 Открыть карточку",
                             callback_data=_ADMIN_VERIFICATION_MENU,
                         ),
                     ],

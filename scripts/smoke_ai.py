@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -10,12 +11,29 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+# Загружаем .env до чтения DATABASE_URL (pydantic загрузит позже при get_settings()).
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env")
+except ImportError:
+    pass
+
+# При запуске на хосте (не в Docker): подключаемся к Postgres из compose по localhost.
+# Если SMOKE_DATABASE_URL не задан и в DATABASE_URL хост postgres — подменяем на localhost
+# (учётные данные из .env сохраняются, не нужно задавать их вручную).
+_db_url = os.environ.get("DATABASE_URL", "")
+if os.environ.get("SMOKE_DATABASE_URL"):
+    os.environ["DATABASE_URL"] = os.environ["SMOKE_DATABASE_URL"]
+elif _db_url and "@postgres" in _db_url:
+    os.environ["DATABASE_URL"] = _db_url.replace("@postgres:", "@localhost:").replace("@postgres/", "@localhost/")
+
 from src.config import get_settings
 from src.core.services.ai.ai_courier_service import AICourierService
 from src.core.services.ai.provider_router import ProviderRouter
 from src.core.services.ai.providers.deepseek_provider import DeepSeekProvider
 from src.core.services.ai.providers.groq_provider import GroqProvider
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
+import asyncpg
 from src.infra.db.repositories.faq_repo import FAQRepository
 from src.infra.db.session import async_session_factory
 
@@ -49,6 +67,37 @@ async def main() -> None:
         async with async_session_factory() as session:
             faq_count = await faq_repo.count(session=session)
         print(f"FAQ_COUNT={faq_count}")
+    except asyncpg.exceptions.InvalidPasswordError as e:
+        print("Database: invalid user or password.", file=sys.stderr)
+        if os.environ.get("SMOKE_DATABASE_URL") or "USER" in str(e):
+            print(
+                "  If SMOKE_DATABASE_URL is set with placeholders (USER/PASSWORD), unset it:",
+                file=sys.stderr,
+            )
+            print("    unset SMOKE_DATABASE_URL", file=sys.stderr)
+            print(
+                "  Then run again — the script will use DATABASE_URL from .env and replace postgres with localhost.",
+                file=sys.stderr,
+            )
+        print(f"  Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except (
+        asyncpg.exceptions.ConnectionDoesNotExistError,
+        asyncpg.exceptions.CannotConnectNowError,
+        OSError,
+        ConnectionError,
+    ) as e:
+        print(
+            "Database unreachable. Ensure PostgreSQL is running and DATABASE_URL is correct.",
+            file=sys.stderr,
+        )
+        print(
+            "  (Use localhost instead of 'postgres' when not running in Docker; script does this automatically.)",
+            file=sys.stderr,
+        )
+        print(f"  Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    try:
         if faq_count == 0:
             raise RuntimeError("Smoke failed: FAQ table is empty")
 
@@ -95,6 +144,7 @@ async def main() -> None:
             ml_sim = res.debug.get("case_similarity")
             print(f"[{status}] {case['input']}")
             print("ROUTE:", res.route, "INTENT:", res.intent, "CONF:", res.confidence)
+            print("SOURCE_IDS:", getattr(res, "source_ids", []) or res.evidence)
             print("ML_CASE_MATCHED=" + str(ml_case) + (f" (sim={ml_sim})" if ml_sim is not None else ""))
             print("ANSWER:", res.text)
             print()

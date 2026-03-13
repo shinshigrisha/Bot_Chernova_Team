@@ -1,5 +1,6 @@
 """Repository for verification applications."""
 
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import select
@@ -58,6 +59,32 @@ class VerificationApplicationRepository:
             phone=phone,
         )
         self._session.add(app)
+        await self._session.flush()
+        return app
+
+    async def set_resolution_for_latest(
+        self,
+        tg_user_id: int,
+        decision: str,
+    ) -> VerificationApplication | None:
+        """Set decision and resolved_at on the latest unresolved application for user.
+
+        Returns the updated application or None if no unresolved application found.
+        """
+        result = await self._session.execute(
+            select(VerificationApplication)
+            .where(
+                VerificationApplication.tg_user_id == tg_user_id,
+                VerificationApplication.resolved_at.is_(None),
+            )
+            .order_by(VerificationApplication.created_at.desc())
+            .limit(1)
+        )
+        app = result.scalars().one_or_none()
+        if app is None:
+            return None
+        app.decision = decision
+        app.resolved_at = datetime.now(timezone.utc)
         await self._session.flush()
         return app
 

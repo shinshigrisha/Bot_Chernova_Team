@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from src.bot.keyboards.verification import build_registration_entry_keyboard
@@ -75,6 +76,7 @@ async def root_admin(
 ) -> None:
     """Вход в админ-панель из главного меню."""
     from src.bot.keyboards.admin_main import build_admin_main_keyboard
+    from src.bot.menu_renderer import get_admin_root_message
 
     if access_service is None:
         await callback.message.answer("Админ-панель временно недоступна. Нажмите /start.")
@@ -87,7 +89,7 @@ async def root_admin(
         return
 
     await callback.message.answer(
-        "Админ-панель:",
+        get_admin_root_message(),
         reply_markup=build_admin_main_keyboard(),
     )
     await callback.answer()
@@ -95,23 +97,25 @@ async def root_admin(
 
 @router.callback_query(F.data == ROOT_HELP)
 async def root_help(callback: CallbackQuery) -> None:
-    """Базовый раздел помощи."""
+    """Базовый раздел помощи (menu-first, без упора на slash-команды)."""
     await callback.message.answer(
-        "Это бот Delivery Assistant.\n"
-        "Используйте кнопки меню ниже для навигации. "
-        "Главная точка входа — команда /start.",
+        "Это бот Delivery Assistant.\n\n"
+        "Используйте кнопки меню для навигации. "
+        "В разделах доступны: «Назад», «Главное меню», «Отмена», «Помощь».",
     )
     await callback.answer()
 
 
-@router.callback_query(F.data == "nav:main")
+@router.callback_query(F.data.in_({NAV_MAIN, NAV_BACK}))
 async def nav_main(
     callback: CallbackQuery,
+    state: FSMContext,
     access_service: AccessService | None = None,
 ) -> None:
-    """Вернуться в главное меню с учётом роли (курьер/куратор/админ)."""
+    """«Главное меню» / «Назад» — возврат в корневое меню с учётом роли; сброс FSM."""
     from src.bot.menu_renderer import show_entrypoint_menu
 
+    await state.clear()
     if access_service is None:
         await callback.message.answer("Меню временно недоступно. Нажмите /start.")
         await callback.answer()
@@ -122,5 +126,45 @@ async def nav_main(
         await show_entrypoint_menu(callback.message, principal)
     except Exception:
         await callback.message.answer("Ошибка загрузки меню. Нажмите /start.")
+    await callback.answer()
+
+
+@router.callback_query(F.data == NAV_CANCEL)
+async def nav_cancel(
+    callback: CallbackQuery,
+    state: FSMContext,
+    access_service: AccessService | None = None,
+) -> None:
+    """Отмена текущего действия и возврат в главное меню по роли; сброс FSM."""
+    from src.bot.menu_renderer import show_entrypoint_menu
+
+    await state.clear()
+    if access_service is None:
+        await callback.message.answer("Действие отменено. Нажмите /start.")
+        await callback.answer()
+        return
+    try:
+        tg_user_id = callback.from_user.id if callback.from_user else 0
+        principal = await access_service.get_principal(tg_user_id)
+        await callback.message.answer("Действие отменено.")
+        await show_entrypoint_menu(callback.message, principal)
+    except Exception:
+        await callback.message.answer("Действие отменено. Нажмите /start.")
+    await callback.answer()
+
+
+@router.callback_query(F.data == NAV_HELP)
+async def nav_help(
+    callback: CallbackQuery,
+    access_service: AccessService | None = None,
+) -> None:
+    """Помощь с кнопкой возврата в главное меню."""
+    from src.bot.keyboards.navigation import build_nav_keyboard
+    help_text = (
+        "Помощь: используйте кнопки меню для навигации. "
+        "В разделах: «Назад», «Главное меню», «Отмена», «Помощь»."
+    )
+    kb = build_nav_keyboard(main_cb=NAV_MAIN)
+    await callback.message.answer(help_text, reply_markup=kb)
     await callback.answer()
 

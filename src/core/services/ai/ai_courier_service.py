@@ -15,6 +15,7 @@ from src.core.services.ai.case_classifier import (
     SimilarCaseResult,
 )
 from src.core.services.ai.case_engine import CaseEngine
+from src.core.services.ai.embedding_service import get_embedding_service
 from src.core.services.ai.embeddings_service import EmbeddingsService
 from src.core.services.ai.intent_engine import IntentDetectionResult, IntentEngine
 from src.core.services.ai.provider_router import ProviderRouter
@@ -54,9 +55,16 @@ SOURCE_DELIVERY_RISK = "delivery_risk"
 class AICourierResult:
     """Canonical decision contract: every AI answer carries structured metadata.
 
-    Cascade: access_check [caller] → must_match → rules → intent → FAQ/RAG
-    → ML classifier → LLM reasoning → escalation/fallback. Answer never goes
-    to LLM before steps 2–6 are tried.
+    Canonical route order (deterministic, debuggable):
+    1. safety_blocker — safety / blocker rules
+    2. must_match — must-match cases (core_policy)
+    3. case_engine — rules by intent (structured FAQ / регламент)
+    4. faq / semantic_faq — FAQ retrieval (keyword → semantic → hybrid)
+    5. semantic_case — ML intent / case ranking (case memory)
+    6. llm_reason — RAG / LLM reasoning
+    7. fallback — escalation / fallback
+
+    Stored/logged: route, intent, confidence, evidence, source_ids, source.
     """
 
     text: str
@@ -67,6 +75,7 @@ class AICourierResult:
     clarify_question: str
     escalate: bool
     evidence: list[str] = field(default_factory=list)
+    source_ids: list[str] = field(default_factory=list)
     debug: dict[str, Any] = field(default_factory=dict)
     source: str = field(default="")
 
@@ -102,7 +111,7 @@ class AICourierService:
         self._case_engine = CaseEngine()
         self._data_root = Path(data_root)
         self._case_classifier = CaseClassifier(data_root=self._data_root)
-        self._embeddings_service = EmbeddingsService()
+        self._embeddings_service = get_embedding_service()
 
         self._policy = self._load_json("core_policy.json", default={})
         self._intent_tags = self._load_json("intent_tags.json", default={})
@@ -243,11 +252,13 @@ class AICourierService:
 
         Формат: route, intent, confidence, evidence, source_ids, user_id, role (см. docs/AI_CURATOR.md).
         """
-        source_ids: list[str] = list(result.evidence) if result.evidence else []
-        debug = result.debug or {}
-        for key in ("faq_top_id", "case_id"):
-            if debug.get(key) is not None:
-                source_ids.append(f"{key}:{debug[key]}")
+        source_ids: list[str] = list(result.source_ids) if result.source_ids else []
+        if not source_ids:
+            source_ids = list(result.evidence) if result.evidence else []
+            debug = result.debug or {}
+            for key in ("faq_top_id", "case_id"):
+                if debug.get(key) is not None:
+                    source_ids.append(f"{key}:{debug[key]}")
         log.info(
             "ai_explainability",
             route=result.route,
@@ -278,6 +289,7 @@ class AICourierService:
                 clarify_question="",
                 escalate=False,
                 evidence=[],
+                source_ids=["risk:none"],
                 debug={"risk_evaluated": True, "risk_detected": False},
                 source=SOURCE_DELIVERY_RISK,
             )
@@ -312,6 +324,7 @@ class AICourierService:
             clarify_question="",
             escalate=rec.escalate if rec else False,
             evidence=[f"risk:{risk.risk_type}"],
+            source_ids=[f"risk:{risk.risk_type}"],
             debug={
                 "risk_type": risk.risk_type,
                 "severity": risk.severity,
@@ -585,12 +598,18 @@ class AICourierService:
         *,
         role: str = "courier",
     ) -> AICourierResult:
-        """Ответ по каскаду решений. В LLM не идём сразу.
+        """Ответ по каноническому пайплайну. В LLM не идём, пока не исчерпаны шаги 1–5.
 
-        Каскад: (1) access check [на стороне вызывающего]; (2) must_match;
-        (3) rules (case_engine); (4) intent detection; (5) semantic FAQ/RAG;
-        (6) ML classifier; (7) LLM reasoning; (8) escalation/fallback.
+        Порядок маршрутов (canonical route order):
+        1. safety_blocker — safety/blocker rules
+        2. must_match — must-match cases (core_policy)
+        3. case_engine — rules by intent (регламент)
+        4. faq / semantic_faq — FAQ retrieval (keyword → semantic → hybrid)
+        5. semantic_case — ML intent/case ranking
+        6. llm_reason — RAG/LLM reasoning
+        7. fallback — escalation/fallback
 
+        Intent detection выполняется в начале и используется в шагах 2–6.
         role: роль вызывающего для explainability (courier / admin).
         """
         question = (text or "").strip()
@@ -650,6 +669,7 @@ class AICourierService:
                 escalate=bool(must_case.get("escalate", high_risk and intent == "battery_fire")),
                 high_risk=high_risk,
             )
+            must_sid = f"must_match:{must_case.get('id') or must_case.get('trigger') or intent}"
             result = AICourierResult(
                 text=response,
                 route="must_match",
@@ -658,7 +678,8 @@ class AICourierService:
                 need_clarify=False,
                 clarify_question="",
                 escalate=bool(must_case.get("escalate", high_risk and intent == "battery_fire")),
-                evidence=[f"must_match:{must_case.get('id') or must_case.get('trigger') or intent}"],
+                evidence=[must_sid],
+                source_ids=[must_sid],
                 debug=self._debug_with_route_decision(
                     debug | {"must_match_trigger": must_case.get("trigger", "")},
                     f"must_match:{must_case.get('id') or intent}",
@@ -681,6 +702,7 @@ class AICourierService:
                 escalate=case_result.escalate,
                 high_risk=high_risk,
             )
+            case_sid = f"case_engine:{intent}"
             result = AICourierResult(
                 text=rag_text,
                 route=case_result.route,
@@ -690,6 +712,7 @@ class AICourierService:
                 clarify_question=case_result.clarify_question,
                 escalate=case_result.escalate,
                 evidence=evidence or [f"case:{intent}"],
+                source_ids=[case_sid],
                 debug=self._debug_with_route_decision(debug, f"case_engine:{intent}"),
                 source=SOURCE_STRUCTURED_FAQ,
             )
@@ -839,6 +862,7 @@ class AICourierService:
                 escalate=False,
                 high_risk=high_risk,
             )
+            faq_sid = f"faq:{faq_hits[0].get('id')}" if faq_hits else "faq"
             result = AICourierResult(
                 text=faq_answer,
                 route=route_label,
@@ -848,6 +872,7 @@ class AICourierService:
                 clarify_question="",
                 escalate=False,
                 evidence=evidence or ["faq"],
+                source_ids=evidence or [faq_sid],
                 debug=self._debug_with_route_decision(
                     debug | {"retrieval_stage": retrieval_stage, "semantic_score": semantic_score, "semantic_hit": semantic_hit},
                     "faq_search",
@@ -875,6 +900,7 @@ class AICourierService:
                         high_risk=high_risk,
                     )
                     if reply:
+                        sem_sid = f"semantic_case:{sem_case.case_id}"
                         result = AICourierResult(
                             text=reply,
                             route="semantic_case",
@@ -883,7 +909,8 @@ class AICourierService:
                             need_clarify=False,
                             clarify_question="",
                             escalate=False,
-                            evidence=evidence or [f"semantic_case:{sem_case.case_id}"],
+                            evidence=evidence or [sem_sid],
+                            source_ids=evidence or [sem_sid],
                             debug=self._debug_with_route_decision(
                                 debug
                                 | {
@@ -976,6 +1003,11 @@ class AICourierService:
                 llm_text = self._format_rag_answer(
                     situation, steps, "При необходимости по регламенту.", high_risk=high_risk
                 )
+            llm_sids = list(evidence) if evidence else ["llm_reason"]
+            if debug.get("faq_top_id") is not None:
+                llm_sids.append(f"faq:{debug['faq_top_id']}")
+            if debug.get("case_id") is not None:
+                llm_sids.append(f"case:{debug['case_id']}")
             result = AICourierResult(
                 text=self._normalize_reply(llm_text),
                 route="llm_reason",
@@ -985,6 +1017,7 @@ class AICourierService:
                 clarify_question=clarify_q,
                 escalate=high_risk and not need_clarify,
                 evidence=evidence or ["llm_reason"],
+                source_ids=llm_sids,
                 debug=self._debug_with_route_decision(
                     debug | {"answer_context_intent": answer_ctx.intent}, "llm_reason"
                 ),
@@ -1008,6 +1041,7 @@ class AICourierService:
             clarify_question=clarify_q,
             escalate=high_risk and not bool(clarify_q),
             evidence=evidence or ["fallback"],
+            source_ids=evidence or ["fallback"],
             debug=self._debug_with_route_decision(debug, "fallback"),
             source=SOURCE_FALLBACK,
         )

@@ -9,24 +9,25 @@ from src.bot.navigation import NAV_MAIN
 # Префикс callback для быстрых кейсов (текст передаётся в AI как есть)
 AI_CURATOR_CB_PREFIX = "ai_curator:case:"
 
-# Код кейса -> текст для запроса к AI (rules/must_match/FAQ)
-QUICK_CASE_LABELS: dict[str, str] = {
-    "client_no_answer": "Клиент не отвечает",
-    "damaged_goods": "Разбил товар",
-    "missing_items": "Недовоз",
-    "payment_fail": "Не проходит оплата",
-    "late": "Опаздываю",
-    "address_issue": "Проблема с адресом",
-}
+# Порядок кнопок по ТЗ; ключ кейса -> текст для запроса к AI
+QUICK_CASE_ORDER: list[tuple[str, str]] = [
+    ("client_no_answer", "Клиент не отвечает"),
+    ("missing_items", "Недовоз"),
+    ("damaged_goods", "Разбил товар"),
+    ("payment_fail", "Не проходит оплата"),
+    ("late", "Опаздываю"),
+    ("address_issue", "Проблема с адресом"),
+]
+QUICK_CASE_LABELS: dict[str, str] = dict(QUICK_CASE_ORDER)
 
 # Кнопка «Другое» — пользователь вводит текст сам
 AI_CURATOR_OTHER = f"{AI_CURATOR_CB_PREFIX}other"
 
 
 def build_ai_curator_intro_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура приветствия: быстрые кейсы + Другое."""
+    """Клавиатура приветствия: быстрые кейсы (порядок по ТЗ) + Другое."""
     rows: list[list[InlineKeyboardButton]] = []
-    for key, label in QUICK_CASE_LABELS.items():
+    for key, label in QUICK_CASE_ORDER:
         rows.append(
             [
                 InlineKeyboardButton(

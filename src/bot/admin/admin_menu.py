@@ -7,15 +7,18 @@ from src.bot.keyboards.admin_main import (
     BROADCASTS_CB,
     CSV_ANALYSIS_CB,
     FAQ_KB_CB,
+    LEGACY_CB,
     MONITORING_CB,
     VERIFICATION_CB,
     build_admin_main_keyboard,
+    build_legacy_keyboard,
 )
 from src.bot.keyboards.navigation import build_nav_keyboard
-from src.bot.navigation import NAV_CANCEL, NAV_MAIN
+from src.bot.navigation import NAV_CANCEL, NAV_HELP, NAV_MAIN
 
 
-ADMIN_BACK_CB = f"{ADMIN_CB_PREFIX}back"
+# Единый callback возврата в главное меню админки (legacy: admin:back_to_main)
+ADMIN_BACK_CB = f"{ADMIN_CB_PREFIX}back_to_main"
 ADMIN_CANCEL_CB = f"{ADMIN_CB_PREFIX}cancel"
 
 
@@ -25,12 +28,12 @@ def build_admin_main_menu() -> InlineKeyboardMarkup:
 
 
 def build_section_nav_keyboard() -> InlineKeyboardMarkup:
-    """Навигация для экранов разделов: Назад / Главное меню / Отмена."""
+    """Навигация для экранов разделов: Назад / Главное меню / Отмена / Помощь."""
     return build_nav_keyboard(
         back_cb=ADMIN_BACK_CB,
         main_cb=NAV_MAIN,
         cancel_cb=ADMIN_CANCEL_CB,
-        help_cb=None,
+        help_cb=NAV_HELP,
     )
 
 
@@ -55,10 +58,12 @@ __all__ = [
     "MONITORING_CB",
     "ASSETS_CB",
     "BROADCASTS_CB",
+    "LEGACY_CB",
     "ADMIN_BACK_CB",
     "ADMIN_CANCEL_CB",
     "build_admin_main_menu",
     "build_section_nav_keyboard",
+    "build_legacy_keyboard",
     "with_section_nav",
 ]
 

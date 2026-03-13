@@ -1,8 +1,16 @@
 """Start and user greeting — canonical status/role flow.
 
-Unknown user -> guest screen (registration).
-Admin bootstrap (ADMIN_IDS, no user yet) -> create user APPROVED+ADMIN, show admin menu.
-Otherwise menu by status: pending, rejected, blocked, approved+role.
+Strict status/role gating:
+- guest (no record or status=guest) -> registration entry screen
+- pending -> waiting screen
+- rejected -> rejected + reapply
+- blocked -> blocked screen
+- approved + admin/lead -> admin root menu
+- approved + courier -> courier root menu
+- approved + curator/viewer -> curator root menu
+
+Bootstrap: only for ADMIN_IDS when user does not exist; creates APPROVED+ADMIN.
+Never auto-creates unknown users as courier (no bypass of status model).
 """
 from __future__ import annotations
 
@@ -46,7 +54,7 @@ async def cmd_start(
         await message.answer("Сервис временно недоступен. Попробуйте позже.")
         return
 
-    # Bootstrap admin: only when user does not exist and ID is in ADMIN_IDS
+    # Safe bootstrap: only ADMIN_IDS, only when user has no record; never creates courier/curator
     if _is_guest(principal) and tg_user_id in settings.admin_ids:
         try:
             await user_service.get_or_create(

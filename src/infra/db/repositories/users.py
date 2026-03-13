@@ -31,8 +31,11 @@ class UserRepository:
         display_name: str | None = None,
         status: UserStatus | None = None,
     ) -> User:
-        # Нормализуем роль: "ADMIN" / "admin" / UserRole.ADMIN → UserRole.ADMIN.
-        # Защита от invalid input value при INSERT в Postgres enum.
+        """Вернуть пользователя по tg_user_id или создать нового.
+
+        Создание только при явном вызове (регистрация или bootstrap админа).
+        Новый пользователь без переданного status получает GUEST (не approved).
+        """
         role = coerce_user_role(role, default=UserRole.VIEWER)
         user = await self.get_by_tg_id(tg_user_id)
         if user:

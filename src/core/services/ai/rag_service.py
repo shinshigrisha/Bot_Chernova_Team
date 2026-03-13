@@ -11,6 +11,7 @@ from src.core.services.ai.case_classifier import (
     CaseClassifier,
     SimilarCaseResult,
 )
+from src.core.services.ai.embedding_service import get_embedding_service
 from src.core.services.ai.embeddings_service import EmbeddingsService
 from src.core.services.ai.intent_engine import (
     IntentDetectionResult,
@@ -48,6 +49,8 @@ class RAGKnowledgeContext:
 class RAGService:
     """Унифицированный retrieval-слой для AI-куратора.
 
+    Canonical retrieval flow: intent → FAQ (semantic → hybrid) → ML cases (lexical + semantic) → regulations.
+    Embeddings: единая точка входа get_embedding_service() (embedding_service).
     Обязанности:
     - определить intent пользователя;
     - найти релевантные FAQ (семантика + гибридный поиск);
@@ -64,6 +67,7 @@ class RAGService:
         core_policy: Mapping[str, Any] | None = None,
         intent_tags: Mapping[str, Sequence[str]] | None = None,
         intents_catalog: Sequence[Mapping[str, Any]] | None = None,
+        embeddings_service: EmbeddingsService | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._data_root = Path(data_root)
@@ -86,7 +90,7 @@ class RAGService:
 
         self._faq_repo = FAQRepository()
         self._case_classifier = CaseClassifier(data_root=self._data_root)
-        self._embeddings_service = EmbeddingsService()
+        self._embeddings_service = embeddings_service or get_embedding_service()
 
         self._high_risk_topics = [
             str(x).strip().lower() for x in self._policy.get("high_risk_topics", [])

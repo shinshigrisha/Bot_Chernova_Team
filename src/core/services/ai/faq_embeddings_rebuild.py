@@ -71,7 +71,7 @@ async def rebuild_faq_embeddings_async(
             )
             return {"updated": updated, "skipped": skipped, "total": len(faq_rows)}
     except Exception as e:
-        logger.exception("faq_embeddings_rebuild_failed", error=str(e))
+        logger.error("faq_embeddings_rebuild_failed: %s", str(e))
         return {"updated": 0, "skipped": 0, "total": 0, "error": str(e)}
     finally:
         if embeddings_service is None and emb is not None:

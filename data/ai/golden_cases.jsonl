@@ -3,3 +3,4 @@
 {"input":"АКБ дымит в шкафу","expect_tags":["battery_fire"],"must_contain_any":["прекрати","обесточь","безопасность"],"must_not_contain_any":["продолжай зарядку"]}
 {"input":"Не хватает пакета, недовоз","expect_tags":["missing_items"],"must_contain_any":["проверь","МП","сообщи"],"must_not_contain_any":["забей"]}
 {"input":"Не успеваю в таймер, пробка","expect_tags":["late_delivery"],"must_contain_any":["ETA","сообщи","причина"],"must_not_contain_any":["превышай скорость"]}
+{"input":"Курьер опаздывает","expect_tags":["courier_late_general","late_delivery"],"must_contain_any":["задержку","опоздан","маршрут","в пути"],"must_not_contain_any":["ничем не могу помочь"],"expect_routes":["faq","semantic_faq","case_engine","semantic_case"]}

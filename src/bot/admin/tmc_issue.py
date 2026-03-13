@@ -8,6 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.bot.states import TMCIssueStates
 from src.core.domain.exceptions import AssetAlreadyAssignedError
+from src.core.services.access_service import AccessService
 from src.core.services.assets import AssetsService
 from src.infra.db.enums import AssetCondition, AssetType
 from src.infra.db.repositories.assets import AssetsRepository
@@ -18,8 +19,22 @@ router = Router(name="admin_tmc")
 ADMIN_CB_PREFIX = "admin:"
 
 
+async def _ensure_admin_callback(callback: CallbackQuery, access_service: AccessService) -> bool:
+    tg_user_id = callback.from_user.id if callback.from_user else 0
+    if not await access_service.can_access_admin(tg_user_id):
+        await callback.answer("Доступ запрещён.", show_alert=True)
+        return False
+    return True
+
+
 @router.callback_query(F.data == f"{ADMIN_CB_PREFIX}tmc")
-async def start_tmc_issue(callback: CallbackQuery, state: FSMContext) -> None:
+async def start_tmc_issue(
+    callback: CallbackQuery,
+    state: FSMContext,
+    access_service: AccessService,
+) -> None:
+    if not await _ensure_admin_callback(callback, access_service):
+        return
     await state.clear()
     await state.set_state(TMCIssueStates.darkstore_code)
     await callback.message.answer("Введите код тёмного магазина (ДС):")

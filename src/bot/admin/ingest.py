@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from src.bot.states import IngestCSVStates
+from src.core.services.access_service import AccessService
 from src.core.services.ingest import IngestService
 from src.infra.db.enums import IngestSource
 
@@ -11,8 +12,22 @@ router = Router(name="admin_ingest")
 ADMIN_CB_PREFIX = "admin:"
 
 
+async def _ensure_admin_callback(callback: CallbackQuery, access_service: AccessService) -> bool:
+    tg_user_id = callback.from_user.id if callback.from_user else 0
+    if not await access_service.can_access_admin(tg_user_id):
+        await callback.answer("Доступ запрещён.", show_alert=True)
+        return False
+    return True
+
+
 @router.callback_query(F.data == f"{ADMIN_CB_PREFIX}ingest")
-async def start_ingest(callback: CallbackQuery, state: FSMContext) -> None:
+async def start_ingest(
+    callback: CallbackQuery,
+    state: FSMContext,
+    access_service: AccessService,
+) -> None:
+    if not await _ensure_admin_callback(callback, access_service):
+        return
     await state.clear()
     await state.set_state(IngestCSVStates.upload)
     await callback.message.answer("Отправьте CSV файл (документом):")

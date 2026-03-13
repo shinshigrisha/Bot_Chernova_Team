@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.0",
     "structlog>=24.0",
     "SQLAlchemy>=2.0",
+    "greenlet>=3.0.0",
     "asyncpg>=0.29",
     "alembic>=1.13",
     "celery[redis]>=5.3",

@@ -12,6 +12,7 @@ Seed FAQ from canonical data/ai/faq_seed.jsonl into faq_ai v2.
 
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,20 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+# Load .env before get_settings()
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env")
+except ImportError:
+    pass
+
+# When running on host (not in Docker): use localhost instead of postgres
+_db_url = os.environ.get("DATABASE_URL", "")
+if os.environ.get("SEED_DATABASE_URL"):
+    os.environ["DATABASE_URL"] = os.environ["SEED_DATABASE_URL"]
+elif _db_url and "@postgres" in _db_url:
+    os.environ["DATABASE_URL"] = _db_url.replace("@postgres:", "@localhost:").replace("@postgres/", "@localhost/")
 
 from src.config import get_settings
 from src.infra.db.repositories.faq_repo import FAQRepository
@@ -104,4 +119,11 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        err_msg = str(e).lower()
+        if "connection" in err_msg or "closed" in err_msg or "does not exist" in err_msg:
+            print("Database connection failed.", file=sys.stderr)
+            print("Hint: ensure PostgreSQL is running and DATABASE_URL is correct (use localhost when not in Docker).", file=sys.stderr)
+        raise
