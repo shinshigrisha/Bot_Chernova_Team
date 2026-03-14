@@ -89,7 +89,7 @@ class FAQRepository:
         *,
         session: AsyncSession | None = None,
     ) -> None:
-        """Set native vector(1536) column for semantic search. embedding_literal format: '[0.1,0.2,...]'."""
+        """Set native vector(384) column for semantic search (MiniLM). embedding_literal format: '[0.1,0.2,...]'."""
         if not embedding_literal or not embedding_literal.strip():
             return
         current_session = self._get_session(session)
@@ -367,7 +367,7 @@ class FAQRepository:
 
         pgvector_enabled = bool(query_embedding) and await self._has_pgvector_extension(current_session)
 
-        # Use native embedding_vector column (vector(1536)) when available; fallback to 0.0
+            # Use native embedding_vector column (vector(384)) when available; fallback to 0.0
         semantic_score_sql = (
             """
                     CASE

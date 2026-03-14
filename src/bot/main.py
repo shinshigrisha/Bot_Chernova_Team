@@ -58,6 +58,17 @@ def _init_ai(dp: Dispatcher) -> None:
         logger.info("AI disabled (AI_ENABLED=false)")
         return
 
+    # Log canonical embedding backend once at startup (provider + model)
+    from src.core.services.ai.embedding_service import get_embedding_service
+
+    _embedding_svc = get_embedding_service()
+    logger.info(
+        "active_embedding_backend: provider=%s model=%s enabled=%s",
+        _embedding_svc.provider,
+        _embedding_svc.model,
+        _embedding_svc.enabled,
+    )
+
     ai_router = ProviderRouter(
         [
             GroqProvider(),

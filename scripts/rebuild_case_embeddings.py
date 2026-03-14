@@ -1,7 +1,9 @@
 """Rebuild in-memory embeddings cache for ML cases (CaseClassifier semantic search).
 
 Reads data/ai/ml_cases.jsonl, generates embeddings for each "input" via canonical
-EmbeddingsService, writes data/ai/ml_cases_embeddings.json. No database dependency.
+EmbeddingsService (local MiniLM by default: EMBEDDING_PROVIDER=local). Writes
+data/ai/ml_cases_embeddings.json. No database dependency. No external embeddings API
+required when EMBEDDING_PROVIDER=local.
 Run after adding/editing ml_cases.jsonl so semantic_case routing can use the cache.
 """
 
@@ -18,9 +20,8 @@ if str(ROOT) not in sys.path:
 
 from src.core.services.ai.embeddings_service import EmbeddingsService
 
-
-ML_CASES_PATH = Path("data/ai/ml_cases.jsonl")
-ML_CASES_EMBEDDINGS_PATH = Path("data/ai/ml_cases_embeddings.json")
+ML_CASES_PATH = ROOT / "data" / "ai" / "ml_cases.jsonl"
+ML_CASES_EMBEDDINGS_PATH = ROOT / "data" / "ai" / "ml_cases_embeddings.json"
 
 
 async def main() -> None:
@@ -30,7 +31,11 @@ async def main() -> None:
 
     service = EmbeddingsService()
     if not service.enabled:
-        print("Embeddings disabled: OPENAI_API_KEY is not configured.")
+        print(
+            "Embeddings disabled (set EMBEDDING_PROVIDER=local for local MiniLM, "
+            "or configure OpenAI API key for openai provider).",
+            file=sys.stderr,
+        )
         return
 
     cases = []
@@ -86,10 +91,11 @@ async def main() -> None:
         encoding="utf-8",
     )
 
-    print(f"ML_CASES_TOTAL={len(cases)}")
-    print(f"ML_CASES_EMBEDDINGS_UPDATED={len(out_list)}")
-    print(f"ML_CASES_EMBEDDINGS_SKIPPED={skipped}")
-    print(f"OUTPUT={ML_CASES_EMBEDDINGS_PATH}")
+    total = len(cases)
+    updated = len(out_list)
+    output_path = str(ML_CASES_EMBEDDINGS_PATH.resolve())
+    print(f"total: {total}, updated: {updated}, skipped: {skipped}")
+    print(f"output: {output_path}")
 
 
 if __name__ == "__main__":

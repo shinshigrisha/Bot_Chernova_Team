@@ -1,6 +1,6 @@
 # Аудит архитектуры: Python Telegram AI Bot
 
-**Режим:** только анализ, без изменений кода.
+**Статус:** снимок аудита; актуальная архитектура — [ARCHITECTURE.md](ARCHITECTURE.md) и [ARCHITECTURE_AI_LAYER.md](ARCHITECTURE_AI_LAYER.md). Режим: только анализ, без изменений кода.
 
 ---
 

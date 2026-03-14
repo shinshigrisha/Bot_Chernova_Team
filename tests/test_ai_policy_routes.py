@@ -1,3 +1,5 @@
+"""AI regression pack: must_match, faq/case_engine, fallback, escalation; explainability contract.
+Uses mocked session and fake provider — no network, no real LLM."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -166,6 +168,9 @@ def _faq_knowledge():
     ]
 
 
+pytestmark = pytest.mark.smoke
+
+
 @pytest.fixture
 def ai_service(monkeypatch):
     service = AICourierService(session_factory=_DummySession, router=_FakeProviderRouter())
@@ -237,6 +242,7 @@ async def test_strict_cases_prefer_must_match_route(
 
 @pytest.mark.asyncio
 async def test_ai_fallback_when_provider_unavailable(monkeypatch):
+    """Fallback route when no FAQ/LLM: explainability fields must be set."""
     service = AICourierService(session_factory=_DummySession, router=_FailingProviderRouter())
     service._rule_reply_fn = None
 
@@ -248,6 +254,9 @@ async def test_ai_fallback_when_provider_unavailable(monkeypatch):
 
     assert result.route == "fallback"
     assert result.text
+    assert hasattr(result, "fallback_reason")
+    assert isinstance(result.fallback_reason, str)
+    assert result.fallback_reason != ""  # canonical: no_strong_match_or_llm_unavailable
 
 
 @pytest.mark.asyncio
@@ -379,7 +388,7 @@ async def test_urgent_format_for_dangerous_situations(ai_service: AICourierServi
 
 @pytest.mark.asyncio
 async def test_ai_result_canonical_contract_metadata(ai_service: AICourierService):
-    """Every AI answer must include structured metadata: route, intent, confidence, evidence, source_ids, source, needs_escalation, needs_clarification."""
+    """Every AI answer must include structured metadata: route, intent, confidence, evidence, source_ids, source, fallback_reason, escalation_reason, needs_escalation, needs_clarification."""
     result = await ai_service.get_answer(user_id=42, text="Яйца разбиты, пакет цел")
     assert result.route == "must_match"
     assert result.intent
@@ -388,11 +397,25 @@ async def test_ai_result_canonical_contract_metadata(ai_service: AICourierServic
     assert isinstance(result.evidence, list)
     assert isinstance(result.source_ids, list)
     assert len(result.source_ids) >= 1, "canonical contract requires source_ids"
+    assert hasattr(result, "fallback_reason") and isinstance(result.fallback_reason, str)
+    assert hasattr(result, "escalation_reason") and isinstance(result.escalation_reason, str)
     assert hasattr(result, "needs_escalation")
     assert result.needs_escalation is result.escalate
     assert hasattr(result, "needs_clarification")
     assert result.needs_clarification is result.need_clarify
     assert result.debug is not None
+
+
+@pytest.mark.asyncio
+async def test_escalation_explainability_for_high_risk_must_match(ai_service: AICourierService):
+    """Battery/fire must_match can set escalate; when escalate=True escalation_reason should be set."""
+    result = await ai_service.get_answer(user_id=42, text="АКБ дымит в шкафу")
+    assert result.route == "must_match"
+    assert result.source == "must_match"
+    assert hasattr(result, "escalation_reason")
+    if result.escalate:
+        assert isinstance(result.escalation_reason, str)
+        assert len(result.escalation_reason) > 0
 
 
 def test_get_risk_recommendation_returns_rag_format():

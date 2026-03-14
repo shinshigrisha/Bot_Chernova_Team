@@ -2,6 +2,7 @@
 
 - Canonical embeddings: embedding_service.get_embedding_service(), generate_embedding().
 - Retrieval: RAG build_context returns valid RAGKnowledgeContext; retrieval_stage in (none|semantic|hybrid).
+- Semantic search path: embedding from canonical service -> FAQRepository.search_semantic -> list.
 - Known cases: golden_cases.jsonl прогоняется через scripts/smoke_ai.py (ручной запуск).
 """
 
@@ -16,6 +17,7 @@ from src.core.services.ai.embedding_service import (
 from src.core.services.ai.embeddings_service import EmbeddingsService
 from src.core.services.ai.intent_engine import IntentDetectionResult
 from src.core.services.ai.rag_service import RAGService, RAGKnowledgeContext
+from src.infra.db.repositories.faq_repo import FAQRepository
 
 
 pytestmark = pytest.mark.smoke
@@ -75,3 +77,25 @@ async def test_rag_build_context_returns_valid_structure(async_session) -> None:
     assert hasattr(ctx.intent, "intent")
     assert ctx.retrieval_stage in ("none", "keyword", "semantic", "hybrid")
     assert isinstance(ctx.context_text, str)
+
+
+@pytest.mark.asyncio
+async def test_semantic_retrieval_canonical_path(async_session) -> None:
+    """Semantic search uses canonical embedding service: embed_text -> search_semantic -> list."""
+    svc = get_embedding_service()
+    if not svc.enabled:
+        pytest.skip("embedding service disabled")
+    query_embedding = await svc.embed_text("не дозвонился до клиента")
+    if query_embedding is None:
+        pytest.skip("embedding not available (e.g. local model not loaded)")
+    assert len(query_embedding) == 384, "MiniLM produces 384-dim vectors"
+    repo = FAQRepository(session=async_session)
+    hits = await repo.search_semantic(
+        query_embedding=query_embedding,
+        limit=5,
+        session=async_session,
+    )
+    assert isinstance(hits, list)
+    for row in hits:
+        assert "id" in row and "question" in row and "answer" in row and "score" in row
+        assert 0 <= float(row["score"]) <= 1.0

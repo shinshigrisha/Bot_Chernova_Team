@@ -4,6 +4,7 @@ Cases: similar phrase retrieval, synonym detection, fallback behavior, semantic 
 """
 from __future__ import annotations
 
+import math
 import pytest
 from sqlalchemy import text
 
@@ -41,20 +42,21 @@ async def test_search_semantic_accepts_list_embedding(async_session) -> None:
     repo = FAQRepository(session=async_session)
     # Invalid length or empty list may return [] if pgvector rejects or no rows
     result = await repo.search_semantic(
-        query_embedding=[0.0] * 1536, limit=5, session=async_session
+        query_embedding=[0.0] * 384, limit=5, session=async_session
     )
     # With no pgvector or no indexed rows, result is []; with pgvector and data, may be non-empty
     assert isinstance(result, list)
     for row in result:
         assert "id" in row and "question" in row and "answer" in row and "score" in row
-        assert 0 <= float(row["score"]) <= 1.0
+        s = float(row["score"])
+        assert math.isnan(s) or (0 <= s <= 1.0), "score must be in [0,1] or NaN (e.g. zero vector)"
 
 
 @pytest.mark.asyncio
 async def test_search_semantic_fallback_when_pgvector_unavailable(async_session) -> None:
     """When pgvector extension is missing, search_semantic returns [] (fallback behavior)."""
     repo = FAQRepository(session=async_session)
-    literal = "[0.1" + ",0.0" * 1535 + "]"  # valid 1536-dim vector literal
+    literal = "[0.1" + ",0.0" * 383 + "]"  # valid 384-dim vector literal (MiniLM)
     result = await repo.search_semantic(
         query_embedding=literal, limit=5, session=async_session
     )
@@ -81,8 +83,8 @@ async def test_search_by_keywords_unchanged(async_session) -> None:
 async def test_semantic_ranking_order_when_results_returned(async_session) -> None:
     """When semantic search returns results, they are ordered by score descending."""
     repo = FAQRepository(session=async_session)
-    # Use a valid 1536-dim vector literal; may return 0 rows if no embeddings in DB
-    literal = "[" + ",".join("0.0" for _ in range(1536)) + "]"
+    # Use a valid 384-dim vector literal (MiniLM); may return 0 rows if no embeddings in DB
+    literal = "[" + ",".join("0.0" for _ in range(384)) + "]"
     result = await repo.search_semantic(
         query_embedding=literal, limit=5, session=async_session
     )
@@ -117,9 +119,9 @@ async def test_search_hybrid_semantic_pairs(
     repo = FAQRepository(session=async_session)
     faq_id = await repo.add_faq(question=faq_question, answer=faq_answer, session=async_session)
 
-    # Use unique one-hot embeddings for each parametrized case.
+    # Use unique one-hot embeddings for each parametrized case (384 = MiniLM).
     # We pick index based on faq_id to avoid collisions across tests within same DB transaction.
-    dim = 1536
+    dim = 384
     idx = int(faq_id) % dim
     literal = _unit_vec(dim, idx)
     await repo.set_embedding_vector(faq_id=int(faq_id), embedding_literal=literal, session=async_session)

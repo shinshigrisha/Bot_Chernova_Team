@@ -19,20 +19,21 @@ async def rebuild_faq_embeddings_async(
 ) -> dict[str, Any]:
     """Пересобрать эмбеддинги для всех активных FAQ. Возвращает счётчики.
 
-    Если embeddings_service is None — создаётся новый EmbeddingsService().
-    При отключённых эмбеддингах (нет OPENAI_API_KEY) возвращает {"skipped": 0, "updated": 0, "error": "embeddings_disabled"}.
+    Если embeddings_service is None — создаётся новый EmbeddingsService() (канонический
+    бэкенд: local MiniLM по умолчанию, без внешнего API при EMBEDDING_PROVIDER=local).
+    При отключённых эмбеддингах возвращает {"skipped": 0, "updated": 0, "error": "embeddings_disabled"}.
     """
     emb = embeddings_service or EmbeddingsService()
     repo = FAQRepository()
     try:
         if not emb.enabled:
             logger.info("faq_embeddings_rebuild_skipped", reason="embeddings_disabled")
-            return {"updated": 0, "skipped": 0, "total": 0, "error": "embeddings_disabled"}
+            return {"updated": 0, "skipped": 0, "total": 0, "error": "embeddings_disabled", "output": "DB (pgvector, faq_ai.embedding_vector)"}
 
         async with session_factory() as session:
             faq_rows = await repo.list_embedding_sources(session=session)
             if not faq_rows:
-                return {"updated": 0, "skipped": 0, "total": 0}
+                return {"updated": 0, "skipped": 0, "total": 0, "output": "DB (pgvector, faq_ai.embedding_vector)"}
 
             payloads = [
                 EmbeddingsService.build_faq_text(
@@ -69,7 +70,12 @@ async def rebuild_faq_embeddings_async(
                 updated=updated,
                 skipped=skipped,
             )
-            return {"updated": updated, "skipped": skipped, "total": len(faq_rows)}
+            return {
+                "updated": updated,
+                "skipped": skipped,
+                "total": len(faq_rows),
+                "output": "DB (pgvector, faq_ai.embedding_vector)",
+            }
     except Exception as e:
         logger.error("faq_embeddings_rebuild_failed: %s", str(e))
         return {"updated": 0, "skipped": 0, "total": 0, "error": str(e)}
