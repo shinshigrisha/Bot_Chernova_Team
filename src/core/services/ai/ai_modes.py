@@ -44,7 +44,8 @@ class AirRouteClass(str, Enum):
     """Эскалация или запасной ответ при недоступности/низкой уверенности."""
 
 
-# Маппинг route (строка из AICourierResult.route) -> класс маршрута
+# Canonical route classes (no_llm | fast_chat | reasoning | analytics | fallback).
+# Маппинг route (строка из AICourierResult.route или контур analytics) -> класс маршрута
 ROUTE_TO_CLASS: dict[str, AirRouteClass] = {
     "safety_blocker": AirRouteClass.NO_LLM,
     "must_match": AirRouteClass.NO_LLM,
@@ -56,6 +57,7 @@ ROUTE_TO_CLASS: dict[str, AirRouteClass] = {
     "llm_reason": AirRouteClass.REASONING,
     "fallback": AirRouteClass.FALLBACK,
     "delivery_risk": AirRouteClass.NO_LLM,
+    "analytics": AirRouteClass.ANALYTICS,
 }
 
 
