@@ -1,3 +1,5 @@
+"""DEPRECATED: Not used in runtime. Canonical intent: IntentEngine + IntentMLClassifier (intent_engine, intent_ml_classifier). Do not import; kept for reference only."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

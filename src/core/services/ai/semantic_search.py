@@ -1,3 +1,5 @@
+"""DEPRECATED: Not used in runtime. Canonical retrieval: RAGService + FAQRepository + get_embedding_service() (rag_service, faq_repo, embedding_service). Do not import; kept for reference only."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence

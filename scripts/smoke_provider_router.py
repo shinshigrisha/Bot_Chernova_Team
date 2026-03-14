@@ -3,11 +3,18 @@ from __future__ import annotations
 
 import asyncio
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env")
 
 from src.core.services.ai.provider_router import ProviderRouter
 from src.core.services.ai.providers.deepseek_provider import DeepSeekProvider
 from src.core.services.ai.providers.groq_provider import GroqProvider
 from src.core.services.ai.providers.openai_provider import OpenAIProvider
+from src.core.services.ai.providers.openai_compatible_provider import OpenAICompatibleProvider
 
 
 async def main() -> None:
@@ -26,6 +33,7 @@ async def main() -> None:
             GroqProvider(),
             DeepSeekProvider(),
             OpenAIProvider(),
+            OpenAICompatibleProvider(),
         ]
     )
     try:

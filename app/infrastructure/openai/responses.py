@@ -1,3 +1,6 @@
+"""LEGACY: Not in runtime (app/ not loaded). Direct provider call — do not use from src.
+All AI must go through AIFacade / ProviderRouter (src). This module is reference only."""
+
 from __future__ import annotations
 
 import json

@@ -64,7 +64,8 @@ class AICourierResult:
     6. llm_reason — RAG / LLM reasoning
     7. fallback — escalation / fallback
 
-    Stored/logged: route, intent, confidence, evidence, source_ids, source.
+    Stored/logged: route, intent, confidence, evidence, source_ids, source,
+    fallback_reason, escalation_reason (explainability).
     """
 
     text: str
@@ -78,6 +79,8 @@ class AICourierResult:
     source_ids: list[str] = field(default_factory=list)
     debug: dict[str, Any] = field(default_factory=dict)
     source: str = field(default="")
+    fallback_reason: str = field(default="")
+    escalation_reason: str = field(default="")
 
     @property
     def needs_escalation(self) -> bool:
@@ -267,6 +270,8 @@ class AICourierService:
             evidence=result.evidence,
             source_ids=source_ids,
             source=result.source or "",
+            fallback_reason=result.fallback_reason or "",
+            escalation_reason=result.escalation_reason or "",
             user_id=user_id,
             role=role,
         )
@@ -292,6 +297,8 @@ class AICourierService:
                 source_ids=["risk:none"],
                 debug={"risk_evaluated": True, "risk_detected": False},
                 source=SOURCE_DELIVERY_RISK,
+                fallback_reason="",
+                escalation_reason="",
             )
         rec = self._recommendation_engine.recommend(risk)
         if rec is None:
@@ -331,6 +338,8 @@ class AICourierService:
                 "risk_reasons": risk.risk_reasons,
             },
             source=SOURCE_DELIVERY_RISK,
+            fallback_reason="",
+            escalation_reason="high_risk_severity" if (rec and rec.escalate) else "",
         )
 
     @staticmethod
@@ -670,6 +679,7 @@ class AICourierService:
                 high_risk=high_risk,
             )
             must_sid = f"must_match:{must_case.get('id') or must_case.get('trigger') or intent}"
+            esc = bool(must_case.get("escalate", high_risk and intent == "battery_fire"))
             result = AICourierResult(
                 text=response,
                 route="must_match",
@@ -677,7 +687,7 @@ class AICourierService:
                 intent=intent,
                 need_clarify=False,
                 clarify_question="",
-                escalate=bool(must_case.get("escalate", high_risk and intent == "battery_fire")),
+                escalate=esc,
                 evidence=[must_sid],
                 source_ids=[must_sid],
                 debug=self._debug_with_route_decision(
@@ -685,6 +695,8 @@ class AICourierService:
                     f"must_match:{must_case.get('id') or intent}",
                 ),
                 source=SOURCE_MUST_MATCH,
+                fallback_reason="",
+                escalation_reason="must_match_policy" if esc else "",
             )
             self._log_explainability(user_id, result, role)
             return result
@@ -715,6 +727,8 @@ class AICourierService:
                 source_ids=[case_sid],
                 debug=self._debug_with_route_decision(debug, f"case_engine:{intent}"),
                 source=SOURCE_STRUCTURED_FAQ,
+                fallback_reason="",
+                escalation_reason="case_engine_always_escalate" if case_result.escalate else "",
             )
             self._log_explainability(user_id, result, role)
             return result
@@ -878,6 +892,8 @@ class AICourierService:
                     "faq_search",
                 ),
                 source=SOURCE_SEMANTIC_RETRIEVAL if retrieval_stage == "semantic_faq" else SOURCE_STRUCTURED_FAQ,
+                fallback_reason="",
+                escalation_reason="",
             )
             self._log_explainability(user_id, result, role)
             return result
@@ -923,6 +939,8 @@ class AICourierService:
                                 f"semantic_case:{sem_case.case_id}",
                             ),
                             source=SOURCE_ML_INTENT_CASE,
+                            fallback_reason="",
+                            escalation_reason="",
                         )
                         self._log_explainability(user_id, result, role)
                         return result
@@ -1022,6 +1040,8 @@ class AICourierService:
                     debug | {"answer_context_intent": answer_ctx.intent}, "llm_reason"
                 ),
                 source=SOURCE_LLM_SYNTHESIS,
+                fallback_reason="",
+                escalation_reason="high_risk_after_llm" if (high_risk and not need_clarify) else "",
             )
             self._log_explainability(user_id, result, role)
             return result
@@ -1032,6 +1052,7 @@ class AICourierService:
         )
         # At most one clarification
         clarify_q = self._clarify_questions.get(intent, "") if not high_risk else ""
+        esc_fallback = high_risk and not bool(clarify_q)
         result = AICourierResult(
             text=fallback,
             route="fallback",
@@ -1039,11 +1060,13 @@ class AICourierService:
             intent=intent,
             need_clarify=bool(clarify_q),
             clarify_question=clarify_q,
-            escalate=high_risk and not bool(clarify_q),
+            escalate=esc_fallback,
             evidence=evidence or ["fallback"],
             source_ids=evidence or ["fallback"],
             debug=self._debug_with_route_decision(debug, "fallback"),
             source=SOURCE_FALLBACK,
+            fallback_reason="no_strong_match_or_llm_unavailable",
+            escalation_reason="high_risk_escalate" if esc_fallback else "",
         )
         self._log_explainability(user_id, result, role)
         return result
